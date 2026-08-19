@@ -1,0 +1,621 @@
+{
+  "title": "Queen - Bohemian Rhapsody",
+  "baseline_hard": 2435,
+  "best_hard": 44,
+  "best_plan": {
+    "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+    "target_skill": 4,
+    "sections": [
+      {
+        "start_bar": 1,
+        "end_bar": 29,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Intro ballad"
+      },
+      {
+        "start_bar": 30,
+        "end_bar": 58,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 2,
+        "roll_wide_chords": false,
+        "label": "Verse build"
+      },
+      {
+        "start_bar": 59,
+        "end_bar": 87,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 2,
+        "roll_wide_chords": false,
+        "label": "Pre-chorus"
+      },
+      {
+        "start_bar": 88,
+        "end_bar": 97,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Opera low phrase"
+      },
+      {
+        "start_bar": 98,
+        "end_bar": 107,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": -12,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Opera mid phrase"
+      },
+      {
+        "start_bar": 108,
+        "end_bar": 112,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": -12,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Opera rising phrase"
+      },
+      {
+        "start_bar": 113,
+        "end_bar": 116,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": -24,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Opera peak displaced"
+      },
+      {
+        "start_bar": 117,
+        "end_bar": 124,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": -12,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Opera high sustain"
+      },
+      {
+        "start_bar": 125,
+        "end_bar": 131,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": -24,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Opera climax"
+      },
+      {
+        "start_bar": 132,
+        "end_bar": 145,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": -12,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Opera resolve"
+      },
+      {
+        "start_bar": 146,
+        "end_bar": 174,
+        "lh_pattern": "block",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 2,
+        "roll_wide_chords": false,
+        "label": "Rock drive"
+      },
+      {
+        "start_bar": 175,
+        "end_bar": 203,
+        "lh_pattern": "block",
+        "melody_shift": -12,
+        "lh_octave": 3,
+        "lh_voices": 2,
+        "roll_wide_chords": false,
+        "label": "Rock high phrase"
+      },
+      {
+        "start_bar": 204,
+        "end_bar": 218,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Outro calm"
+      },
+      {
+        "start_bar": 219,
+        "end_bar": 232,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Outro fade"
+      },
+      {
+        "start_bar": 233,
+        "end_bar": 239,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "label": "Final coda"
+      }
+    ],
+    "reductions": [
+      {
+        "kind": "bass_movement",
+        "start_bar": 30,
+        "end_bar": 87,
+        "rationale": "Simplify dense chords to single sustained bass tones for ease."
+      },
+      {
+        "kind": "doubling",
+        "start_bar": 88,
+        "end_bar": 145,
+        "rationale": "Reduce texture to melody plus single bass note to fit hand span."
+      },
+      {
+        "kind": "inner_voice",
+        "start_bar": 146,
+        "end_bar": 203,
+        "rationale": "Drop inner chord tones from rock riffs to avoid large leaps."
+      },
+      {
+        "kind": "harmonic_colour",
+        "start_bar": 204,
+        "end_bar": 239,
+        "rationale": "Use simple sustained chords to imply harmony without complexity."
+      },
+      {
+        "kind": "countermelody",
+        "start_bar": 108,
+        "end_bar": 131,
+        "rationale": "Omit operatic countermelody and split melody register to fit hand span."
+      }
+    ],
+    "pedal_bars": [],
+    "notes": "Wide operatic melody is split into short octave-shifted sub-sections to keep every phrase within a comfortable hand span."
+  },
+  "playable": false,
+  "attempts": [
+    {
+      "number": 1,
+      "plan": {
+        "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Intro ballad, whisper bass"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 44,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Verse building"
+          },
+          {
+            "start_bar": 45,
+            "end_bar": 58,
+            "lh_pattern": "block",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Verse higher phrase"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 73,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Pre-chorus movement"
+          },
+          {
+            "start_bar": 74,
+            "end_bar": 87,
+            "lh_pattern": "block",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Pre-chorus climax"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 102,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Operatic dense low"
+          },
+          {
+            "start_bar": 103,
+            "end_bar": 116,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Operatic dense high"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 131,
+            "lh_pattern": "block",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Operatic peak wide range"
+          },
+          {
+            "start_bar": 132,
+            "end_bar": 145,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Operatic peak resolve"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 160,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Rock section drive"
+          },
+          {
+            "start_bar": 161,
+            "end_bar": 174,
+            "lh_pattern": "walking",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Rock section high"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 189,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Rock continuation"
+          },
+          {
+            "start_bar": 190,
+            "end_bar": 203,
+            "lh_pattern": "block",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Rock high phrase"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 218,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Outro calm"
+          },
+          {
+            "start_bar": 219,
+            "end_bar": 232,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Outro continue"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Final coda"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 30,
+            "end_bar": 87,
+            "rationale": "Simplify dense source harmony to single sustained bass notes for playability."
+          },
+          {
+            "kind": "doubling",
+            "start_bar": 88,
+            "end_bar": 145,
+            "rationale": "Thin the 26-37 notes/bar texture to melody plus single bass note."
+          },
+          {
+            "kind": "inner_voice",
+            "start_bar": 146,
+            "end_bar": 203,
+            "rationale": "Drop inner chordal voices from rock riffs, keep walking bass only."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 204,
+            "end_bar": 239,
+            "rationale": "Use simple sustained chords to imply harmony without added complexity."
+          },
+          {
+            "kind": "countermelody",
+            "start_bar": 117,
+            "end_bar": 131,
+            "rationale": "Omit the operatic countermelody line to keep hands within reach."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Melody is displaced by an octave at natural phrase boundaries to keep it within the player's comfortable reach while left hand stays simple throughout."
+      },
+      "hard": 45,
+      "strain": 10,
+      "error": null,
+      "seconds": 36.54825162887573
+    },
+    {
+      "number": 2,
+      "plan": null,
+      "hard": null,
+      "strain": null,
+      "error": "TruncatedResponse: response hit the 8000-token limit and was cut off mid-plan. Use fewer sections, and keep rationale and notes to one short sentence each.",
+      "seconds": 82.89992308616638
+    },
+    {
+      "number": 3,
+      "plan": {
+        "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Intro ballad"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Verse build"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Pre-chorus"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 97,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Opera low phrase"
+          },
+          {
+            "start_bar": 98,
+            "end_bar": 107,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Opera mid phrase"
+          },
+          {
+            "start_bar": 108,
+            "end_bar": 112,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Opera rising phrase"
+          },
+          {
+            "start_bar": 113,
+            "end_bar": 116,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -24,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Opera peak displaced"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 124,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Opera high sustain"
+          },
+          {
+            "start_bar": 125,
+            "end_bar": 131,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -24,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Opera climax"
+          },
+          {
+            "start_bar": 132,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Opera resolve"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Rock drive"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "block",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "label": "Rock high phrase"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 218,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Outro calm"
+          },
+          {
+            "start_bar": 219,
+            "end_bar": 232,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Outro fade"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "label": "Final coda"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 30,
+            "end_bar": 87,
+            "rationale": "Simplify dense chords to single sustained bass tones for ease."
+          },
+          {
+            "kind": "doubling",
+            "start_bar": 88,
+            "end_bar": 145,
+            "rationale": "Reduce texture to melody plus single bass note to fit hand span."
+          },
+          {
+            "kind": "inner_voice",
+            "start_bar": 146,
+            "end_bar": 203,
+            "rationale": "Drop inner chord tones from rock riffs to avoid large leaps."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 204,
+            "end_bar": 239,
+            "rationale": "Use simple sustained chords to imply harmony without complexity."
+          },
+          {
+            "kind": "countermelody",
+            "start_bar": 108,
+            "end_bar": 131,
+            "rationale": "Omit operatic countermelody and split melody register to fit hand span."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Wide operatic melody is split into short octave-shifted sub-sections to keep every phrase within a comfortable hand span."
+      },
+      "hard": 44,
+      "strain": 10,
+      "error": null,
+      "seconds": 52.32400298118591
+    },
+    {
+      "number": 4,
+      "plan": null,
+      "hard": null,
+      "strain": null,
+      "error": "TruncatedResponse: response hit the 8000-token limit and was cut off mid-plan. Use fewer sections, and keep rationale and notes to one short sentence each.",
+      "seconds": 95.00540089607239
+    }
+  ],
+  "escalated": true,
+  "input_tokens": 14031,
+  "output_tokens": 25003
+}
