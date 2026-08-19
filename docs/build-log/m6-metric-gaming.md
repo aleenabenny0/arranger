@@ -108,3 +108,56 @@ This is the argument for keeping a non-model baseline in the harness
 permanently. Brute force did not know to delete anything, so its score was
 honest by accident — and it was the comparison, not the absolute number, that
 made the problem visible.
+
+---
+
+# M6b: the floor had a hole in it
+
+The fidelity floor was set at 0.85 with weights 0.55 melody / 0.30 harmony /
+0.15 accompaniment, chosen by reasoning about which losses hurt most.
+
+A test written to prove the floor worked failed instead:
+
+```
+voices=0: 0 hard, melody 100%, harmony 100%, accompaniment 0% (score 0.85)
+```
+
+An arrangement with **no left hand whatsoever** scored exactly 0.85 — landing
+precisely on the acceptance floor.
+
+## Why
+
+Harmonic coverage counts a bar as covered when the chord's root or third is
+present *anywhere* in the arrangement. The melody usually supplies one. So
+deleting the entire accompaniment leaves melody and harmony at 100%, and the
+score becomes 0.55 + 0.30 + 0 = 0.85.
+
+The metric built specifically to stop the model deleting music would have
+accepted an arrangement with everything deleted.
+
+Worse, checked against the actual run: the agent's nine-section plan scored
+0.898 under the old weighting. **It would have passed.** The fix would have
+changed nothing while appearing to solve the problem.
+
+## The correction
+
+Weights are now 0.45 / 0.25 / 0.30 and the floor is 0.88.
+
+- Empty accompaniment: 0.45 + 0.25 + 0 = **0.70**, well clear of the floor
+- The agent's plan: **0.850** — rejected
+- Brute force, complete: **1.000** — passes fidelity, fails on 2 violations
+
+Both real plans are now rejected, which is the honest state of affairs: one is
+playable but hollowed out, the other is complete but not quite playable.
+Neither is finished, and the loop will now say so instead of declaring victory.
+
+## The lesson
+
+The first weighting was derived by thinking about which losses matter. The
+second was derived by computing what the degenerate case actually scores.
+
+Only the second method can tell you whether a floor is a floor. Any threshold
+meant to rule out a specific failure should be set by measuring that failure,
+not by reasoning about the quantity in the abstract — and the check belongs in
+a test, because it is the kind of arithmetic that is obvious in hindsight and
+invisible in advance.

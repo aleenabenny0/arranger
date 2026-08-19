@@ -32,6 +32,7 @@ import time
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
+from .fidelity import Fidelity, measure
 from .ir import Score, pitch_name
 from .plan import ArrangementPlan, LHPattern, Section, simple_plan
 from .profile import PlayerProfile
@@ -40,6 +41,27 @@ from .verify import Verdict, verify
 
 DEFAULT_MODEL = "claude-sonnet-5"
 MAX_ATTEMPTS = 4
+
+# An arrangement must be playable AND still be the song. Without the second
+# condition the objective is maximised by deleting music, which is exactly
+# what the first successful run did — see docs/build-log/m6-metric-gaming.md.
+FIDELITY_FLOOR = 0.88
+
+# How many violations one point of fidelity below the floor is worth. Sets the
+# exchange rate between the two goals; without it "best" is ambiguous whenever
+# one attempt is more playable and another is more faithful.
+FIDELITY_WEIGHT = 60.0
+
+
+def cost(hard: int, fidelity: Fidelity) -> float:
+    """The single number the loop actually minimises.
+
+    Violations, plus a penalty for falling below the fidelity floor. Fidelity
+    above the floor earns nothing: the goal is a complete arrangement that can
+    be played, not the most faithful one imaginable.
+    """
+    shortfall = max(0.0, FIDELITY_FLOOR - fidelity.score())
+    return hard + FIDELITY_WEIGHT * shortfall
 
 PITCH_CLASSES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
@@ -322,6 +344,8 @@ class Attempt:
     strain: int | None
     error: str | None = None
     seconds: float = 0.0
+    fidelity: dict | None = None
+    cost: float | None = None
 
 
 @dataclass
@@ -331,6 +355,9 @@ class RunResult:
     best_hard: int | None
     best_plan: dict | None
     playable: bool
+    best_fidelity: dict | None = None
+    best_cost: float | None = None
+    accepted: bool = False
     attempts: list[Attempt] = field(default_factory=list)
     escalated: bool = False
     input_tokens: int = 0
@@ -401,28 +428,55 @@ def arrange(
             arranged = render(plan, source)
             verdict = verify(arranged, profile)
 
+            fidelity = measure(source, arranged)
+            this_cost = cost(len(verdict.hard), fidelity)
+
             attempt.plan = json.loads(plan.to_json())
             attempt.hard = len(verdict.hard)
             attempt.strain = len(verdict.strain)
+            attempt.fidelity = asdict(fidelity)
+            attempt.cost = round(this_cost, 2)
 
             # Keep the best result, not the most recent one. A later attempt
             # can be worse, and without this the loop can return a regression
-            # after appearing to make progress.
-            if result.best_hard is None or len(verdict.hard) < result.best_hard:
+            # after appearing to make progress. Ranked by cost, not violations
+            # alone — otherwise an emptier arrangement always looks better.
+            if result.best_cost is None or this_cost < result.best_cost:
+                result.best_cost = round(this_cost, 2)
                 result.best_hard = len(verdict.hard)
                 result.best_plan = attempt.plan
+                result.best_fidelity = asdict(fidelity)
                 best_verdict = verdict
 
+            accepted = verdict.playable and fidelity.score() >= FIDELITY_FLOOR
             if verbose:
-                print(f"  attempt {attempt_no}: {len(verdict.hard)} hard violations")
+                print(
+                    f"  attempt {attempt_no}: {len(verdict.hard)} hard, "
+                    f"{fidelity.summary()}"
+                )
 
-            if verdict.playable:
+            if accepted:
                 result.playable = True
+                result.accepted = True
                 attempt.seconds = time.time() - started
                 result.attempts.append(attempt)
                 break
 
             feedback = describe_verdict(verdict, plan)
+            if verdict.playable:
+                feedback = (
+                    f"Playable, but too much of the piece is gone: "
+                    f"{fidelity.summary()}. Required: {FIDELITY_FLOOR:.2f}.\n"
+                    "Restore the left hand where you removed it "
+                    "(lh_voices=0) and solve the leaps another way."
+                )
+            else:
+                feedback += (
+                    f"\nFIDELITY: {fidelity.summary()} "
+                    f"(must end at or above {FIDELITY_FLOOR:.2f}).\n"
+                    "Setting lh_voices=0 removes violations by removing the "
+                    "music and will fail this check.\n"
+                )
             messages.append({"role": "assistant", "content": raw})
             messages.append(
                 {
@@ -455,17 +509,17 @@ def arrange(
         attempt.seconds = time.time() - started
         result.attempts.append(attempt)
 
-    result.escalated = not result.playable
+    result.escalated = not result.accepted
     result.input_tokens = getattr(model, "input_tokens", 0)
     result.output_tokens = getattr(model, "output_tokens", 0)
 
     if verbose:
-        if result.playable:
-            print(f"  PLAYABLE after {len(result.attempts)} attempt(s)")
+        if result.accepted:
+            print(f"  ACCEPTED after {len(result.attempts)} attempt(s)")
         else:
             print(
                 f"  escalated: best was {result.best_hard} hard violations "
-                f"(source had {result.baseline_hard})"
+                f"(source had {result.baseline_hard}), cost {result.best_cost}"
             )
         if best_verdict and not result.playable:
             print("  remaining:", best_verdict.summary())
@@ -473,7 +527,7 @@ def arrange(
     return result
 
 
-def brute_force_baseline(source: Score, profile: PlayerProfile) -> tuple[int, str, int, int]:
+def brute_force_baseline(source: Score, profile: PlayerProfile) -> tuple[float, int, str, int, int]:
     """The score to beat: best single-section plan, found by exhaustive search.
 
     An agent that cannot beat this is not earning its cost. Reported alongside
@@ -490,9 +544,11 @@ def brute_force_baseline(source: Score, profile: PlayerProfile) -> tuple[int, st
                     sections=[Section(1, end, pattern, lh_voices=voices,
                                       melody_fold_window=fold)],
                 )
-                hard = len(verify(render(plan, source), profile).hard)
-                if best is None or hard < best[0]:
-                    best = (hard, str(pattern), voices, fold)
+                arranged = render(plan, source)
+                hard = len(verify(arranged, profile).hard)
+                c = cost(hard, measure(source, arranged))
+                if best is None or c < best[0]:
+                    best = (c, hard, str(pattern), voices, fold)
     assert best is not None
     return best
 
@@ -521,8 +577,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{source.title}: {len(source.notes)} notes, {end} bars")
     baseline = brute_force_baseline(source, profile)
     print(
-        f"brute-force baseline: {baseline[0]} hard "
-        f"({baseline[1]}, {baseline[2]} voices, fold {baseline[3]})"
+        f"brute-force baseline: {baseline[1]} hard, cost {baseline[0]:.2f} "
+        f"({baseline[2]}, {baseline[3]} voices, fold {baseline[4]})"
     )
 
     if args.dry_run:
@@ -539,8 +595,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if result.best_hard is not None:
         print(
-            f"\nsource {result.baseline_hard} -> agent {result.best_hard} "
-            f"(brute force {baseline[0]})"
+            f"\nsource {result.baseline_hard} -> agent {result.best_hard} hard, "
+            f"cost {result.best_cost} (brute force {baseline[1]} hard, "
+            f"cost {baseline[0]:.2f})"
         )
     if result.output_tokens:
         print(f"tokens: {result.input_tokens} in, {result.output_tokens} out")
@@ -549,7 +606,7 @@ def main(argv: list[str] | None = None) -> int:
         args.out.write_text(result.to_json() + "\n")
         print(f"run log: {args.out}")
 
-    return 0 if result.playable else 1
+    return 0 if result.accepted else 1
 
 
 if __name__ == "__main__":

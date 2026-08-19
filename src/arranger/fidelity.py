@@ -33,14 +33,24 @@ class Fidelity:
         """One number, weighted by how much each loss hurts.
 
         The melody carries the most weight because losing it means the piece
-        is no longer recognisable. Accompaniment carries the least: thinning
-        it is legitimate arranging, and some passages are genuinely better
-        unaccompanied. The weights make deletion costly without banning it.
+        is no longer recognisable.
+
+        Accompaniment is weighted at 0.30, higher than it first appears to
+        deserve, because of an arithmetic trap. Harmonic coverage counts a
+        bar as covered if the root or third is present *anywhere* — and the
+        melody usually supplies one. So an arrangement with no left hand at
+        all still scores full marks on melody and harmony. Under the original
+        0.55/0.30/0.15 weighting that summed to exactly 0.85: deleting every
+        note of accompaniment landed precisely on the acceptance floor.
+
+        The first weighting was chosen by reasoning about which losses matter.
+        This one is chosen by checking what the degenerate case actually
+        scores, which is the only way to know whether a floor is a floor.
         """
         return (
-            0.55 * self.melodic_recall
-            + 0.30 * self.harmonic_coverage
-            + 0.15 * self.accompaniment
+            0.45 * self.melodic_recall
+            + 0.25 * self.harmonic_coverage
+            + 0.30 * self.accompaniment
         )
 
     def summary(self) -> str:

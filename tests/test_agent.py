@@ -19,9 +19,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from arranger.agent import (  # noqa: E402
-    Attempt, ScriptedModel, TruncatedResponse, arrange, brute_force_baseline,
-    describe_score, describe_verdict, _parse_plan,
+    FIDELITY_FLOOR, Attempt, ScriptedModel, TruncatedResponse, arrange,
+    brute_force_baseline, cost, describe_score, describe_verdict, _parse_plan,
 )
+from arranger.fidelity import Fidelity, measure  # noqa: E402
 from arranger.ir import Note, Score  # noqa: E402
 from arranger.plan import ArrangementPlan, LHPattern, Section, simple_plan  # noqa: E402
 from arranger.profile import PlayerProfile, PRESETS  # noqa: E402
@@ -208,9 +209,45 @@ def test_run_log_records_every_attempt():
 # --- the baseline the agent must beat -----------------------------------
 
 def test_brute_force_returns_a_real_plan():
-    hard, pattern, voices, fold = brute_force_baseline(SOURCE, PROFILE)
-    assert hard >= 0 and pattern in {str(p) for p in LHPattern}
+    c, hard, pattern, voices, fold = brute_force_baseline(SOURCE, PROFILE)
+    assert c >= 0 and hard >= 0 and pattern in {str(p) for p in LHPattern}
     assert 1 <= voices <= 3 and fold in (0, 12, 16)
+
+
+# --- the objective -------------------------------------------------------
+
+def test_deleting_the_accompaniment_costs_more_than_it_saves():
+    # The whole point of the fidelity floor. An empty arrangement is perfectly
+    # playable; the objective must not reward that.
+    gutted = render(ArrangementPlan(sections=[Section(1, END, lh_voices=0)]), SOURCE)
+    complete = render(ArrangementPlan(sections=[Section(1, END, lh_voices=2)]), SOURCE)
+    g_hard = len(verify(gutted, PROFILE).hard)
+    c_hard = len(verify(complete, PROFILE).hard)
+    g_cost = cost(g_hard, measure(SOURCE, gutted))
+    c_cost = cost(c_hard, measure(SOURCE, complete))
+    assert g_hard <= c_hard, "fixture invalid: gutting did not reduce violations"
+    assert g_cost > c_cost, "the objective still rewards deleting music"
+
+
+def test_full_fidelity_costs_only_its_violations():
+    perfect = Fidelity(1.0, 1.0, 1.0)
+    assert cost(3, perfect) == 3
+
+
+def test_fidelity_above_the_floor_earns_nothing_extra():
+    # The goal is a complete arrangement that plays, not the most faithful one
+    # imaginable. Rewarding surplus fidelity would trade playability for it.
+    at_floor = cost(2, Fidelity(FIDELITY_FLOOR, FIDELITY_FLOOR, FIDELITY_FLOOR))
+    assert cost(2, Fidelity(1.0, 1.0, 1.0)) == at_floor
+
+
+def test_melody_survives_octave_folding_in_the_score():
+    # Fidelity compares pitch classes, not absolute pitch — otherwise folding,
+    # the encouraged fix for wide melodies, would be punished as note loss.
+    folded = render(
+        ArrangementPlan(sections=[Section(1, END, melody_fold_window=12)]), SOURCE
+    )
+    assert measure(SOURCE, folded).melodic_recall > 0.9
 
 
 def test_brute_force_is_at_least_as_good_as_any_single_choice():
