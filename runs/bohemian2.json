@@ -1,0 +1,704 @@
+{
+  "title": "Queen - Bohemian Rhapsody",
+  "baseline_hard": 2435,
+  "best_hard": 0,
+  "best_plan": {
+    "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+    "target_skill": 4,
+    "sections": [
+      {
+        "start_bar": 1,
+        "end_bar": 29,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Intro - sustained bass"
+      },
+      {
+        "start_bar": 30,
+        "end_bar": 58,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Ballad verse - sustained bass"
+      },
+      {
+        "start_bar": 59,
+        "end_bar": 87,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Verse continuation"
+      },
+      {
+        "start_bar": 88,
+        "end_bar": 116,
+        "lh_pattern": "block",
+        "melody_shift": -12,
+        "lh_octave": 3,
+        "lh_voices": 0,
+        "roll_wide_chords": false,
+        "melody_fold_window": 16,
+        "label": "Building section - melody only"
+      },
+      {
+        "start_bar": 117,
+        "end_bar": 145,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": -12,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 16,
+        "label": "Operatic climax - sustained bass"
+      },
+      {
+        "start_bar": 146,
+        "end_bar": 174,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Hard rock section - sustained bass"
+      },
+      {
+        "start_bar": 175,
+        "end_bar": 203,
+        "lh_pattern": "block",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 0,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Rock drive - melody only"
+      },
+      {
+        "start_bar": 204,
+        "end_bar": 232,
+        "lh_pattern": "block",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 0,
+        "roll_wide_chords": false,
+        "melody_fold_window": 12,
+        "label": "Outro build - melody only"
+      },
+      {
+        "start_bar": 233,
+        "end_bar": 239,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 0,
+        "label": "Coda - single sustained note"
+      }
+    ],
+    "reductions": [
+      {
+        "kind": "doubling",
+        "start_bar": 1,
+        "end_bar": 29,
+        "rationale": "Simplify dense chordal texture to a single sustained bass for playability."
+      },
+      {
+        "kind": "bass_movement",
+        "start_bar": 88,
+        "end_bar": 116,
+        "rationale": "Remove left hand entirely in this harmonically dense region to eliminate all LH leaps."
+      },
+      {
+        "kind": "harmonic_colour",
+        "start_bar": 117,
+        "end_bar": 145,
+        "rationale": "Keep a single sustained bass tone to preserve harmonic grounding during the climax."
+      },
+      {
+        "kind": "inner_voice",
+        "start_bar": 175,
+        "end_bar": 232,
+        "rationale": "Remove left hand entirely in these fast harmonic-change regions to guarantee no LH leaps remain."
+      }
+    ],
+    "pedal_bars": [],
+    "notes": "Switched strategy to remove the left hand entirely (lh_voices=0) in the three sections whose rapid chord changes made even single sustained bass notes leap too far."
+  },
+  "playable": true,
+  "attempts": [
+    {
+      "number": 1,
+      "plan": {
+        "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro - sustained bass"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Ballad verse - simple chords"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse continuation"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "walking",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section - moving bass"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "arpeggio",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 3,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax - broad arpeggios"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section - chordal support"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Rock drive - walking bass"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Outro build - steady chords"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Coda - single sustained note"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 29,
+            "rationale": "Simplify dense chordal texture to a single sustained bass for playability."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 88,
+            "end_bar": 116,
+            "rationale": "Add gentle stepwise bass motion to support the building harmony without overtaxing the hand."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 117,
+            "end_bar": 145,
+            "rationale": "Use sustained arpeggiated chords to convey the operatic climax within reach limits."
+          },
+          {
+            "kind": "inner_voice",
+            "start_bar": 175,
+            "end_bar": 203,
+            "rationale": "Add a light inner voice to enrich the rock groove while keeping the melody clear."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Melody is octave-folded and shifted at phrase points to fit a 12-semitone reach while keeping LH patterns simple for a skill-4 player."
+      },
+      "hard": 8,
+      "strain": 0,
+      "error": null,
+      "seconds": 23.707756757736206
+    },
+    {
+      "number": 2,
+      "plan": {
+        "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro - sustained bass"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Ballad verse - simple chords"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse continuation"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "block",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section - static chords"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax - sustained bass"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section - chordal support"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Rock drive - static chords"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Outro build - steady chords"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Coda - single sustained note"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 29,
+            "rationale": "Simplify dense chordal texture to a single sustained bass for playability."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 88,
+            "end_bar": 116,
+            "rationale": "Use static block chords instead of walking bass to avoid large LH leaps."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 117,
+            "end_bar": 145,
+            "rationale": "Replace arpeggios with a sustained bass tone to keep the hand still during the climax."
+          },
+          {
+            "kind": "inner_voice",
+            "start_bar": 175,
+            "end_bar": 203,
+            "rationale": "Use static block chords instead of walking bass to keep LH leaps within reach."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Switched walking/arpeggio LH patterns to block/pedal_tone in problem sections to eliminate large left-hand leaps while keeping melody intact via folding."
+      },
+      "hard": 9,
+      "strain": 0,
+      "error": null,
+      "seconds": 10.702937364578247
+    },
+    {
+      "number": 3,
+      "plan": {
+        "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro - sustained bass"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Ballad verse - sustained bass"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse continuation"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section - sustained bass"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax - sustained bass"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section - sustained bass"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Rock drive - sustained bass"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Outro build - sustained bass"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Coda - single sustained note"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 29,
+            "rationale": "Simplify dense chordal texture to a single sustained bass for playability."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 88,
+            "end_bar": 116,
+            "rationale": "Use a single sustained bass note instead of moving chords to eliminate LH leaps entirely."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 117,
+            "end_bar": 145,
+            "rationale": "Replace arpeggios with a single sustained bass tone to keep the hand still during the climax."
+          },
+          {
+            "kind": "inner_voice",
+            "start_bar": 175,
+            "end_bar": 232,
+            "rationale": "Use a single sustained bass note throughout to keep LH leaps within reach across all remaining sections."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "All sections now use pedal_tone with a single LH voice to eliminate every left-hand leap, relying on melody_fold_window to keep the RH within reach."
+      },
+      "hard": 9,
+      "strain": 0,
+      "error": null,
+      "seconds": 12.520172119140625
+    },
+    {
+      "number": 4,
+      "plan": {
+        "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro - sustained bass"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Ballad verse - sustained bass"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse continuation"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "block",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 0,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section - melody only"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax - sustained bass"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section - sustained bass"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 0,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Rock drive - melody only"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 0,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Outro build - melody only"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Coda - single sustained note"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 29,
+            "rationale": "Simplify dense chordal texture to a single sustained bass for playability."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 88,
+            "end_bar": 116,
+            "rationale": "Remove left hand entirely in this harmonically dense region to eliminate all LH leaps."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 117,
+            "end_bar": 145,
+            "rationale": "Keep a single sustained bass tone to preserve harmonic grounding during the climax."
+          },
+          {
+            "kind": "inner_voice",
+            "start_bar": 175,
+            "end_bar": 232,
+            "rationale": "Remove left hand entirely in these fast harmonic-change regions to guarantee no LH leaps remain."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Switched strategy to remove the left hand entirely (lh_voices=0) in the three sections whose rapid chord changes made even single sustained bass notes leap too far."
+      },
+      "hard": 0,
+      "strain": 0,
+      "error": null,
+      "seconds": 21.229357719421387
+    }
+  ],
+  "escalated": false,
+  "input_tokens": 15721,
+  "output_tokens": 7416
+}
