@@ -8,5 +8,5 @@
   "max_notes_per_hand": 5,
   "max_leap_rate": 50.0,
   "leap_slack": 5,
-  "skill_level": 2
+  "skill_level": 4
 }
