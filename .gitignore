@@ -6,3 +6,4 @@ build/
 evals/corpus/*.wav
 evals/corpus/*.mp3
 workspace/
+samples/
