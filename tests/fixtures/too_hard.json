@@ -1,0 +1,16 @@
+{
+  "title": "over-ambitious chorale",
+  "tempo_bpm": 76,
+  "notes": [
+    {"pitch": 36, "onset": 0.0,  "duration": 0.9, "staff": 2, "bar": 1},
+    {"pitch": 55, "onset": 0.0,  "duration": 0.9, "staff": 2, "bar": 1},
+    {"pitch": 64, "onset": 0.0,  "duration": 0.9, "staff": 1, "bar": 1},
+    {"pitch": 67, "onset": 0.0,  "duration": 0.9, "staff": 1, "bar": 1},
+    {"pitch": 72, "onset": 0.0,  "duration": 0.9, "staff": 1, "bar": 1},
+    {"pitch": 31, "onset": 1.0,  "duration": 0.9, "staff": 2, "bar": 2},
+    {"pitch": 62, "onset": 1.0,  "duration": 0.9, "staff": 1, "bar": 2},
+    {"pitch": 60, "onset": 1.95, "duration": 0.05,"staff": 2, "bar": 3},
+    {"pitch": 33, "onset": 2.0,  "duration": 0.9, "staff": 2, "bar": 3},
+    {"pitch": 110,"onset": 2.0,  "duration": 0.9, "staff": 1, "bar": 3}
+  ]
+}

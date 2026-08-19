@@ -1,0 +1,12 @@
+{
+  "name": "me",
+  "instrument": "piano",
+  "lowest_pitch": 21,
+  "highest_pitch": 108,
+  "max_span": 12,
+  "comfortable_span": 9,
+  "max_notes_per_hand": 5,
+  "max_leap_rate": 70.0,
+  "leap_slack": 5,
+  "skill_level": 5
+}

@@ -1,0 +1,53 @@
+ARRANGER — start here
+=====================
+
+You need Python 3.11 or newer.
+Check by opening PowerShell and typing:     python --version
+
+If that fails, install from python.org and TICK THE BOX that says
+"Add Python to PATH" during setup. Everyone misses it.
+
+
+STEP 1 — open PowerShell in this folder
+---------------------------------------
+Easiest way: open this folder in File Explorer, click the address bar
+at the top, type   powershell   and press Enter.
+
+To check you're in the right place, type:   dir
+You should see CLAUDE.md, README.md, calibrate.py, and some folders.
+
+
+STEP 2 — run the tests
+----------------------
+    $env:PYTHONPATH="src"; python tests/test_constraints.py
+
+You should see 17 PASS lines and "17/17 passed".
+If you see that, everything works.
+
+
+STEP 3 — measure your hands
+---------------------------
+Take your laptop to the piano, then:
+
+    python calibrate.py
+
+Five questions. Answer them at the keyboard, don't guess.
+It saves your answers to profiles/me.json
+
+
+STEP 4 — check it against music you can already play
+----------------------------------------------------
+    $env:PYTHONPATH="src"; python -m arranger.verify.cli tests/fixtures/too_hard.json --profile profiles/me.json
+
+That fixture is deliberately impossible, so it should say NOT PLAYABLE
+and list four problems. That proves the checker catches things.
+
+Then make your own file in the same format, using the first few bars of
+something you CAN play, and run it. That one should say PLAYABLE.
+If it doesn't, your calibration numbers are too tight — redo step 3.
+
+
+NOTE ON WINDOWS
+---------------
+PowerShell uses    $env:PYTHONPATH="src"    where Mac/Linux uses PYTHONPATH=src
+Only needed once per PowerShell window, not before every command.
