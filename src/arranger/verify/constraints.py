@@ -55,7 +55,13 @@ def check_hands(score: Score, profile: PlayerProfile) -> list[Violation]:
     """
     out: list[Violation] = []
     prev_centroids: tuple[float | None, float | None] = (None, None)
-    prev_time: float | None = None
+    # When each hand last actually played a note. A resting hand keeps moving
+    # time: if the right hand plays four notes while the left rests, the left
+    # has all four notes' worth of time to reach its next position, not just
+    # the gap since the most recent note. Measuring from the last onset by
+    # *either* hand was the original bug — it charged the left hand 5ms to
+    # make a move it had half a second to prepare.
+    last_played: list[float | None] = [None, None]
 
     for t in score.onsets:
         sounding = score.sounding_at(t)
@@ -63,6 +69,7 @@ def check_hands(score: Score, profile: PlayerProfile) -> list[Violation]:
             continue
         assignment, centroids = assign_hands(sounding, profile, prev_centroids)
         bar = next((n.bar for n in sounding if n.bar is not None), None)
+        active = {assignment.get(i) for i in range(len(sounding))}
 
         for hand in ("L", "R"):
             pitches = sorted(
@@ -112,29 +119,33 @@ def check_hands(score: Score, profile: PlayerProfile) -> list[Violation]:
         # Leap feasibility: how far did each hand have to travel, and was
         # there time to do it? This is the rule that catches arrangements
         # that look fine on the page and are impossible under the fingers.
-        if prev_time is not None:
-            dt = t - prev_time
-            for idx, hand in enumerate(("L", "R")):
-                before, after = prev_centroids[idx], centroids[idx]
-                if before is None or after is None:
-                    continue
-                displacement = abs(after - before)
-                budget = profile.leap_slack + profile.max_leap_rate * dt
-                if displacement > budget:
-                    out.append(
-                        Violation(
-                            rule=Rule.LEAP_INFEASIBLE, severity=Severity.HARD, time=t,
-                            bar=bar, hand=hand, measured=displacement, limit=budget,
-                            message=(
-                                f"{hand}H must move {displacement:.0f} semitones in "
-                                f"{dt * 1000:.0f}ms; feasible budget is "
-                                f"{budget:.0f}. Sustain the lower note with pedal, "
-                                f"or re-voice so the hand stays put."
-                            ),
-                        )
+        for idx, hand in enumerate(("L", "R")):
+            if hand not in active:
+                continue  # this hand is resting; it isn't going anywhere
+            since = last_played[idx]
+            before, after = prev_centroids[idx], centroids[idx]
+            last_played[idx] = t
+            if before is None or after is None or since is None:
+                continue  # first appearance of this hand, nothing to compare
+            dt = t - since
+            displacement = abs(after - before)
+            budget = profile.leap_slack + profile.max_leap_rate * dt
+            if displacement > budget:
+                out.append(
+                    Violation(
+                        rule=Rule.LEAP_INFEASIBLE, severity=Severity.HARD, time=t,
+                        bar=bar, hand=hand, measured=displacement,
+                        limit=round(budget, 2),
+                        message=(
+                            f"{hand}H must move {displacement:.0f} semitones in "
+                            f"{dt * 1000:.0f}ms; feasible budget is "
+                            f"{budget:.0f}. Sustain the lower note with pedal, "
+                            f"or re-voice so the hand stays put."
+                        ),
                     )
+                )
 
-        prev_centroids, prev_time = centroids, t
+        prev_centroids = centroids
 
     return out
 

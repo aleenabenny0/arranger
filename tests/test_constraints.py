@@ -104,11 +104,33 @@ def test_two_octave_leap_in_20ms_is_infeasible():
     assert Rule.LEAP_INFEASIBLE in rules(v)
 
 
-def test_wide_leap_is_allowed_when_the_other_hand_is_free():
-    # Documents deliberate behaviour: a pianist takes this with the other
-    # hand. Flagging it would make the agent "fix" perfectly good music.
+def test_lone_line_stays_in_one_hand_and_its_leaps_are_checked():
+    # REVERSED in M2. This test previously asserted the opposite: that a fast
+    # wide leap should be excused because the other hand is idle and could
+    # take it. That rule let a single melodic line drift into whichever hand
+    # was momentarily nearer, and Fur Elise showed the cost — 58 phantom leap
+    # violations from a melody being relabelled back and forth.
+    #
+    # Charging a price to wake a resting hand fixed that, at the cost of no
+    # longer excusing genuine two-hand rescues in isolated fragments. That
+    # trade is worth it: a per-instant solver cannot tell whether the other
+    # hand is free over the whole phrase, only at this moment. The proper
+    # answer is the global solver in M3.
     score = Score.from_tuples([(36, 0.0, 0.02), (60, 0.02, 0.5)])
     v = verify(score, PlayerProfile(name="t", max_leap_rate=70.0, leap_slack=5))
+    assert Rule.LEAP_INFEASIBLE in rules(v)
+
+
+def test_resting_hand_gets_credit_for_the_time_it_rested():
+    # The M2 timing fix. The left hand plays a low note, rests while the right
+    # hand plays three fast notes, then moves. It had the whole rest to move,
+    # not just the 20ms since the most recent right-hand note.
+    score = Score.from_tuples([
+        (36, 0.00, 0.10, 2),
+        (72, 0.10, 0.02, 1), (74, 0.12, 0.02, 1), (76, 0.14, 0.02, 1),
+        (48, 0.60, 0.20, 2),
+    ])
+    v = verify(score, PlayerProfile(name="t", max_leap_rate=50.0, leap_slack=5))
     assert Rule.LEAP_INFEASIBLE not in rules(v)
 
 

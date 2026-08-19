@@ -23,6 +23,10 @@ from ..profile import PlayerProfile
 
 Assignment = dict[int, str]  # index into the sounding list -> "L" or "R"
 
+# Price of bringing a resting hand into play, in "semitones of travel".
+# Tuned empirically against Fur Elise; see the M2 build-log entry.
+IDLE_HAND_COST = 24.0
+
 
 def _centroid(pitches: list[int]) -> float | None:
     return sum(pitches) / len(pitches) if pitches else None
@@ -79,11 +83,25 @@ def assign_hands(
                 cost += 1000 * (len(pitches) - profile.max_notes_per_hand)
 
         # Continuity: hands prefer to stay where they are.
+        #
+        # An idle hand must be charged something, or it is always the cheapest
+        # option. Without this, a lone melody note at pitch 75 costs |75-76|=1
+        # to keep in the right hand but 0 to hand to the idle left, so a single
+        # melodic line alternates between hands forever — and the phantom
+        # motion then shows up as impossible leaps when the other hand really
+        # does enter. See docs/build-log/m2-first-real-music.md.
+        #
+        # IDLE_HAND_COST is the price of waking a resting hand. It has to
+        # exceed the distance a hand would sensibly travel within a phrase,
+        # but stay below the cost of a genuinely impossible stretch.
         lc, rc = _centroid(left_p), _centroid(right_p)
-        if prev_l is not None and lc is not None:
-            cost += abs(lc - prev_l)
-        if prev_r is not None and rc is not None:
-            cost += abs(rc - prev_r)
+        for pos, prev_pos in ((lc, prev_l), (rc, prev_r)):
+            if pos is None:
+                continue  # this hand rests; it is not moving, so no cost
+            if prev_pos is None:
+                cost += IDLE_HAND_COST
+            else:
+                cost += abs(pos - prev_pos)
         # Hands do not cross in v1. Real pianists cross constantly; this is a
         # known limitation, listed in docs/build-log/limitations.md.
         if lc is not None and rc is not None and lc > rc:
