@@ -83,3 +83,77 @@ visible because the budget was changed and the result was compared, not because
 anything failed.
 
 Both runs "succeeded". Neither result was suspicious on its own.
+
+---
+
+# M7b: the ablation, and why it settles nothing
+
+```
+--no-countdown, 7 attempts:
+16 -> 10 -> 10 -> 10 -> 1 -> 0    ACCEPTED (attempt 6 of 7)
+```
+
+The first run that did not solve on its final attempt. The deadline
+hypothesis predicted exactly this, so at first reading it is confirmation.
+
+It is not, and the reason is in the first column.
+
+## Attempt 1, across three runs of the same piece
+
+| Run | Attempt 1 violations |
+|---|---|
+| 4 attempts, countdown | 8 |
+| 7 attempts, countdown | 8 |
+| 7 attempts, no countdown | **16** |
+
+Same piece, same profile, same prompt, same starting state — no feedback has
+been exchanged yet at attempt 1, so these three numbers differ for no reason
+except sampling.
+
+**A 2x spread before the loop has done anything.**
+
+Against that, the evidence for the deadline effect is that a breakthrough
+moved from attempt 6 to attempt 5. One position. That is comfortably inside
+the noise the first column demonstrates.
+
+## The finding is the variance
+
+Every conclusion drawn from single runs in this log is now suspect:
+
+- "the agent beat brute force 0 to 1" — one sample from an unmeasured
+  distribution
+- "the deadline drives convergence" — two samples, one per condition
+- "7 attempts costs 2.7x for the same result" — the *result* was the same
+  twice; the cost ratio is one comparison
+
+None are wrong. None are supported either. They are anecdotes that happen to
+have numbers attached, which is the most persuasive kind of anecdote and the
+easiest to mistake for data.
+
+## What replaces guessing
+
+`arranger.evaluate`: N repeats per piece, success rate, median cost, observed
+spread, and how often the agent beat the brute-force baseline. Medians rather
+than means, because at five repeats one escalated run drags a mean across the
+whole scale.
+
+The spread column is the point of the whole thing. Where it is wide, a single
+run of this system tells you almost nothing — and that is a property worth
+publishing rather than smoothing away.
+
+The deadline question gets answered properly only by running both conditions
+with enough repeats to see whether the distributions differ. Until then it
+stays a hypothesis in this file, with its prediction recorded before the data
+that will test it.
+
+## Note on the corpus
+
+Two of three sample pieces now have a brute-force baseline of 0. They cannot
+demonstrate anything about the agent — a perfect score is available without a
+model — so they remain only as regression checks.
+
+A real benchmark needs pieces where the baseline is genuinely hard, and it
+needs music the model cannot have memorised. The section labels in the first
+successful run ("operatic climax", "hard rock section") match Bohemian
+Rhapsody's actual structure, which the summary alone does not describe. That
+confound is still open and still untested.
