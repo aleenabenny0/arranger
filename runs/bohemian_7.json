@@ -1,0 +1,1167 @@
+{
+  "title": "Queen - Bohemian Rhapsody",
+  "baseline_hard": 2435,
+  "best_hard": 0,
+  "best_plan": {
+    "title": "Bohemian Rhapsody (Reduced Piano Arrangement)",
+    "target_skill": 4,
+    "sections": [
+      {
+        "start_bar": 1,
+        "end_bar": 29,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Intro ballad, mid-register pedal"
+      },
+      {
+        "start_bar": 30,
+        "end_bar": 58,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Verse 1, mid-register pedal"
+      },
+      {
+        "start_bar": 59,
+        "end_bar": 87,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Verse 2, mid-register pedal"
+      },
+      {
+        "start_bar": 88,
+        "end_bar": 116,
+        "lh_pattern": "walking",
+        "melody_shift": 0,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 12,
+        "label": "Building section, stepwise walking bass, tighter melody fold"
+      },
+      {
+        "start_bar": 117,
+        "end_bar": 145,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 16,
+        "label": "Operatic climax, mid-register pedal"
+      },
+      {
+        "start_bar": 146,
+        "end_bar": 174,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Hard rock section, mid-register pedal"
+      },
+      {
+        "start_bar": 175,
+        "end_bar": 203,
+        "lh_pattern": "walking",
+        "melody_shift": 0,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 14,
+        "label": "Guitar solo analog, stepwise walking bass"
+      },
+      {
+        "start_bar": 204,
+        "end_bar": 232,
+        "lh_pattern": "walking",
+        "melody_shift": 0,
+        "lh_octave": 2,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 12,
+        "label": "Reprise, stepwise walking bass"
+      },
+      {
+        "start_bar": 233,
+        "end_bar": 239,
+        "lh_pattern": "pedal_tone",
+        "melody_shift": 0,
+        "lh_octave": 3,
+        "lh_voices": 1,
+        "roll_wide_chords": false,
+        "melody_fold_window": 0,
+        "label": "Outro, mid-register pedal"
+      }
+    ],
+    "reductions": [
+      {
+        "kind": "bass_movement",
+        "start_bar": 1,
+        "end_bar": 239,
+        "rationale": "Single-note left hand used everywhere to minimize hand-span demands."
+      },
+      {
+        "kind": "harmonic_colour",
+        "start_bar": 88,
+        "end_bar": 232,
+        "rationale": "Stepwise walking bass in low register replaces large chord-to-chord leaps with small connecting steps."
+      },
+      {
+        "kind": "doubling",
+        "start_bar": 1,
+        "end_bar": 239,
+        "rationale": "No chordal doubling used so the left hand never has to span beyond a single note."
+      }
+    ],
+    "pedal_bars": [],
+    "notes": "Tightened melody_fold_window from 16 to 12 in the building section to fix the single remaining right-hand leap violation."
+  },
+  "playable": true,
+  "best_fidelity": {
+    "melodic_recall": 1.0,
+    "harmonic_coverage": 1.0,
+    "accompaniment": 1.0
+  },
+  "best_cost": 0.0,
+  "accepted": true,
+  "attempts": [
+    {
+      "number": 1,
+      "plan": {
+        "title": "Bohemian Rhapsody (Reduced Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro ballad, simple bass"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 1, block chords"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 2, block chords"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section, walking bass"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax, sustained bass to offset dense melody"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section, block chords"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 3,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Guitar solo analog, moderate chords"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Reprise, simple bass"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Outro, calm block chords"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 1,
+            "end_bar": 29,
+            "rationale": "Single sustained bass note supports slow harmonic rhythm."
+          },
+          {
+            "kind": "doubling",
+            "start_bar": 30,
+            "end_bar": 87,
+            "rationale": "Block chords double roots to keep harmony full without extra hand motion."
+          },
+          {
+            "kind": "inner_voice",
+            "start_bar": 88,
+            "end_bar": 116,
+            "rationale": "Walking bass implies inner harmonic motion while hand stays low-effort."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 117,
+            "end_bar": 145,
+            "rationale": "Sustained low pedal lets folded melody carry the dense harmonic climax."
+          },
+          {
+            "kind": "countermelody",
+            "start_bar": 146,
+            "end_bar": 203,
+            "rationale": "Block chords imply the rock riff without demanding independent rhythm."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 204,
+            "end_bar": 239,
+            "rationale": "Simple bass returns for the calm reprise and outro."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Melody kept intact throughout with octave folding to fit a 12-semitone reach; left hand simplified to block/pedal patterns suited to a skill-4 player."
+      },
+      "hard": 8,
+      "strain": 2,
+      "error": null,
+      "seconds": 20.414278507232666,
+      "fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "cost": 8.0
+    },
+    {
+      "number": 2,
+      "plan": {
+        "title": "Bohemian Rhapsody (Reduced Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro ballad, simple bass"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 1, block chords"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 2, block chords"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section, static bass to avoid walking leaps"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax, low sustained bass"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section, block chords"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Guitar solo analog, static bass to remove chordal leaps"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Reprise, low static bass to limit leap size"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Outro, calm block chords"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 1,
+            "end_bar": 29,
+            "rationale": "Single sustained bass note supports slow harmonic rhythm."
+          },
+          {
+            "kind": "doubling",
+            "start_bar": 30,
+            "end_bar": 87,
+            "rationale": "Block chords double roots to keep harmony full without extra hand motion."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 88,
+            "end_bar": 116,
+            "rationale": "Static pedal tone implies motion while eliminating LH leap risk."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 117,
+            "end_bar": 145,
+            "rationale": "Low sustained pedal supports dense melody without LH movement."
+          },
+          {
+            "kind": "countermelody",
+            "start_bar": 146,
+            "end_bar": 174,
+            "rationale": "Block chords imply the rock riff without independent LH rhythm."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 175,
+            "end_bar": 203,
+            "rationale": "Static bass removes rapid chordal leaps in the solo section."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 204,
+            "end_bar": 239,
+            "rationale": "Low, single-note bass minimizes leap size through the reprise and outro."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Replaced walking and multi-voice block patterns in leap-prone sections with single-note pedal tones to eliminate LH leap violations while preserving full melody fidelity."
+      },
+      "hard": 10,
+      "strain": 2,
+      "error": null,
+      "seconds": 43.432241678237915,
+      "fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "cost": 10.0
+    },
+    {
+      "number": 3,
+      "plan": {
+        "title": "Bohemian Rhapsody (Reduced Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro ballad, uniform simple bass"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 1, uniform simple bass"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 2, uniform simple bass"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section, uniform simple bass"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax, uniform simple bass"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section, uniform simple bass"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Guitar solo analog, uniform simple bass"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Reprise, uniform simple bass"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Outro, uniform simple bass"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "A single sustained bass note at a constant register is used throughout to remove all left-hand register leaps."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "Harmony is implied solely through the sustained bass note rather than moving chord voicings."
+          },
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "No chordal doubling is used so the left hand never spans more than one note."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Switched to a single uniform left-hand octave and pattern for the whole piece to eliminate all register-jump leaps regardless of harmonic movement."
+      },
+      "hard": 10,
+      "strain": 2,
+      "error": null,
+      "seconds": 103.28422856330872,
+      "fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "cost": 10.0
+    },
+    {
+      "number": 4,
+      "plan": {
+        "title": "Bohemian Rhapsody (Reduced Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro ballad, mid-register pedal"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 1, mid-register pedal"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 2, mid-register pedal"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section, low pedal kept well clear of busy melody"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax, low pedal clear of dense melody"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section, mid-register pedal"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Guitar solo analog, low pedal kept clear of chord-heavy passage"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Reprise, low pedal to separate hand from fast harmonic changes"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Outro, mid-register pedal"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "Single sustained bass note per section removes chordal accompaniment leaps."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 88,
+            "end_bar": 232,
+            "rationale": "Lowering the pedal register in the densest-harmony regions keeps the left hand physically separated from rapid chord changes overhead."
+          },
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "No additional chord tones are added so the hand never has to span beyond a single note."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Kept single-note pedal throughout but dropped the left hand an octave in the three fastest-harmony regions to remove the register leaps flagged there."
+      },
+      "hard": 10,
+      "strain": 2,
+      "error": null,
+      "seconds": 112.89675259590149,
+      "fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "cost": 10.0
+    },
+    {
+      "number": 5,
+      "plan": {
+        "title": "Bohemian Rhapsody (Reduced Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro ballad, mid-register pedal"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 1, mid-register pedal"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 2, mid-register pedal"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section, close-position block chords for smooth voice leading"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax, mid-register pedal"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section, mid-register pedal"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Guitar solo analog, close-position block chords for smooth voice leading"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Reprise, close-position block chords for smooth voice leading"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Outro, mid-register pedal"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "Single sustained bass note removes leaps in the slower-harmony regions."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 88,
+            "end_bar": 232,
+            "rationale": "Switching the fast-harmonic-rhythm regions to close-position block chords replaces large root jumps with smooth two-note voice leading."
+          },
+          {
+            "kind": "doubling",
+            "start_bar": 88,
+            "end_bar": 232,
+            "rationale": "Two-voice block chords double nearby chord tones instead of forcing a fixed distant root."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Changed strategy for the three dense-harmony hotspot sections from pedal_tone (which forced large root-to-root jumps) to close-position block chords with two voices for smoother, smaller left-hand motion."
+      },
+      "hard": 10,
+      "strain": 2,
+      "error": null,
+      "seconds": 75.8801760673523,
+      "fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "cost": 10.0
+    },
+    {
+      "number": 6,
+      "plan": {
+        "title": "Bohemian Rhapsody (Reduced Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro ballad, mid-register pedal"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 1, mid-register pedal"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 2, mid-register pedal"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section, stepwise walking bass to smooth large chord-root jumps"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax, mid-register pedal"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section, mid-register pedal"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Guitar solo analog, stepwise walking bass to smooth large chord-root jumps"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Reprise, stepwise walking bass to smooth large chord-root jumps"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Outro, mid-register pedal"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "Single-note left hand used everywhere to minimize hand-span demands."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 88,
+            "end_bar": 232,
+            "rationale": "Switching from static/root-jump patterns to stepwise walking bass in low register replaces large chord-to-chord leaps with small connecting steps."
+          },
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "No chordal doubling used so the left hand never has to span beyond a single note."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Abandoned the static-note approach for the three fast-harmony hotspots and switched to a low, single-voice walking bass that moves stepwise between chord tones instead of jumping directly to distant roots."
+      },
+      "hard": 1,
+      "strain": 2,
+      "error": null,
+      "seconds": 41.64118146896362,
+      "fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "cost": 1.0
+    },
+    {
+      "number": 7,
+      "plan": {
+        "title": "Bohemian Rhapsody (Reduced Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro ballad, mid-register pedal"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 1, mid-register pedal"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 2, mid-register pedal"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Building section, stepwise walking bass, tighter melody fold"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax, mid-register pedal"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section, mid-register pedal"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Guitar solo analog, stepwise walking bass"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Reprise, stepwise walking bass"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Outro, mid-register pedal"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "Single-note left hand used everywhere to minimize hand-span demands."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 88,
+            "end_bar": 232,
+            "rationale": "Stepwise walking bass in low register replaces large chord-to-chord leaps with small connecting steps."
+          },
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 239,
+            "rationale": "No chordal doubling used so the left hand never has to span beyond a single note."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Tightened melody_fold_window from 16 to 12 in the building section to fix the single remaining right-hand leap violation."
+      },
+      "hard": 0,
+      "strain": 1,
+      "error": null,
+      "seconds": 9.73918342590332,
+      "fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "cost": 0.0
+    }
+  ],
+  "escalated": false,
+  "input_tokens": 47646,
+  "output_tokens": 35834
+}

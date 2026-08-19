@@ -391,8 +391,16 @@ def arrange(
     model=None,
     max_attempts: int = MAX_ATTEMPTS,
     verbose: bool = True,
+    countdown: bool = True,
 ) -> RunResult:
-    """Run the loop until the arrangement is playable or the budget runs out."""
+    """Run the loop until the arrangement is accepted or the budget runs out.
+
+    `countdown` controls whether feedback tells the model which attempt it is
+    on and how many remain. It exists as a switch because two runs solved on
+    their final attempt — the 4th of 4, then the 6th-7th of 7 — which suggests
+    the deadline, not the accumulated feedback, is what triggers the strategy
+    change. Turning it off is the ablation that tests this.
+    """
     model = model or ClaudeModel()
     baseline = verify(source, profile)
     result = RunResult(
@@ -483,8 +491,11 @@ def arrange(
                     "role": "user",
                     "content": (
                         f"{feedback}\n{REPAIR_GUIDANCE}\n"
-                        f"Attempt {attempt_no} of {max_attempts}. "
-                        "Revise the plan and return the complete JSON."
+                        + (
+                            f"Attempt {attempt_no} of {max_attempts}. "
+                            if countdown else ""
+                        )
+                        + "Revise the plan and return the complete JSON."
                     ),
                 }
             )
@@ -568,6 +579,10 @@ def main(argv: list[str] | None = None) -> int:
         "--dry-run", action="store_true",
         help="use a scripted model; no API calls, no cost",
     )
+    ap.add_argument(
+        "--no-countdown", action="store_true",
+        help="hide the attempt number from feedback (ablation)",
+    )
     args = ap.parse_args(argv)
 
     profile = PlayerProfile.load(args.profile)
@@ -591,7 +606,10 @@ def main(argv: list[str] | None = None) -> int:
     else:
         model = ClaudeModel(args.model)
 
-    result = arrange(source, profile, model, max_attempts=args.attempts)
+    result = arrange(
+        source, profile, model, max_attempts=args.attempts,
+        countdown=not args.no_countdown,
+    )
 
     if result.best_hard is not None:
         print(
