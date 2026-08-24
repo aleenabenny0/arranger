@@ -5,5 +5,7 @@ dist/
 build/
 evals/corpus/*.wav
 evals/corpus/*.mp3
+evals/corpus/*.mid
+evals/corpus/*.midi
 workspace/
 samples/

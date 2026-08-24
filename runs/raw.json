@@ -1,0 +1,2287 @@
+{
+  "Queen - Bohemian Rhapsody": [
+    {
+      "title": "Queen - Bohemian Rhapsody",
+      "baseline_hard": 2435,
+      "best_hard": 1,
+      "best_plan": {
+        "title": "Bohemian Rhapsody (Simplified Solo Piano)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro ballad"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building verse"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Transition verse"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "walking",
+            "melody_shift": -12,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Dense chorus lead-in"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Rock section a"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Rock section b"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Outro build"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Final cadence"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "bass_movement",
+            "start_bar": 1,
+            "end_bar": 29,
+            "rationale": "Single sustained bass notes trace the chord roots beneath the ballad melody."
+          },
+          {
+            "kind": "inner_voice",
+            "start_bar": 88,
+            "end_bar": 116,
+            "rationale": "A light inner voice fills the dense harmony without burdening the left hand."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 117,
+            "end_bar": 145,
+            "rationale": "Added color tones support the operatic climax while keeping texture playable."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 204,
+            "end_bar": 232,
+            "rationale": "Stepwise walking bass smooths large root jumps in the outro chord changes."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Switched the chronically leaping bass regions from static chord-root jumps to stepwise walking bass in a lower register to keep interval sizes within reach."
+      },
+      "playable": false,
+      "best_fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "best_cost": 1.0,
+      "accepted": false,
+      "attempts": [
+        {
+          "number": 1,
+          "plan": {
+            "title": "Bohemian Rhapsody (Simplified Solo Piano)",
+            "target_skill": 4,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Intro ballad"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Building verse"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Transition verse"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "block",
+                "melody_shift": -12,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Dense chorus lead-in"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Operatic climax"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Rock section a"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Rock section b"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Outro build"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Final cadence"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "bass_movement",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Single sustained bass notes trace the chord roots beneath the ballad melody."
+              },
+              {
+                "kind": "inner_voice",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "A light inner voice fills the dense harmony without burdening the left hand."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "Added color tones support the operatic climax while keeping texture playable."
+              },
+              {
+                "kind": "doubling",
+                "start_bar": 204,
+                "end_bar": 232,
+                "rationale": "Octave doubling of the melody adds power for the rock outro without extra hand strain."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Wide melodic leaps are tamed section-by-section with octave shifts and fold windows, while the left hand stays on simple pedal or block patterns matching a skill-4 player."
+          },
+          "hard": 7,
+          "strain": 0,
+          "error": null,
+          "seconds": 34.230692625045776,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 7.0
+        },
+        {
+          "number": 2,
+          "plan": {
+            "title": "Bohemian Rhapsody (Simplified Solo Piano)",
+            "target_skill": 4,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Intro ballad"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Building verse"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Transition verse"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Dense chorus lead-in"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Operatic climax"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Rock section a"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Rock section b"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Outro build"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Final cadence"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "bass_movement",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Single sustained bass notes trace the chord roots beneath the ballad melody."
+              },
+              {
+                "kind": "inner_voice",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "A light inner voice fills the dense harmony without burdening the left hand."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "Added color tones support the operatic climax while keeping texture playable."
+              },
+              {
+                "kind": "doubling",
+                "start_bar": 204,
+                "end_bar": 232,
+                "rationale": "Octave doubling of the melody adds power for the rock outro without extra hand strain."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Left hand now holds still single bass tones in the dense chorus and second rock section to eliminate leap violations while melody folding keeps the tune within reach."
+          },
+          "hard": 10,
+          "strain": 0,
+          "error": null,
+          "seconds": 15.646172761917114,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 10.0
+        },
+        {
+          "number": 3,
+          "plan": {
+            "title": "Bohemian Rhapsody (Simplified Solo Piano)",
+            "target_skill": 4,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Intro ballad"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Building verse"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Transition verse"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "block",
+                "melody_shift": -12,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Dense chorus lead-in"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Operatic climax"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Rock section a"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Rock section b"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Outro build"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Final cadence"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "bass_movement",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Single sustained bass notes trace the chord roots beneath the ballad melody."
+              },
+              {
+                "kind": "inner_voice",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "A light inner voice fills the dense harmony without burdening the left hand."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "Added color tones support the operatic climax while keeping texture playable."
+              },
+              {
+                "kind": "doubling",
+                "start_bar": 204,
+                "end_bar": 232,
+                "rationale": "Octave doubling of the melody adds power for the rock outro without extra hand strain."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Switched the previously leap-prone bass sections to single-note block voicing at a consistent middle register to minimize interval jumps between chord changes."
+          },
+          "hard": 10,
+          "strain": 0,
+          "error": null,
+          "seconds": 43.72299313545227,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 10.0
+        },
+        {
+          "number": 4,
+          "plan": {
+            "title": "Bohemian Rhapsody (Simplified Solo Piano)",
+            "target_skill": 4,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Intro ballad"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Building verse"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Transition verse"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "walking",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Dense chorus lead-in"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Operatic climax"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Rock section a"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Rock section b"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Outro build"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Final cadence"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "bass_movement",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Single sustained bass notes trace the chord roots beneath the ballad melody."
+              },
+              {
+                "kind": "inner_voice",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "A light inner voice fills the dense harmony without burdening the left hand."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "Added color tones support the operatic climax while keeping texture playable."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 204,
+                "end_bar": 232,
+                "rationale": "Stepwise walking bass smooths large root jumps in the outro chord changes."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Switched the chronically leaping bass regions from static chord-root jumps to stepwise walking bass in a lower register to keep interval sizes within reach."
+          },
+          "hard": 1,
+          "strain": 0,
+          "error": null,
+          "seconds": 41.78592395782471,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 1.0
+        }
+      ],
+      "escalated": true,
+      "input_tokens": 15890,
+      "output_tokens": 11274
+    },
+    {
+      "title": "Queen - Bohemian Rhapsody",
+      "baseline_hard": 2435,
+      "best_hard": 8,
+      "best_plan": {
+        "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+        "target_skill": 4,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Intro ballad, simple bass"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 1, gentle chords"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse 2, expanding harmony"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Building section, dense melody eased"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": -12,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Operatic climax, register lowered and folded"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock section, steady chords"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 15,
+            "label": "Guitar solo homage, simple walking bass"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Reprise, calmer chords"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Outro, single sustained note"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 29,
+            "rationale": "Melody doubled at unison to reinforce quiet opening."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 88,
+            "end_bar": 116,
+            "rationale": "Added simple color tones to suggest fuller harmony without extra hand motion."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 117,
+            "end_bar": 145,
+            "rationale": "Occasional bass note changes imply operatic harmonic motion."
+          },
+          {
+            "kind": "countermelody",
+            "start_bar": 175,
+            "end_bar": 203,
+            "rationale": "Light countermelody echoes the guitar solo without overloading the hands."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Wide melody folded and lowered in dense/high sections while left hand stays simple to match skill level 4."
+      },
+      "playable": false,
+      "best_fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "best_cost": 8.0,
+      "accepted": false,
+      "attempts": [
+        {
+          "number": 1,
+          "plan": {
+            "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+            "target_skill": 4,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Intro ballad, simple bass"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse 1, gentle chords"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse 2, expanding harmony"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Building section, dense melody eased"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Operatic climax, register lowered and folded"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Hard rock section, steady chords"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 15,
+                "label": "Guitar solo homage, simple walking bass"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Reprise, calmer chords"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Outro, single sustained note"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "doubling",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Melody doubled at unison to reinforce quiet opening."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "Added simple color tones to suggest fuller harmony without extra hand motion."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "Occasional bass note changes imply operatic harmonic motion."
+              },
+              {
+                "kind": "countermelody",
+                "start_bar": 175,
+                "end_bar": 203,
+                "rationale": "Light countermelody echoes the guitar solo without overloading the hands."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Wide melody folded and lowered in dense/high sections while left hand stays simple to match skill level 4."
+          },
+          "hard": 8,
+          "strain": 1,
+          "error": null,
+          "seconds": 26.22280788421631,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 8.0
+        },
+        {
+          "number": 2,
+          "plan": {
+            "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+            "target_skill": 4,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Intro ballad, simple bass"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse 1, gentle chords"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse 2, expanding harmony"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Building section, low static bass to avoid leaps"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Operatic climax, register lowered and folded"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Hard rock section, steady chords"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 15,
+                "label": "Guitar solo homage, static chords instead of walking bass"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Reprise, calmer chords"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Outro, single sustained note"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "doubling",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Melody doubled at unison to reinforce quiet opening."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "Static low bass implies harmony while avoiding wide leaps."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "Occasional bass note changes imply operatic harmonic motion."
+              },
+              {
+                "kind": "countermelody",
+                "start_bar": 175,
+                "end_bar": 203,
+                "rationale": "Light countermelody echoes the guitar solo while bass stays still."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Replaced leap-prone bass movement with stationary block/pedal patterns in bars 88-116 and 175-203 to eliminate LH leap violations."
+          },
+          "hard": 11,
+          "strain": 1,
+          "error": null,
+          "seconds": 23.527502059936523,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 11.0
+        },
+        {
+          "number": 3,
+          "plan": {
+            "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+            "target_skill": 4,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Intro ballad, simple sustained bass"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse 1, gentle chords"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse 2, expanding harmony"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Building section, true static pedal to remove root-jump leaps"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Operatic climax, folded melody, static bass"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Hard rock section, steady chords"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 15,
+                "label": "Guitar solo homage, sustained bass instead of chord-following"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Reprise, static bass to avoid large leaps"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Outro, single sustained note"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "doubling",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Melody doubled at unison to reinforce quiet opening."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "Static pedal implies harmony while eliminating large bass leaps."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "Occasional bass note changes imply operatic harmonic motion without leaping."
+              },
+              {
+                "kind": "countermelody",
+                "start_bar": 175,
+                "end_bar": 203,
+                "rationale": "Light countermelody echoes the guitar solo while bass stays fixed."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Replaced chord-following bass with truly static pedal tones in bars 88-116, 175-203, and 204-232 to eliminate remaining LH leap violations."
+          },
+          "hard": 11,
+          "strain": 1,
+          "error": null,
+          "seconds": 51.801151514053345,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 11.0
+        },
+        {
+          "number": 4,
+          "plan": {
+            "title": "Bohemian Rhapsody (Solo Piano Arrangement)",
+            "target_skill": 4,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Intro ballad, simple sustained bass"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse 1, gentle chords"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse 2, expanding harmony"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 3,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Building section, close-position chords to minimize hand travel"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": -12,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Operatic climax, folded melody, static bass"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Hard rock section, steady chords"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 3,
+                "roll_wide_chords": false,
+                "melody_fold_window": 15,
+                "label": "Guitar solo homage, close-position chords with common-tone voice leading"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 3,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Reprise, close-position chords to avoid root-to-root leaps"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Outro, single sustained note"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "doubling",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Melody doubled at unison to reinforce quiet opening."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "Close-position chords imply harmony while keeping the hand near one spot."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "Occasional bass note changes imply operatic harmonic motion without leaping."
+              },
+              {
+                "kind": "countermelody",
+                "start_bar": 175,
+                "end_bar": 203,
+                "rationale": "Light countermelody echoes the guitar solo while chords stay in close position."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Switched from single-note pedal tones to close-position block chords with shared common tones in bars 88-116, 175-203, and 204-232 to keep the LH stationary and eliminate root-to-root leaps."
+          },
+          "hard": 12,
+          "strain": 2,
+          "error": null,
+          "seconds": 48.28550386428833,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 12.0
+        }
+      ],
+      "escalated": true,
+      "input_tokens": 15940,
+      "output_tokens": 11798
+    },
+    {
+      "title": "Queen - Bohemian Rhapsody",
+      "baseline_hard": 2435,
+      "best_hard": 0,
+      "best_plan": {
+        "title": "Bohemian Rhapsody",
+        "target_skill": 5,
+        "sections": [
+          {
+            "start_bar": 1,
+            "end_bar": 29,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Ballad intro"
+          },
+          {
+            "start_bar": 30,
+            "end_bar": 58,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Verse build"
+          },
+          {
+            "start_bar": 59,
+            "end_bar": 87,
+            "lh_pattern": "block",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 2,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Chromatic verse"
+          },
+          {
+            "start_bar": 88,
+            "end_bar": 116,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 12,
+            "label": "Dense pre-opera, stepwise bass, tighter melody fold"
+          },
+          {
+            "start_bar": 117,
+            "end_bar": 145,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 16,
+            "label": "Opera section, widest melody"
+          },
+          {
+            "start_bar": 146,
+            "end_bar": 174,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 14,
+            "label": "Hard rock drive, static bass"
+          },
+          {
+            "start_bar": 175,
+            "end_bar": 203,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 15,
+            "label": "Rock climax, stepwise bass to avoid leaps"
+          },
+          {
+            "start_bar": 204,
+            "end_bar": 232,
+            "lh_pattern": "walking",
+            "melody_shift": 0,
+            "lh_octave": 3,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 13,
+            "label": "Winding down, stepwise bass to avoid leaps"
+          },
+          {
+            "start_bar": 233,
+            "end_bar": 239,
+            "lh_pattern": "pedal_tone",
+            "melody_shift": 0,
+            "lh_octave": 2,
+            "lh_voices": 1,
+            "roll_wide_chords": false,
+            "melody_fold_window": 0,
+            "label": "Outro"
+          }
+        ],
+        "reductions": [
+          {
+            "kind": "doubling",
+            "start_bar": 1,
+            "end_bar": 29,
+            "rationale": "Occasional octave doubling adds warmth without extra hand work."
+          },
+          {
+            "kind": "inner_voice",
+            "start_bar": 59,
+            "end_bar": 87,
+            "rationale": "Thin inner voice implies chord colour under a single easy bass note."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 88,
+            "end_bar": 116,
+            "rationale": "Stepwise walking bass replaces distant chord-root jumps to stay within reach."
+          },
+          {
+            "kind": "countermelody",
+            "start_bar": 117,
+            "end_bar": 145,
+            "rationale": "A light countermelody stands in for the operatic backing vocals."
+          },
+          {
+            "kind": "harmonic_colour",
+            "start_bar": 146,
+            "end_bar": 174,
+            "rationale": "Static low bass implies harmonic motion without physical leaping."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 175,
+            "end_bar": 203,
+            "rationale": "Stepwise walking bass smooths the climax's chord changes to avoid large leaps."
+          },
+          {
+            "kind": "bass_movement",
+            "start_bar": 204,
+            "end_bar": 232,
+            "rationale": "Stepwise walking bass avoids the big root jumps of the wind-down progression."
+          }
+        ],
+        "pedal_bars": [],
+        "notes": "Tightened the melody fold window in the one remaining offending section to eliminate the last right-hand leap."
+      },
+      "playable": true,
+      "best_fidelity": {
+        "melodic_recall": 1.0,
+        "harmonic_coverage": 1.0,
+        "accompaniment": 1.0
+      },
+      "best_cost": 0.0,
+      "accepted": true,
+      "attempts": [
+        {
+          "number": 1,
+          "plan": {
+            "title": "Bohemian Rhapsody",
+            "target_skill": 5,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Ballad intro"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse build"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Chromatic verse"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Dense pre-opera"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Opera section, widest melody"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Hard rock drive"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 15,
+                "label": "Rock climax"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 13,
+                "label": "Winding down"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Outro"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "doubling",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Occasional octave doubling adds warmth without extra hand work."
+              },
+              {
+                "kind": "inner_voice",
+                "start_bar": 59,
+                "end_bar": 87,
+                "rationale": "Thin inner voice implies chord colour under a single easy bass note."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "Sustained pedal harmony substitutes for the dense original texture."
+              },
+              {
+                "kind": "countermelody",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "A light countermelody stands in for the operatic backing vocals."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 146,
+                "end_bar": 174,
+                "rationale": "Walking bass gives forward drive for the rock section."
+              },
+              {
+                "kind": "doubling",
+                "start_bar": 175,
+                "end_bar": 203,
+                "rationale": "Octave doubling of block chords reinforces the climax simply."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Wide melody is tamed section by section with fold windows near the player's reach while the left hand stays on easy pedal or block patterns for a skill-4 player."
+          },
+          "hard": 10,
+          "strain": 2,
+          "error": null,
+          "seconds": 23.40931487083435,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 10.0
+        },
+        {
+          "number": 2,
+          "plan": {
+            "title": "Bohemian Rhapsody",
+            "target_skill": 5,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Ballad intro"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse build"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Chromatic verse"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Dense pre-opera, hand held still"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Opera section, widest melody"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Hard rock drive, static bass"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 15,
+                "label": "Rock climax, static bass"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 13,
+                "label": "Winding down"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Outro"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "doubling",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Occasional octave doubling adds warmth without extra hand work."
+              },
+              {
+                "kind": "inner_voice",
+                "start_bar": 59,
+                "end_bar": 87,
+                "rationale": "Thin inner voice implies chord colour under a single easy bass note."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "Sustained low pedal tone substitutes for the dense original texture and removes hand leaps."
+              },
+              {
+                "kind": "countermelody",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "A light countermelody stands in for the operatic backing vocals."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 146,
+                "end_bar": 174,
+                "rationale": "Static bass note implies harmonic motion without physical leaping."
+              },
+              {
+                "kind": "doubling",
+                "start_bar": 175,
+                "end_bar": 203,
+                "rationale": "A single sustained low note reinforces the climax without leaps."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Replaced all leaping LH patterns with single-note pedal_tone at lower octave in the previously violating sections to keep the hand stationary."
+          },
+          "hard": 10,
+          "strain": 2,
+          "error": null,
+          "seconds": 18.178022146224976,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 10.0
+        },
+        {
+          "number": 3,
+          "plan": {
+            "title": "Bohemian Rhapsody",
+            "target_skill": 5,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Ballad intro"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse build"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Chromatic verse"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Dense pre-opera, stepwise bass to avoid leaps"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Opera section, widest melody"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Hard rock drive, static bass"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 15,
+                "label": "Rock climax, stepwise bass to avoid leaps"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 13,
+                "label": "Winding down, stepwise bass to avoid leaps"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Outro"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "doubling",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Occasional octave doubling adds warmth without extra hand work."
+              },
+              {
+                "kind": "inner_voice",
+                "start_bar": 59,
+                "end_bar": 87,
+                "rationale": "Thin inner voice implies chord colour under a single easy bass note."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "Stepwise walking bass replaces distant chord-root jumps to stay within reach."
+              },
+              {
+                "kind": "countermelody",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "A light countermelody stands in for the operatic backing vocals."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 146,
+                "end_bar": 174,
+                "rationale": "Static low bass implies harmonic motion without physical leaping."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 175,
+                "end_bar": 203,
+                "rationale": "Stepwise walking bass smooths the climax's chord changes to avoid large leaps."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 204,
+                "end_bar": 232,
+                "rationale": "Stepwise walking bass avoids the big root jumps of the wind-down progression."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Switched previously-failing sections from static pedal tones to stepwise walking bass so the left hand never has to leap directly between distant chord roots."
+          },
+          "hard": 1,
+          "strain": 2,
+          "error": null,
+          "seconds": 77.92181921005249,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 1.0
+        },
+        {
+          "number": 4,
+          "plan": {
+            "title": "Bohemian Rhapsody",
+            "target_skill": 5,
+            "sections": [
+              {
+                "start_bar": 1,
+                "end_bar": 29,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Ballad intro"
+              },
+              {
+                "start_bar": 30,
+                "end_bar": 58,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Verse build"
+              },
+              {
+                "start_bar": 59,
+                "end_bar": 87,
+                "lh_pattern": "block",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 2,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Chromatic verse"
+              },
+              {
+                "start_bar": 88,
+                "end_bar": 116,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 12,
+                "label": "Dense pre-opera, stepwise bass, tighter melody fold"
+              },
+              {
+                "start_bar": 117,
+                "end_bar": 145,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 16,
+                "label": "Opera section, widest melody"
+              },
+              {
+                "start_bar": 146,
+                "end_bar": 174,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 14,
+                "label": "Hard rock drive, static bass"
+              },
+              {
+                "start_bar": 175,
+                "end_bar": 203,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 15,
+                "label": "Rock climax, stepwise bass to avoid leaps"
+              },
+              {
+                "start_bar": 204,
+                "end_bar": 232,
+                "lh_pattern": "walking",
+                "melody_shift": 0,
+                "lh_octave": 3,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 13,
+                "label": "Winding down, stepwise bass to avoid leaps"
+              },
+              {
+                "start_bar": 233,
+                "end_bar": 239,
+                "lh_pattern": "pedal_tone",
+                "melody_shift": 0,
+                "lh_octave": 2,
+                "lh_voices": 1,
+                "roll_wide_chords": false,
+                "melody_fold_window": 0,
+                "label": "Outro"
+              }
+            ],
+            "reductions": [
+              {
+                "kind": "doubling",
+                "start_bar": 1,
+                "end_bar": 29,
+                "rationale": "Occasional octave doubling adds warmth without extra hand work."
+              },
+              {
+                "kind": "inner_voice",
+                "start_bar": 59,
+                "end_bar": 87,
+                "rationale": "Thin inner voice implies chord colour under a single easy bass note."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 88,
+                "end_bar": 116,
+                "rationale": "Stepwise walking bass replaces distant chord-root jumps to stay within reach."
+              },
+              {
+                "kind": "countermelody",
+                "start_bar": 117,
+                "end_bar": 145,
+                "rationale": "A light countermelody stands in for the operatic backing vocals."
+              },
+              {
+                "kind": "harmonic_colour",
+                "start_bar": 146,
+                "end_bar": 174,
+                "rationale": "Static low bass implies harmonic motion without physical leaping."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 175,
+                "end_bar": 203,
+                "rationale": "Stepwise walking bass smooths the climax's chord changes to avoid large leaps."
+              },
+              {
+                "kind": "bass_movement",
+                "start_bar": 204,
+                "end_bar": 232,
+                "rationale": "Stepwise walking bass avoids the big root jumps of the wind-down progression."
+              }
+            ],
+            "pedal_bars": [],
+            "notes": "Tightened the melody fold window in the one remaining offending section to eliminate the last right-hand leap."
+          },
+          "hard": 0,
+          "strain": 1,
+          "error": null,
+          "seconds": 15.505172491073608,
+          "fidelity": {
+            "melodic_recall": 1.0,
+            "harmonic_coverage": 1.0,
+            "accompaniment": 1.0
+          },
+          "cost": 0.0
+        }
+      ],
+      "escalated": false,
+      "input_tokens": 16308,
+      "output_tokens": 10973
+    }
+  ]
+}
