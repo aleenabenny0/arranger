@@ -4,16 +4,30 @@ from __future__ import annotations
 
 import json
 import logging
-import urllib.error
 import urllib.parse
-import urllib.request
 from dataclasses import dataclass
 from typing import Protocol
+
+import httpx
 
 from .settings import Settings
 
 logger = logging.getLogger("arranger_api.email")
 USER_AGENT = "arranger-api/0.1"
+
+
+class EmailSendError(RuntimeError):
+    """Raised when an email provider rejects or fails to deliver a message.
+
+    Carries the provider's raw status code and response body (never the
+    request payload, which holds the reset link/token) so callers can log
+    enough detail to diagnose delivery failures without re-deriving them.
+    """
+
+    def __init__(self, message: str, *, status_code: int | None = None, body: str | None = None):
+        super().__init__(message)
+        self.status_code = status_code
+        self.body = body
 
 
 class EmailSender(Protocol):
@@ -55,40 +69,52 @@ class ResendEmailSender:
             f'<p><a href="{reset_link}">Reset password</a></p>'
             f"<p>This link expires in {expires_minutes} minutes.</p>"
         )
-        payload = json.dumps(
-            {
-                "from": self.from_email,
-                "to": [email],
-                "subject": self.subject,
-                "text": text,
-                "html": html,
-            }
-        ).encode("utf-8")
-        request = urllib.request.Request(
-            "https://api.resend.com/emails",
-            data=payload,
-            method="POST",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "User-Agent": USER_AGENT,
-            },
-        )
+        payload = {
+            "from": self.from_email,
+            "to": [email],
+            "subject": self.subject,
+            "text": text,
+            "html": html,
+        }
 
         try:
-            with urllib.request.urlopen(request, timeout=10) as response:
-                if response.status >= 300:
-                    raise RuntimeError(f"Resend returned status {response.status}")
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"Resend returned status {exc.code}: {detail}") from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError(f"Resend request failed: {exc.reason}") from exc
+            with httpx.Client(http2=True, timeout=10) as client:
+                response = client.post(
+                    "https://api.resend.com/emails",
+                    content=json.dumps(payload),
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                        "User-Agent": USER_AGENT,
+                    },
+                )
+        except httpx.RequestError as exc:
+            raise EmailSendError(f"Resend request failed: {exc}") from exc
+
+        if response.status_code >= 300:
+            raise EmailSendError(
+                f"Resend returned status {response.status_code}",
+                status_code=response.status_code,
+                body=response.text,
+            )
 
 
 def build_password_reset_link(settings: Settings, token: str) -> str:
     query = urllib.parse.urlencode({"reset_token": token})
     return f"{settings.app_public_url}/?{query}"
+
+
+def email_diagnostics(settings: Settings) -> dict:
+    """Non-secret email configuration for startup logs and /diagnostics/email.
+
+    Deliberately excludes resend_api_key itself - only whether it is set.
+    """
+    return {
+        "provider": settings.email_provider,
+        "has_resend_key": bool(settings.resend_api_key),
+        "app_public_url": settings.app_public_url,
+        "password_reset_from": settings.password_reset_from,
+    }
 
 
 def build_email_sender(settings: Settings) -> EmailSender:

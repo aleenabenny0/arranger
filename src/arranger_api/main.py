@@ -39,7 +39,7 @@ from arranger.plan import ArrangementPlan, LHPattern, Section
 from arranger.render import last_bar
 
 from .errors import domain_error, not_found
-from .email import EmailSender, build_email_sender, build_password_reset_link
+from .email import EmailSender, build_email_sender, build_password_reset_link, email_diagnostics
 from .observability import configure_logging, log_event, monotonic_ms, request_id
 from .schemas import (
     ArrangeRequest,
@@ -78,6 +78,7 @@ from .settings import load_settings
 settings = load_settings()
 configure_logging(settings.log_level)
 logger = logging.getLogger("arranger_api")
+log_event(logger, "email_config", **email_diagnostics(settings))
 rate_limiter = RateLimiter(settings.rate_limit_requests, settings.rate_limit_window_seconds)
 CSRF_EXEMPT_PATHS = {
     "/auth/register",
@@ -266,6 +267,11 @@ def ready(storage: Storage = Depends(get_storage)) -> dict:
     return {"status": "ready", "service": "arranger-api", "database": "ok"}
 
 
+@app.get("/diagnostics/email")
+def email_diagnostics_endpoint() -> dict:
+    return email_diagnostics(settings)
+
+
 @app.post("/auth/register", response_model=UserResponse)
 def register_endpoint(
     request: RegisterRequest,
@@ -400,12 +406,18 @@ def request_password_reset_endpoint(
             provider=settings.email_provider,
             email_domain=request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
         )
-    except Exception:
-        logger.exception(
-            "password_reset_email_failed provider=%s email_domain=%s",
-            settings.email_provider,
-            request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
+    except Exception as exc:
+        body = getattr(exc, "body", None)
+        log_event(
+            logger,
+            "password_reset_email_failed",
+            provider=settings.email_provider,
+            email_domain=request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
+            error_type=type(exc).__name__,
+            status_code=getattr(exc, "status_code", None),
+            response_body=body[:500] if body else None,
         )
+        logger.debug("password_reset_email_failed_traceback", exc_info=exc)
         if settings.app_env != "production":
             response["email_error"] = "Password reset email could not be sent."
     if settings.app_env != "production":

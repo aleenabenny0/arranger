@@ -19,6 +19,7 @@ except ImportError:
 
 if TestClient is not None:
     import arranger_api.main as api_main
+    from arranger_api.email import EmailSendError
     from arranger_api.main import app, get_email_sender, get_storage
     from arranger_api.storage import Storage, connect, init_db
 
@@ -518,6 +519,66 @@ if TestClient is not None:
         assert reset_response.status_code == 200
         assert reset_response.json() == {"accepted": True}
         assert fake_email.sent == []
+
+
+    def test_password_reset_email_failure_logs_status_and_body_without_leaking_secrets():
+        import json
+        import logging
+
+        conn = connect(":memory:")
+        init_db(conn)
+
+        class FailingEmailSender:
+            def send_password_reset(self, email, reset_link, expires_minutes):
+                raise EmailSendError(
+                    "Resend returned status 403",
+                    status_code=403,
+                    body="error code: 1010",
+                )
+
+        api = client(Storage(conn), FailingEmailSender())
+        register(api, "fail-reset@example.com", "Password12345")
+
+        records = []
+        handler = logging.Handler()
+        handler.emit = lambda record: records.append(record.getMessage())
+        logger = logging.getLogger("arranger_api")
+        logger.addHandler(handler)
+        try:
+            response = api.post(
+                "/auth/password-reset/request",
+                json={"email": "fail-reset@example.com"},
+            )
+        finally:
+            logger.removeHandler(handler)
+
+        assert response.status_code == 200
+        assert response.json()["accepted"] is True
+
+        failure_events = [
+            json.loads(message)
+            for message in records
+            if '"event": "password_reset_email_failed"' in message
+        ]
+        assert failure_events, "expected a password_reset_email_failed log event"
+        event = failure_events[0]
+        assert event["status_code"] == 403
+        assert event["response_body"] == "error code: 1010"
+        assert "reset_link" not in json.dumps(event)
+        assert "reset_token" not in json.dumps(event)
+
+
+    def test_email_diagnostics_endpoint_exposes_non_secret_config():
+        response = client().get("/diagnostics/email")
+        assert response.status_code == 200
+        body = response.json()
+        assert set(body) == {
+            "provider",
+            "has_resend_key",
+            "app_public_url",
+            "password_reset_from",
+        }
+        assert isinstance(body["has_resend_key"], bool)
 
 
 if __name__ == "__main__":
