@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+import time
 from dataclasses import asdict
 from typing import Iterator
 
@@ -37,6 +39,7 @@ from arranger.plan import ArrangementPlan, LHPattern, Section
 from arranger.render import last_bar
 
 from .errors import domain_error, not_found
+from .observability import configure_logging, log_event, monotonic_ms, request_id
 from .schemas import (
     ArrangeRequest,
     ArrangeResponse,
@@ -72,6 +75,8 @@ from .settings import load_settings
 
 
 settings = load_settings()
+configure_logging(settings.log_level)
+logger = logging.getLogger("arranger_api")
 rate_limiter = RateLimiter(settings.rate_limit_requests, settings.rate_limit_window_seconds)
 CSRF_EXEMPT_PATHS = {
     "/auth/register",
@@ -125,6 +130,29 @@ async def security_middleware(request: Request, call_next):
                 )
 
     return await call_next(request)
+
+
+@app.middleware("http")
+async def request_logging_middleware(request: Request, call_next):
+    start = time.monotonic()
+    rid = request_id(request)
+    response = None
+    try:
+        response = await call_next(request)
+        return response
+    finally:
+        log_event(
+            logger,
+            "http_request",
+            request_id=rid,
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code if response else 500,
+            duration_ms=monotonic_ms(start),
+            client_ip=client_ip(request),
+        )
+        if response is not None:
+            response.headers["X-Request-ID"] = rid
 
 
 def get_storage() -> Iterator[Storage]:

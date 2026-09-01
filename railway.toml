@@ -10,6 +10,7 @@ restartPolicyMaxRetries = 3
 
 [variables]
 APP_ENV = "production"
+LOG_LEVEL = "INFO"
 HOST = "0.0.0.0"
 RELOAD = "false"
 COOKIE_SECURE = "true"

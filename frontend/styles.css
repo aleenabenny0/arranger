@@ -135,6 +135,18 @@ button:hover {
   font-size: 16px;
 }
 
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.panel-heading button {
+  min-height: 30px;
+  padding: 0 9px;
+}
+
 .dropzone {
   display: grid;
   gap: 4px;
@@ -212,6 +224,54 @@ input[type="file"] {
 
 .button-row button {
   flex: 1;
+}
+
+.saved-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.saved-tab {
+  min-width: 0;
+  padding: 0 6px;
+  font-size: 12px;
+}
+
+.saved-tab.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
+}
+
+.saved-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.saved-item {
+  display: grid;
+  gap: 4px;
+  min-height: 54px;
+  height: auto;
+  padding: 9px;
+  text-align: left;
+  align-content: center;
+}
+
+.saved-item strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-item span,
+.empty-state {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 label {
@@ -316,6 +376,36 @@ textarea {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
   gap: 8px;
+}
+
+.score-viz {
+  position: relative;
+  min-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    linear-gradient(to right, rgba(35, 100, 170, 0.08) 1px, transparent 1px),
+    linear-gradient(to top, rgba(29, 37, 40, 0.07) 1px, transparent 1px),
+    #fff;
+  background-size: 8.333% 100%, 100% 24px;
+}
+
+.note-marker {
+  position: absolute;
+  min-width: 4px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent);
+  box-shadow: 0 1px 2px rgba(29, 37, 40, 0.18);
+}
+
+.note-marker.staff-1 {
+  background: var(--good);
+}
+
+.note-marker.staff-2 {
+  background: var(--bad);
 }
 
 .bar-tile {

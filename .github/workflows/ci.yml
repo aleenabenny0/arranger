@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Unit and API tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[api]"
+
+      - name: Run backend and architecture checks
+        run: |
+          python tests/test_api.py
+          python tests/test_storage.py
+          python tests/test_settings.py
+          python tests/test_security.py
+          python tests/test_architecture.py
+          python tests/test_constraints.py
+          python tests/test_render.py
+          python tests/test_agent.py
+
+      - name: Check frontend JavaScript syntax
+        run: node --check frontend/app.js
+
+  postgres-integration:
+    name: Postgres integration
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: arranger_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[api]"
+
+      - name: Run real Postgres storage flow
+        env:
+          POSTGRES_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/arranger_test
+        run: python tests/test_postgres_integration.py
+
+  docker-build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    needs:
+      - test
+      - postgres-integration
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build deployment image
+        run: docker build -t arranger-ci .

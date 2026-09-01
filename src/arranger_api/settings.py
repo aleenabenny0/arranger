@@ -31,6 +31,7 @@ def env_list(name: str, default: list[str]) -> list[str]:
 @dataclass(frozen=True)
 class Settings:
     app_env: str
+    log_level: str
     host: str
     port: int
     reload: bool
@@ -52,6 +53,7 @@ def load_settings() -> Settings:
     default_frontend = cwd_frontend if cwd_frontend.exists() else source_root / "frontend"
     return Settings(
         app_env=app_env,
+        log_level=os.environ.get("LOG_LEVEL", "INFO"),
         host=os.environ.get("HOST", "127.0.0.1"),
         port=env_int("PORT", 8000),
         reload=env_bool("RELOAD", app_env != "production"),

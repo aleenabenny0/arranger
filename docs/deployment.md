@@ -66,6 +66,14 @@ If `DATABASE_URL` is present and starts with `postgres://` or `postgresql://`,
 the API opens Postgres and creates the required tables/indexes at startup.
 Without `DATABASE_URL`, the API falls back to SQLite for local development.
 
+## CI/CD
+
+GitHub Actions runs on pull requests and pushes to `main`. The workflow checks
+the backend tests, frontend JavaScript syntax, a temporary Postgres integration
+test, and the Docker build. Railway should deploy from `main` after CI passes.
+
+See `docs/version-control.md` for branch, pull request, tag, and release flow.
+
 ## Real Postgres Integration Test
 
 Use a disposable Postgres database or a Railway Postgres database that is safe
@@ -99,6 +107,7 @@ manual copy is needed. If it does not:
 ## Environment Variables
 
 - `APP_ENV`: `development` or `production`.
+- `LOG_LEVEL`: Python log level, default `INFO`.
 - `HOST`: bind host. Use `0.0.0.0` in containers.
 - `PORT`: bind port. Cloud hosts often set this automatically.
 - `RELOAD`: set `false` in production.

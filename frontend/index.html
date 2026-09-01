@@ -65,6 +65,19 @@
           </section>
 
           <section class="panel">
+            <div class="panel-heading">
+              <h2>Saved Work</h2>
+              <button id="refreshSavedBtn" type="button">Refresh</button>
+            </div>
+            <div class="saved-tabs">
+              <button class="saved-tab active" data-saved="scores" type="button">Scores</button>
+              <button class="saved-tab" data-saved="plans" type="button">Plans</button>
+              <button class="saved-tab" data-saved="arrangements" type="button">Arrangements</button>
+            </div>
+            <div id="savedList" class="saved-list"></div>
+          </section>
+
+          <section class="panel">
             <h2>Profile</h2>
             <label class="dropzone compact" for="profileFile">
               <span>Upload profile JSON</span>
@@ -102,6 +115,7 @@
         <section class="mainstage">
           <div class="tabs" role="tablist" aria-label="Workspace views">
             <button class="tab active" data-view="plan" type="button">Plan</button>
+            <button class="tab" data-view="score" type="button">Score</button>
             <button class="tab" data-view="timeline" type="button">Timeline</button>
             <button class="tab" data-view="json" type="button">JSON</button>
           </div>
@@ -115,6 +129,16 @@
               <button id="addSectionBtn" type="button">Add Section</button>
             </div>
             <div id="sectionsList" class="sections-list"></div>
+          </section>
+
+          <section id="scoreView" class="view">
+            <div class="section-header">
+              <div>
+                <h2>Score Sketch</h2>
+                <p>Pitch and timing overview for the current source or arrangement.</p>
+              </div>
+            </div>
+            <div id="scoreViz" class="score-viz"></div>
           </section>
 
           <section id="timelineView" class="view">

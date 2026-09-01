@@ -124,6 +124,8 @@ Avoid these:
 2. Replace greedy hand assignment behind the existing `assign_hands` boundary.
 3. Move rate limiting to Redis or the hosting edge before multi-replica scale.
 4. Add an email provider for production password reset delivery.
-5. Add MusicXML/PDF artifact records once export exists.
+5. Add object storage for generated MIDI/MusicXML/PDF artifacts once export exists.
 6. Convert the repair loop to LangGraph only after the use cases and artifacts
    are stable.
+
+See `docs/artifact-storage.md` for the current artifact storage decision.

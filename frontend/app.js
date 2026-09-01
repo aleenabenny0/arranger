@@ -66,6 +66,8 @@ let state = {
   verdictSource: "local",
   backendStatus: "Local preview mode",
   saved: null,
+  savedRecords: { scores: [], plans: [], arrangements: [] },
+  savedView: "scores",
   storageStatus: "Nothing saved yet",
   user: null,
   authStatus: "Sign in to save work.",
@@ -86,6 +88,8 @@ const els = {
   loginBtn: document.querySelector("#loginBtn"),
   registerBtn: document.querySelector("#registerBtn"),
   resetPasswordBtn: document.querySelector("#resetPasswordBtn"),
+  refreshSavedBtn: document.querySelector("#refreshSavedBtn"),
+  savedList: document.querySelector("#savedList"),
   logoutBtn: document.querySelector("#logoutBtn"),
   signedOutPanel: document.querySelector("#signedOutPanel"),
   signedInPanel: document.querySelector("#signedInPanel"),
@@ -107,6 +111,7 @@ const els = {
   maxLeapRate: document.querySelector("#maxLeapRate"),
   sectionsList: document.querySelector("#sectionsList"),
   addSectionBtn: document.querySelector("#addSectionBtn"),
+  scoreViz: document.querySelector("#scoreViz"),
   timeline: document.querySelector("#timeline"),
   scoreJson: document.querySelector("#scoreJson"),
   planJson: document.querySelector("#planJson"),
@@ -498,6 +503,39 @@ function renderStorageStatus() {
   els.storageStatus.textContent = state.storageStatus;
 }
 
+function formatDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
+function renderSavedList() {
+  els.savedList.innerHTML = "";
+  if (!state.user) {
+    els.savedList.innerHTML = `<div class="empty-state">Sign in to load saved work.</div>`;
+    return;
+  }
+
+  const records = state.savedRecords[state.savedView] || [];
+  if (!records.length) {
+    els.savedList.innerHTML = `<div class="empty-state">No saved ${state.savedView} yet.</div>`;
+    return;
+  }
+
+  records.slice(0, 12).forEach((record) => {
+    const item = document.createElement("button");
+    item.className = "saved-item";
+    item.type = "button";
+    const title = record.title || record.name || record.payload?.title || record.payload?.name || record.id;
+    const meta = state.savedView === "arrangements"
+      ? `${record.status} - ${record.n_hard} hard - ${formatDate(record.created_at)}`
+      : formatDate(record.updated_at || record.created_at);
+    item.innerHTML = `<strong>${title}</strong><span>${meta}</span>`;
+    item.addEventListener("click", () => loadSavedRecord(state.savedView, record));
+    els.savedList.appendChild(item);
+  });
+}
+
 function renderAuth() {
   els.signedOutPanel.classList.toggle("hidden", Boolean(state.user));
   els.signedInPanel.classList.toggle("hidden", !state.user);
@@ -522,6 +560,32 @@ function renderPlanHealth() {
     item.className = "health-item";
     item.innerHTML = `<strong>Needs attention</strong><p>${problem}</p>`;
     els.planHealth.appendChild(item);
+  });
+}
+
+function renderScoreViz() {
+  const score = state.arranged || state.score;
+  const notes = score.notes || [];
+  els.scoreViz.innerHTML = "";
+  if (!notes.length) {
+    els.scoreViz.innerHTML = `<div class="empty-state">No notes to show.</div>`;
+    return;
+  }
+
+  const minPitch = Math.min(...notes.map((note) => note.pitch));
+  const maxPitch = Math.max(...notes.map((note) => note.pitch));
+  const end = Math.max(...notes.map((note) => offset(note)));
+  const pitchRange = Math.max(1, maxPitch - minPitch);
+  const safeEnd = Math.max(1, end);
+
+  notes.slice(0, 400).forEach((note) => {
+    const marker = document.createElement("div");
+    marker.className = `note-marker staff-${note.staff || 0}`;
+    marker.title = `${pitchName(note.pitch)} at ${note.onset}s`;
+    marker.style.left = `${(Number(note.onset) / safeEnd) * 100}%`;
+    marker.style.width = `${Math.max(1.2, (Number(note.duration) / safeEnd) * 100)}%`;
+    marker.style.bottom = `${((note.pitch - minPitch) / pitchRange) * 88 + 4}%`;
+    els.scoreViz.appendChild(marker);
   });
 }
 
@@ -574,6 +638,7 @@ function refresh() {
   renderAuth();
   renderStorageStatus();
   renderPlanHealth();
+  renderScoreViz();
   renderTimeline();
   renderJson();
 }
@@ -691,6 +756,37 @@ async function postJson(path, payload) {
   return body;
 }
 
+async function getJson(path) {
+  const baseUrl = apiBaseUrl();
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: "GET",
+    credentials: "include",
+    headers: jsonHeaders(false),
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    const detail = body.detail?.detail || body.detail || "Backend request failed.";
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return body;
+}
+
+async function putJson(path, payload) {
+  const baseUrl = apiBaseUrl();
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: jsonHeaders(true),
+    body: JSON.stringify(payload),
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    const detail = body.detail?.detail || body.detail || "Backend request failed.";
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return body;
+}
+
 async function authRequest(path, payload = null) {
   const baseUrl = apiBaseUrl();
   const options = {
@@ -725,9 +821,24 @@ async function loginOrRegister(path) {
     state.authStatus = "Signed in";
     els.authPassword.value = "";
     renderAuth();
+    await loadSavedRecords();
   } catch (error) {
     state.authStatus = error.message;
     renderAuth();
+  }
+}
+
+async function bootstrapAuth() {
+  try {
+    const body = await authRequest("/auth/me");
+    state.user = body.user;
+    state.authStatus = "Signed in";
+    renderAuth();
+    await loadSavedRecords();
+  } catch {
+    state.user = null;
+    renderAuth();
+    renderSavedList();
   }
 }
 
@@ -737,10 +848,12 @@ async function logout() {
   } finally {
     state.user = null;
     state.saved = null;
+    state.savedRecords = { scores: [], plans: [], arrangements: [] };
     state.storageStatus = "Nothing saved yet";
     state.authStatus = "Signed out";
     renderAuth();
     renderStorageStatus();
+    renderSavedList();
   }
 }
 
@@ -774,23 +887,97 @@ async function saveWork() {
   renderStorageStatus();
 
   try {
-    const profile = await postJson("/profiles", state.profile);
-    const score = await postJson("/scores", state.score);
-    const plan = await postJson("/plans", {
-      score_id: score.record.id,
-      plan: state.plan,
-    });
+    const profile = state.saved?.profile_id
+      ? await putJson(`/profiles/${state.saved.profile_id}`, state.profile)
+      : await postJson("/profiles", state.profile);
+    const score = state.saved?.score_id
+      ? { record: await getJson(`/scores/${state.saved.score_id}`).then((body) => body.record) }
+      : await postJson("/scores", state.score);
+    const plan = state.saved?.plan_id
+      ? await putJson(`/plans/${state.saved.plan_id}`, state.plan)
+      : await postJson("/plans", {
+          score_id: score.record.id,
+          plan: state.plan,
+        });
     state.saved = {
       profile_id: profile.record.id,
       score_id: score.record.id,
       plan_id: plan.record.id,
     };
     state.storageStatus = `Saved score ${state.saved.score_id}`;
+    await loadSavedRecords();
     renderStorageStatus();
     renderJson();
   } catch (error) {
     state.saved = null;
     state.storageStatus = `Save failed: ${error.message}`;
+    renderStorageStatus();
+  }
+}
+
+async function loadSavedRecords() {
+  if (!state.user) return;
+  try {
+    const [scores, plans, arrangements] = await Promise.all([
+      getJson("/scores"),
+      getJson("/plans"),
+      getJson("/arrangements"),
+    ]);
+    state.savedRecords = {
+      scores: scores.records,
+      plans: plans.records,
+      arrangements: arrangements.records,
+    };
+    renderSavedList();
+  } catch (error) {
+    state.storageStatus = `Load saved work failed: ${error.message}`;
+    renderStorageStatus();
+  }
+}
+
+async function loadSavedRecord(kind, record) {
+  try {
+    if (kind === "scores") {
+      state.score = clone(record.payload);
+      state.saved = { score_id: record.id, profile_id: null, plan_id: null };
+      state.storageStatus = `Loaded score ${record.id}`;
+    }
+    if (kind === "plans") {
+      const score = await getJson(`/scores/${record.score_id}`);
+      state.score = clone(score.record.payload);
+      state.plan = clone(record.payload);
+      state.saved = { score_id: record.score_id, profile_id: null, plan_id: record.id };
+      state.storageStatus = `Loaded plan ${record.id}`;
+    }
+    if (kind === "arrangements") {
+      const [score, plan, profile] = await Promise.all([
+        getJson(`/scores/${record.score_id}`),
+        getJson(`/plans/${record.plan_id}`),
+        getJson(`/profiles/${record.profile_id}`),
+      ]);
+      state.score = clone(score.record.payload);
+      state.plan = clone(plan.record.payload);
+      state.profile = clone(profile.record.payload);
+      state.arranged = clone(record.arranged_score);
+      state.verdict = clone(record.verdict);
+      state.fidelity = clone(record.fidelity);
+      state.verdictSource = "backend";
+      state.backendStatus = "Loaded previous arrangement";
+      state.saved = {
+        score_id: record.score_id,
+        profile_id: record.profile_id,
+        plan_id: record.plan_id,
+      };
+      state.storageStatus = `Loaded arrangement ${record.id}`;
+      renderProfileInputs();
+      refresh();
+      return;
+    }
+    state.verdictSource = "local";
+    renderProfileInputs();
+    refresh();
+  } catch (error) {
+    state.storageStatus = `Load failed: ${error.message}`;
     renderStorageStatus();
   }
 }
@@ -836,6 +1023,7 @@ els.exportVerdictBtn.addEventListener("click", () => downloadJson("verdict.json"
 }));
 els.runBackendBtn.addEventListener("click", runBackend);
 els.saveWorkBtn.addEventListener("click", saveWork);
+els.refreshSavedBtn.addEventListener("click", loadSavedRecords);
 els.loginBtn.addEventListener("click", () => loginOrRegister("/auth/login"));
 els.registerBtn.addEventListener("click", () => loginOrRegister("/auth/register"));
 els.resetPasswordBtn.addEventListener("click", resetPassword);
@@ -905,6 +1093,15 @@ document.querySelectorAll(".tab").forEach((tab) => {
   });
 });
 
+document.querySelectorAll(".saved-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".saved-tab").forEach((item) => item.classList.remove("active"));
+    tab.classList.add("active");
+    state.savedView = tab.dataset.saved;
+    renderSavedList();
+  });
+});
+
 els.scoreJson.addEventListener("change", () => {
   state.score = JSON.parse(els.scoreJson.value);
   markUnsaved();
@@ -922,3 +1119,4 @@ els.apiUrl.value = window.location.protocol.startsWith("http")
   : "http://127.0.0.1:8000";
 renderProfileInputs();
 refresh();
+bootstrapAuth();

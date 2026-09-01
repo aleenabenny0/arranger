@@ -108,6 +108,7 @@ not expose raw tokens in the response.
 ## Environment
 
 - `APP_ENV`: `development` by default. Use `production` in cloud hosting.
+- `LOG_LEVEL`: Python log level, default `INFO`.
 - `HOST`: bind host, default `127.0.0.1`.
 - `PORT`: bind port, default `8000`. Cloud hosts usually provide this.
 - `RELOAD`: enables Uvicorn reload. Defaults off in production.

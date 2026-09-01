@@ -25,9 +25,16 @@ def test_port_and_cookie_secure_come_from_environment():
         assert settings.port == 9999
         assert settings.cookie_secure
         assert not settings.reload
+        assert settings.log_level == "DEBUG"
 
     with_env(
-        {"APP_ENV": "production", "PORT": "9999", "COOKIE_SECURE": "true", "RELOAD": "false"},
+        {
+            "APP_ENV": "production",
+            "PORT": "9999",
+            "COOKIE_SECURE": "true",
+            "RELOAD": "false",
+            "LOG_LEVEL": "DEBUG",
+        },
         check,
     )
 
