@@ -504,6 +504,22 @@ if TestClient is not None:
             api_main.settings = old_settings
 
 
+    def test_password_reset_unknown_email_does_not_send_email():
+        conn = connect(":memory:")
+        init_db(conn)
+        fake_email = FakeEmailSender()
+        api = client(Storage(conn), fake_email)
+
+        reset_response = api.post(
+            "/auth/password-reset/request",
+            json={"email": "missing@example.com"},
+        )
+
+        assert reset_response.status_code == 200
+        assert reset_response.json() == {"accepted": True}
+        assert fake_email.sent == []
+
+
 if __name__ == "__main__":
     if TestClient is None:
         print("SKIP  FastAPI is not installed; run: pip install -e .[api]")

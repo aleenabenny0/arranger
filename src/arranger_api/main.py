@@ -364,6 +364,14 @@ def request_password_reset_endpoint(
     user = storage.get_user_with_password(request.email)
     response = {"accepted": True}
     if user is None:
+        log_event(
+            logger,
+            "password_reset_request",
+            user_found=False,
+            email_domain=request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
+            provider=settings.email_provider,
+            resend_key_configured=bool(settings.resend_api_key),
+        )
         return response
     token = new_token()
     storage.create_password_reset_token(
@@ -372,14 +380,32 @@ def request_password_reset_endpoint(
         settings.password_reset_minutes,
     )
     reset_link = build_password_reset_link(settings, token)
+    log_event(
+        logger,
+        "password_reset_request",
+        user_found=True,
+        email_domain=request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
+        provider=settings.email_provider,
+        resend_key_configured=bool(settings.resend_api_key),
+    )
     try:
         email_sender.send_password_reset(
             request.email,
             reset_link,
             settings.password_reset_minutes,
         )
+        log_event(
+            logger,
+            "password_reset_email_sent",
+            provider=settings.email_provider,
+            email_domain=request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
+        )
     except Exception:
-        logger.exception("password_reset_email_failed")
+        logger.exception(
+            "password_reset_email_failed provider=%s email_domain=%s",
+            settings.email_provider,
+            request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
+        )
         if settings.app_env != "production":
             response["email_error"] = "Password reset email could not be sent."
     if settings.app_env != "production":
