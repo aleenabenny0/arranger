@@ -42,6 +42,10 @@ class Storage:
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
 
+    def ping(self) -> bool:
+        self.conn.execute("SELECT 1").fetchone()
+        return True
+
     # --- users and sessions --------------------------------------------
 
     def create_user(self, email: str, password_hash: str, display_name: str) -> dict:
@@ -267,12 +271,17 @@ class Storage:
         self.conn.commit()
         return self.get_profile(user_id, record_id)
 
-    def list_profiles(self, user_id: str) -> list[dict]:
+    def list_profiles(self, user_id: str, limit: int = 25, offset: int = 0) -> list[dict]:
         return [
             decode_row(row)
             for row in self.conn.execute(
-                "SELECT * FROM profiles WHERE user_id = ? ORDER BY created_at DESC",
-                (user_id,),
+                """
+                SELECT * FROM profiles
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+                """,
+                (user_id, limit, offset),
             )
         ]
 
@@ -327,12 +336,17 @@ class Storage:
         self.conn.commit()
         return self.get_score(user_id, record_id)
 
-    def list_scores(self, user_id: str) -> list[dict]:
+    def list_scores(self, user_id: str, limit: int = 25, offset: int = 0) -> list[dict]:
         return [
             decode_row(row)
             for row in self.conn.execute(
-                "SELECT * FROM scores WHERE user_id = ? ORDER BY created_at DESC",
-                (user_id,),
+                """
+                SELECT * FROM scores
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+                """,
+                (user_id, limit, offset),
             )
         ]
 
@@ -370,20 +384,32 @@ class Storage:
         self.conn.commit()
         return self.get_plan(user_id, record_id)
 
-    def list_plans(self, user_id: str, score_id: str | None = None) -> list[dict]:
+    def list_plans(
+        self,
+        user_id: str,
+        score_id: str | None = None,
+        limit: int = 25,
+        offset: int = 0,
+    ) -> list[dict]:
         if score_id:
             rows = self.conn.execute(
                 """
                 SELECT * FROM plans
                 WHERE user_id = ? AND score_id = ?
                 ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
                 """,
-                (user_id, score_id),
+                (user_id, score_id, limit, offset),
             )
         else:
             rows = self.conn.execute(
-                "SELECT * FROM plans WHERE user_id = ? ORDER BY created_at DESC",
-                (user_id,),
+                """
+                SELECT * FROM plans
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+                """,
+                (user_id, limit, offset),
             )
         return [decode_row(row) for row in rows]
 
@@ -455,7 +481,7 @@ class Storage:
         self.conn.commit()
         return self.get_arrangement(user_id, record_id)
 
-    def list_arrangements(self, user_id: str) -> list[dict]:
+    def list_arrangements(self, user_id: str, limit: int = 25, offset: int = 0) -> list[dict]:
         return [
             decode_row(row)
             for row in self.conn.execute(
@@ -463,8 +489,9 @@ class Storage:
                 SELECT * FROM arrangements
                 WHERE user_id = ?
                 ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
                 """,
-                (user_id,),
+                (user_id, limit, offset),
             )
         ]
 
@@ -506,12 +533,17 @@ class Storage:
         self.conn.commit()
         return self.get_run(user_id, record_id)
 
-    def list_runs(self, user_id: str) -> list[dict]:
+    def list_runs(self, user_id: str, limit: int = 25, offset: int = 0) -> list[dict]:
         return [
             decode_row(row)
             for row in self.conn.execute(
-                "SELECT * FROM runs WHERE user_id = ? ORDER BY created_at DESC",
-                (user_id,),
+                """
+                SELECT * FROM runs
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+                """,
+                (user_id, limit, offset),
             )
         ]
 

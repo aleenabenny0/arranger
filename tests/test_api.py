@@ -96,11 +96,57 @@ if TestClient is not None:
         assert response.status_code == 200
         return response.json()["user"]
 
+    def create_workspace(api):
+        headers = csrf_headers(api)
+        profile = api.post("/profiles", json=PROFILE, headers=headers).json()["record"]
+        score = api.post("/scores", json=SCORE, headers=headers).json()["record"]
+        plan = api.post(
+            "/plans",
+            json={"score_id": score["id"], "plan": PLAN},
+            headers=headers,
+        ).json()["record"]
+        arrangement = api.post(
+            "/arrangements/render-and-verify",
+            json={
+                "score_id": score["id"],
+                "profile_id": profile["id"],
+                "plan_id": plan["id"],
+            },
+            headers=headers,
+        ).json()["record"]
+        run = api.post(
+            "/runs/dry-run",
+            json={"score_id": score["id"], "profile_id": profile["id"], "max_attempts": 1},
+            headers=headers,
+        ).json()["record"]
+        return {
+            "profile": profile,
+            "score": score,
+            "plan": plan,
+            "arrangement": arrangement,
+            "run": run,
+        }
+
     def test_health():
         response = client().get("/health")
         assert response.status_code == 200
         assert response.json()["status"] == "ok"
         assert response.headers["x-request-id"]
+
+
+    def test_ready_checks_database():
+        conn = connect(":memory:")
+        init_db(conn)
+        response = client(Storage(conn)).get("/ready")
+        assert response.status_code == 200
+        assert response.json()["database"] == "ok"
+
+
+    def test_security_headers_are_set():
+        response = client().get("/health")
+        assert response.headers["x-content-type-options"] == "nosniff"
+        assert response.headers["x-frame-options"] == "DENY"
+        assert "default-src 'self'" in response.headers["content-security-policy"]
 
     def test_frontend_is_served_from_root():
         response = client().get("/")
@@ -220,6 +266,36 @@ if TestClient is not None:
         assert response.status_code == 401
 
 
+    def test_large_request_is_rejected():
+        api = client()
+        response = api.post(
+            "/verify",
+            content="{}",
+            headers={"content-type": "application/json", "content-length": "1000001"},
+        )
+        assert response.status_code == 413
+
+
+    def test_list_endpoints_are_paginated():
+        conn = connect(":memory:")
+        init_db(conn)
+        api = client(Storage(conn))
+        register(api, "pagination@example.com")
+        headers = csrf_headers(api)
+        for index in range(3):
+            score = dict(SCORE, title=f"score {index}")
+            response = api.post("/scores", json=score, headers=headers)
+            assert response.status_code == 200
+
+        page = api.get("/scores?limit=2&offset=0")
+        assert page.status_code == 200
+        assert len(page.json()["records"]) == 2
+
+        next_page = api.get("/scores?limit=2&offset=2")
+        assert next_page.status_code == 200
+        assert len(next_page.json()["records"]) == 1
+
+
     def test_users_cannot_access_each_others_scores():
         conn = connect(":memory:")
         init_db(conn)
@@ -235,6 +311,76 @@ if TestClient is not None:
         register(other, "other@example.com")
         blocked = other.get(f"/scores/{score_id}")
         assert blocked.status_code == 404
+
+
+    def test_users_cannot_access_each_others_saved_resources():
+        conn = connect(":memory:")
+        init_db(conn)
+        storage = Storage(conn)
+        owner = client(storage)
+        other = client(storage)
+
+        register(owner, "owner-all@example.com")
+        records = create_workspace(owner)
+        register(other, "other-all@example.com")
+        other_headers = csrf_headers(other)
+
+        blocked_reads = [
+            other.get(f"/profiles/{records['profile']['id']}"),
+            other.get(f"/scores/{records['score']['id']}"),
+            other.get(f"/plans/{records['plan']['id']}"),
+            other.get(f"/arrangements/{records['arrangement']['id']}"),
+            other.get(f"/arrangements/{records['arrangement']['id']}/verdict"),
+            other.get(f"/runs/{records['run']['id']}"),
+        ]
+        assert all(response.status_code == 404 for response in blocked_reads)
+
+        blocked_writes = [
+            other.put(f"/profiles/{records['profile']['id']}", json=PROFILE, headers=other_headers),
+            other.put(f"/plans/{records['plan']['id']}", json=PLAN, headers=other_headers),
+            other.delete(f"/profiles/{records['profile']['id']}", headers=other_headers),
+            other.delete(f"/scores/{records['score']['id']}", headers=other_headers),
+            other.delete(f"/plans/{records['plan']['id']}", headers=other_headers),
+        ]
+        assert all(response.status_code == 404 for response in blocked_writes)
+
+
+    def test_users_cannot_mix_foreign_relationship_ids():
+        conn = connect(":memory:")
+        init_db(conn)
+        storage = Storage(conn)
+        owner = client(storage)
+        other = client(storage)
+
+        register(owner, "relationship-owner@example.com")
+        records = create_workspace(owner)
+        register(other, "relationship-other@example.com")
+        headers = csrf_headers(other)
+
+        create_plan = other.post(
+            "/plans",
+            json={"score_id": records["score"]["id"], "plan": PLAN},
+            headers=headers,
+        )
+        assert create_plan.status_code == 404
+
+        create_arrangement = other.post(
+            "/arrangements/render-and-verify",
+            json={
+                "score_id": records["score"]["id"],
+                "profile_id": records["profile"]["id"],
+                "plan_id": records["plan"]["id"],
+            },
+            headers=headers,
+        )
+        assert create_arrangement.status_code == 404
+
+        create_run = other.post(
+            "/runs/dry-run",
+            json={"score_id": records["score"]["id"], "profile_id": records["profile"]["id"]},
+            headers=headers,
+        )
+        assert create_run.status_code == 404
 
 
     def test_protected_write_requires_csrf_token():

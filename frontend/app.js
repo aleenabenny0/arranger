@@ -919,9 +919,9 @@ async function loadSavedRecords() {
   if (!state.user) return;
   try {
     const [scores, plans, arrangements] = await Promise.all([
-      getJson("/scores"),
-      getJson("/plans"),
-      getJson("/arrangements"),
+      getJson("/scores?limit=25&offset=0"),
+      getJson("/plans?limit=25&offset=0"),
+      getJson("/arrangements?limit=25&offset=0"),
     ]);
     state.savedRecords = {
       scores: scores.records,

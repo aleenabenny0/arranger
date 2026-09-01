@@ -60,6 +60,7 @@ CSRF_PROTECTION=true
 MAX_SESSIONS_PER_USER=5
 RATE_LIMIT_REQUESTS=120
 RATE_LIMIT_WINDOW_SECONDS=60
+MAX_REQUEST_BYTES=1000000
 ```
 
 If `DATABASE_URL` is present and starts with `postgres://` or `postgresql://`,
@@ -103,6 +104,7 @@ manual copy is needed. If it does not:
 6. Add `DATABASE_URL` with that connection string.
 7. Redeploy the web service.
 8. Confirm `GET /health` returns `{"status":"ok","service":"arranger-api"}`.
+9. Confirm `GET /ready` returns `{"status":"ready","service":"arranger-api","database":"ok"}`.
 
 ## Environment Variables
 
@@ -117,6 +119,7 @@ manual copy is needed. If it does not:
 - `CSRF_PROTECTION`: require CSRF cookie/header matches for unsafe cookie requests.
 - `RATE_LIMIT_REQUESTS`: per-window limit for auth/write requests.
 - `RATE_LIMIT_WINDOW_SECONDS`: size of the rate-limit window.
+- `MAX_REQUEST_BYTES`: maximum accepted request body size in bytes.
 - `PASSWORD_RESET_MINUTES`: password reset token lifetime.
 - `FRONTEND_ORIGINS`: comma-separated CORS origins.
 - `FRONTEND_DIR`: static frontend directory.

@@ -31,6 +31,7 @@ http://127.0.0.1:8000
 Stateless:
 
 - `GET /health`
+- `GET /ready`
 - `POST /verify`
 - `POST /render`
 - `POST /render-and-verify`
@@ -105,6 +106,10 @@ and `X-CSRF-Token` header. Auth and write traffic is rate-limited in process.
 Password reset tokens are stored hashed and expire; production reset requests do
 not expose raw tokens in the response.
 
+Responses include defensive browser headers, including a restrictive content
+security policy. Requests with a `Content-Length` larger than
+`MAX_REQUEST_BYTES` are rejected before route handling.
+
 ## Environment
 
 - `APP_ENV`: `development` by default. Use `production` in cloud hosting.
@@ -118,6 +123,7 @@ not expose raw tokens in the response.
 - `CSRF_PROTECTION`: enables CSRF checks, default `true`.
 - `RATE_LIMIT_REQUESTS`: per-window request limit, default `120`.
 - `RATE_LIMIT_WINDOW_SECONDS`: rate-limit window, default `60`.
+- `MAX_REQUEST_BYTES`: maximum accepted request body size, default `1000000`.
 - `PASSWORD_RESET_MINUTES`: reset token lifetime, default `30`.
 - `FRONTEND_ORIGINS`: comma-separated CORS origins.
 - `FRONTEND_DIR`: path to the static frontend, default `frontend/`.

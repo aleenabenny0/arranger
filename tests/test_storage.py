@@ -127,6 +127,19 @@ def test_users_cannot_read_each_others_scores():
     assert storage.get_score(other_id, score["id"]) is None
 
 
+def test_score_lists_support_limit_and_offset():
+    storage = make_storage()
+    user_id = make_user(storage, "pages@example.com")
+    for index in range(3):
+        storage.create_score(user_id, dict(SCORE, title=f"score {index}"))
+
+    first_page = storage.list_scores(user_id, limit=2, offset=0)
+    second_page = storage.list_scores(user_id, limit=2, offset=2)
+
+    assert len(first_page) == 2
+    assert len(second_page) == 1
+
+
 def test_migrations_are_recorded():
     conn = connect(":memory:")
     init_db(conn)

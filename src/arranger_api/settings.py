@@ -41,6 +41,7 @@ class Settings:
     csrf_protection: bool
     rate_limit_requests: int
     rate_limit_window_seconds: int
+    max_request_bytes: int
     password_reset_minutes: int
     cors_origins: list[str]
     frontend_dir: Path
@@ -63,6 +64,7 @@ def load_settings() -> Settings:
         csrf_protection=env_bool("CSRF_PROTECTION", True),
         rate_limit_requests=env_int("RATE_LIMIT_REQUESTS", 120),
         rate_limit_window_seconds=env_int("RATE_LIMIT_WINDOW_SECONDS", 60),
+        max_request_bytes=env_int("MAX_REQUEST_BYTES", 1_000_000),
         password_reset_minutes=env_int("PASSWORD_RESET_MINUTES", 30),
         cors_origins=env_list(
             "FRONTEND_ORIGINS",

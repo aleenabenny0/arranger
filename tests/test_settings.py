@@ -65,6 +65,7 @@ def test_security_settings_come_from_environment():
         assert not settings.csrf_protection
         assert settings.rate_limit_requests == 10
         assert settings.rate_limit_window_seconds == 5
+        assert settings.max_request_bytes == 2048
         assert settings.password_reset_minutes == 15
 
     with_env(
@@ -73,6 +74,7 @@ def test_security_settings_come_from_environment():
             "CSRF_PROTECTION": "false",
             "RATE_LIMIT_REQUESTS": "10",
             "RATE_LIMIT_WINDOW_SECONDS": "5",
+            "MAX_REQUEST_BYTES": "2048",
             "PASSWORD_RESET_MINUTES": "15",
         },
         check,

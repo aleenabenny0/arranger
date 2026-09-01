@@ -7,7 +7,7 @@ import time
 from dataclasses import asdict
 from typing import Iterator
 
-from fastapi import Cookie, Depends, FastAPI, HTTPException, Request, Response
+from fastapi import Cookie, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -84,6 +84,19 @@ CSRF_EXEMPT_PATHS = {
     "/auth/password-reset/request",
     "/auth/password-reset/confirm",
 }
+SECURITY_HEADERS = {
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "same-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "X-Frame-Options": "DENY",
+}
+
+
+def add_security_headers(response: Response) -> Response:
+    for key, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(key, value)
+    return response
 
 
 app = FastAPI(
@@ -103,11 +116,32 @@ app.add_middleware(
 
 @app.middleware("http")
 async def security_middleware(request: Request, call_next):
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            too_large = int(content_length) > settings.max_request_bytes
+        except ValueError:
+            too_large = False
+        if too_large:
+            return add_security_headers(
+                JSONResponse(
+                    status_code=413,
+                    content={
+                        "detail": {
+                            "error": "request_too_large",
+                            "detail": "Request body is too large.",
+                        }
+                    },
+                )
+            )
+
     if request.url.path.startswith("/auth") or request.method in {"POST", "PUT", "DELETE"}:
         try:
             rate_limiter.check(f"{client_ip(request)}:{request.url.path}")
         except HTTPException as exc:
-            return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+            return add_security_headers(
+                JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+            )
 
     if (
         settings.csrf_protection
@@ -119,17 +153,20 @@ async def security_middleware(request: Request, call_next):
         csrf_header = request.headers.get(CSRF_HEADER)
         if session_token:
             if not csrf_cookie or not csrf_header or csrf_cookie != csrf_header:
-                return JSONResponse(
-                    status_code=403,
-                    content={
-                        "detail": {
-                            "error": "forbidden",
-                            "detail": "Missing or invalid CSRF token.",
-                        }
-                    },
+                return add_security_headers(
+                    JSONResponse(
+                        status_code=403,
+                        content={
+                            "detail": {
+                                "error": "forbidden",
+                                "detail": "Missing or invalid CSRF token.",
+                            }
+                        },
+                    )
                 )
 
-    return await call_next(request)
+    response = await call_next(request)
+    return add_security_headers(response)
 
 
 @app.middleware("http")
@@ -193,6 +230,12 @@ def user_payload(user: dict | CurrentUser) -> dict:
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "service": "arranger-api"}
+
+
+@app.get("/ready")
+def ready(storage: Storage = Depends(get_storage)) -> dict:
+    storage.ping()
+    return {"status": "ready", "service": "arranger-api", "database": "ok"}
 
 
 @app.post("/auth/register", response_model=UserResponse)
@@ -403,10 +446,12 @@ def create_profile_endpoint(
 
 @app.get("/profiles", response_model=RecordsResponse)
 def list_profiles_endpoint(
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     storage: Storage = Depends(get_storage),
     user: CurrentUser = Depends(get_current_user),
 ) -> dict:
-    return {"records": storage.list_profiles(user.id)}
+    return {"records": storage.list_profiles(user.id, limit, offset)}
 
 
 @app.get("/profiles/{profile_id}", response_model=RecordResponse)
@@ -464,10 +509,12 @@ def create_score_endpoint(
 
 @app.get("/scores", response_model=RecordsResponse)
 def list_scores_endpoint(
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     storage: Storage = Depends(get_storage),
     user: CurrentUser = Depends(get_current_user),
 ) -> dict:
-    return {"records": storage.list_scores(user.id)}
+    return {"records": storage.list_scores(user.id, limit, offset)}
 
 
 @app.get("/scores/{score_id}", response_model=RecordResponse)
@@ -511,10 +558,12 @@ def create_plan_endpoint(
 @app.get("/plans", response_model=RecordsResponse)
 def list_plans_endpoint(
     score_id: str | None = None,
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     storage: Storage = Depends(get_storage),
     user: CurrentUser = Depends(get_current_user),
 ) -> dict:
-    return {"records": storage.list_plans(user.id, score_id)}
+    return {"records": storage.list_plans(user.id, score_id, limit, offset)}
 
 
 @app.get("/plans/{plan_id}", response_model=RecordResponse)
@@ -596,10 +645,12 @@ def create_arrangement_endpoint(
 
 @app.get("/arrangements", response_model=RecordsResponse)
 def list_arrangements_endpoint(
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     storage: Storage = Depends(get_storage),
     user: CurrentUser = Depends(get_current_user),
 ) -> dict:
-    return {"records": storage.list_arrangements(user.id)}
+    return {"records": storage.list_arrangements(user.id, limit, offset)}
 
 
 @app.get("/arrangements/{arrangement_id}", response_model=RecordResponse)
@@ -674,10 +725,12 @@ def create_dry_run_endpoint(
 
 @app.get("/runs", response_model=RecordsResponse)
 def list_runs_endpoint(
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     storage: Storage = Depends(get_storage),
     user: CurrentUser = Depends(get_current_user),
 ) -> dict:
-    return {"records": storage.list_runs(user.id)}
+    return {"records": storage.list_runs(user.id, limit, offset)}
 
 
 @app.get("/runs/{run_id}", response_model=RecordResponse)
