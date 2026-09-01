@@ -10,7 +10,7 @@ dependencies = []
 io = ["music21>=9.1", "pretty_midi>=0.2.10"]
 audio = ["librosa>=0.10", "basic-pitch>=0.3", "demucs>=4.0"]
 agent = ["langgraph>=0.2", "pydantic>=2.7"]
-api = ["fastapi>=0.111", "uvicorn[standard]>=0.30", "pydantic>=2.7", "psycopg[binary]>=3.2", "httpx[http2]>=0.28"]
+api = ["fastapi>=0.111", "uvicorn[standard]>=0.30", "pydantic>=2.7", "psycopg[binary]>=3.2", "httpx>=0.28", "resend>=2.13"]
 dev = ["pytest>=8.0", "ruff>=0.5"]
 
 [project.scripts]

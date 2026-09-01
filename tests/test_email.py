@@ -31,37 +31,34 @@ def test_console_email_sender_is_default():
     assert sender.__class__.__name__ == "ConsoleEmailSender"
 
 
-def test_resend_sender_uses_http2_and_includes_user_agent_header():
+def test_resend_sender_uses_official_sdk_payload():
     sender = ResendEmailSender("re_test", "onboarding@resend.dev", "Reset")
 
-    with patch("httpx.Client") as client_class:
-        response = client_class.return_value.__enter__.return_value.post.return_value
-        response.status_code = 200
-
+    with patch("resend.Emails.send") as send:
         sender.send_password_reset("user@example.com", "https://example.com/?reset_token=t", 30)
 
-    assert client_class.call_args.kwargs["http2"] is True
-    post = client_class.return_value.__enter__.return_value.post
-    assert post.call_args.args[0] == "https://api.resend.com/emails"
-    assert post.call_args.kwargs["headers"]["User-Agent"] == "arranger-api/0.1"
-    assert post.call_args.kwargs["headers"]["Authorization"] == "Bearer re_test"
-    assert '"to": ["user@example.com"]' in post.call_args.kwargs["content"]
+    payload = send.call_args.args[0]
+    assert payload["from"] == "onboarding@resend.dev"
+    assert payload["to"] == ["user@example.com"]
+    assert payload["subject"] == "Reset"
+    assert "https://example.com/?reset_token=t" in payload["html"]
+    assert "https://example.com/?reset_token=t" in payload["text"]
 
 
 def test_resend_sender_raises_email_send_error_with_status_and_body():
     sender = ResendEmailSender("re_test", "onboarding@resend.dev", "Reset")
 
-    with patch("httpx.Client") as client_class:
-        response = client_class.return_value.__enter__.return_value.post.return_value
-        response.status_code = 403
-        response.text = "error code: 1010"
+    with patch("resend.Emails.send") as send:
+        error = Exception("sandbox recipient is not allowed")
+        error.status_code = 403
+        send.side_effect = error
 
         try:
             sender.send_password_reset("user@example.com", "https://example.com/?reset_token=t", 30)
             raise AssertionError("expected EmailSendError")
         except EmailSendError as exc:
-            assert exc.status_code == 403
-            assert exc.body == "error code: 1010"
+            assert exc.status_code is None
+            assert "sandbox recipient is not allowed" in exc.body
 
 
 def test_email_diagnostics_reports_non_secret_fields_only():

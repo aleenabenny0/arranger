@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import urllib.parse
 from dataclasses import dataclass
 from typing import Protocol
 
-import httpx
+import resend
+from resend.exceptions import ResendError
 
 from .settings import Settings
 
 logger = logging.getLogger("arranger_api.email")
-USER_AGENT = "arranger-api/0.1"
 
 
 class EmailSendError(RuntimeError):
@@ -78,25 +77,18 @@ class ResendEmailSender:
         }
 
         try:
-            with httpx.Client(http2=True, timeout=10) as client:
-                response = client.post(
-                    "https://api.resend.com/emails",
-                    content=json.dumps(payload),
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json",
-                        "User-Agent": USER_AGENT,
-                    },
-                )
-        except httpx.RequestError as exc:
-            raise EmailSendError(f"Resend request failed: {exc}") from exc
-
-        if response.status_code >= 300:
+            resend.api_key = self.api_key
+            resend.Emails.send(payload)
+        except ResendError as exc:
+            status_code = getattr(exc, "status_code", None)
+            body = getattr(exc, "message", None) or str(exc)
             raise EmailSendError(
-                f"Resend returned status {response.status_code}",
-                status_code=response.status_code,
-                body=response.text,
-            )
+                "Resend rejected the email request",
+                status_code=status_code,
+                body=body,
+            ) from exc
+        except Exception as exc:
+            raise EmailSendError(f"Resend request failed: {exc}", body=str(exc)) from exc
 
 
 def build_password_reset_link(settings: Settings, token: str) -> str:
