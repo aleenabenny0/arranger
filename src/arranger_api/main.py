@@ -39,6 +39,7 @@ from arranger.plan import ArrangementPlan, LHPattern, Section
 from arranger.render import last_bar
 
 from .errors import domain_error, not_found
+from .email import EmailSender, build_email_sender, build_password_reset_link
 from .observability import configure_logging, log_event, monotonic_ms, request_id
 from .schemas import (
     ArrangeRequest,
@@ -201,6 +202,10 @@ def get_storage() -> Iterator[Storage]:
         conn.close()
 
 
+def get_email_sender() -> EmailSender:
+    return build_email_sender(settings)
+
+
 def get_current_user(
     storage: Storage = Depends(get_storage),
     session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE),
@@ -331,6 +336,7 @@ def me_endpoint(user: CurrentUser = Depends(get_current_user)) -> dict:
 def request_password_reset_endpoint(
     request: PasswordResetRequest,
     storage: Storage = Depends(get_storage),
+    email_sender: EmailSender = Depends(get_email_sender),
 ) -> dict:
     user = storage.get_user_with_password(request.email)
     response = {"accepted": True}
@@ -342,8 +348,20 @@ def request_password_reset_endpoint(
         hash_token(token),
         settings.password_reset_minutes,
     )
+    reset_link = build_password_reset_link(settings, token)
+    try:
+        email_sender.send_password_reset(
+            request.email,
+            reset_link,
+            settings.password_reset_minutes,
+        )
+    except Exception:
+        logger.exception("password_reset_email_failed")
+        if settings.app_env != "production":
+            response["email_error"] = "Password reset email could not be sent."
     if settings.app_env != "production":
         response["reset_token"] = token
+        response["reset_link"] = reset_link
     return response
 
 

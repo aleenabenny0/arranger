@@ -67,6 +67,11 @@ def test_security_settings_come_from_environment():
         assert settings.rate_limit_window_seconds == 5
         assert settings.max_request_bytes == 2048
         assert settings.password_reset_minutes == 15
+        assert settings.app_public_url == "https://arranger.example"
+        assert settings.email_provider == "resend"
+        assert settings.resend_api_key == "test-key"
+        assert settings.password_reset_from == "Arranger <support@arranger.example>"
+        assert settings.password_reset_subject == "Reset access"
 
     with_env(
         {
@@ -76,6 +81,11 @@ def test_security_settings_come_from_environment():
             "RATE_LIMIT_WINDOW_SECONDS": "5",
             "MAX_REQUEST_BYTES": "2048",
             "PASSWORD_RESET_MINUTES": "15",
+            "APP_PUBLIC_URL": "https://arranger.example/",
+            "EMAIL_PROVIDER": "RESEND",
+            "RESEND_API_KEY": "test-key",
+            "PASSWORD_RESET_FROM": "Arranger <support@arranger.example>",
+            "PASSWORD_RESET_SUBJECT": "Reset access",
         },
         check,
     )

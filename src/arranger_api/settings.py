@@ -32,6 +32,7 @@ def env_list(name: str, default: list[str]) -> list[str]:
 class Settings:
     app_env: str
     log_level: str
+    app_public_url: str
     host: str
     port: int
     reload: bool
@@ -43,6 +44,10 @@ class Settings:
     rate_limit_window_seconds: int
     max_request_bytes: int
     password_reset_minutes: int
+    email_provider: str
+    resend_api_key: str
+    password_reset_from: str
+    password_reset_subject: str
     cors_origins: list[str]
     frontend_dir: Path
 
@@ -55,6 +60,7 @@ def load_settings() -> Settings:
     return Settings(
         app_env=app_env,
         log_level=os.environ.get("LOG_LEVEL", "INFO"),
+        app_public_url=os.environ.get("APP_PUBLIC_URL", "http://127.0.0.1:8000").rstrip("/"),
         host=os.environ.get("HOST", "127.0.0.1"),
         port=env_int("PORT", 8000),
         reload=env_bool("RELOAD", app_env != "production"),
@@ -66,6 +72,16 @@ def load_settings() -> Settings:
         rate_limit_window_seconds=env_int("RATE_LIMIT_WINDOW_SECONDS", 60),
         max_request_bytes=env_int("MAX_REQUEST_BYTES", 1_000_000),
         password_reset_minutes=env_int("PASSWORD_RESET_MINUTES", 30),
+        email_provider=os.environ.get("EMAIL_PROVIDER", "console").strip().lower(),
+        resend_api_key=os.environ.get("RESEND_API_KEY", ""),
+        password_reset_from=os.environ.get(
+            "PASSWORD_RESET_FROM",
+            "Arranger <no-reply@arranger.local>",
+        ),
+        password_reset_subject=os.environ.get(
+            "PASSWORD_RESET_SUBJECT",
+            "Reset your Arranger password",
+        ),
         cors_origins=env_list(
             "FRONTEND_ORIGINS",
             ["http://127.0.0.1:8000", "http://localhost:8000", "null"],

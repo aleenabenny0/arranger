@@ -53,6 +53,7 @@ should use Railway Postgres or another managed Postgres provider.
 6. Set:
 
 ```text
+APP_PUBLIC_URL=https://your-generated-domain.up.railway.app
 FRONTEND_ORIGINS=https://your-generated-domain.up.railway.app
 COOKIE_SECURE=true
 APP_ENV=production
@@ -61,6 +62,15 @@ MAX_SESSIONS_PER_USER=5
 RATE_LIMIT_REQUESTS=120
 RATE_LIMIT_WINDOW_SECONDS=60
 MAX_REQUEST_BYTES=1000000
+EMAIL_PROVIDER=resend
+PASSWORD_RESET_FROM=Arranger <your-verified-sender@your-domain.example>
+PASSWORD_RESET_SUBJECT=Reset your Arranger password
+```
+
+7. Add the secret email variable in Railway:
+
+```text
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 If `DATABASE_URL` is present and starts with `postgres://` or `postgresql://`,
@@ -110,6 +120,7 @@ manual copy is needed. If it does not:
 
 - `APP_ENV`: `development` or `production`.
 - `LOG_LEVEL`: Python log level, default `INFO`.
+- `APP_PUBLIC_URL`: public base URL used for password reset links.
 - `HOST`: bind host. Use `0.0.0.0` in containers.
 - `PORT`: bind port. Cloud hosts often set this automatically.
 - `RELOAD`: set `false` in production.
@@ -121,6 +132,10 @@ manual copy is needed. If it does not:
 - `RATE_LIMIT_WINDOW_SECONDS`: size of the rate-limit window.
 - `MAX_REQUEST_BYTES`: maximum accepted request body size in bytes.
 - `PASSWORD_RESET_MINUTES`: password reset token lifetime.
+- `EMAIL_PROVIDER`: `console` for local logging or `resend` for real delivery.
+- `RESEND_API_KEY`: Resend API key. Store only as a secret variable.
+- `PASSWORD_RESET_FROM`: verified sender address for reset emails.
+- `PASSWORD_RESET_SUBJECT`: subject line for reset emails.
 - `FRONTEND_ORIGINS`: comma-separated CORS origins.
 - `FRONTEND_DIR`: static frontend directory.
 - `DATABASE_URL`: managed Postgres connection string for production.

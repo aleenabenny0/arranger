@@ -104,7 +104,8 @@ switch that to `secure=True`.
 Unsafe cookie-authenticated requests require a matching `arranger_csrf` cookie
 and `X-CSRF-Token` header. Auth and write traffic is rate-limited in process.
 Password reset tokens are stored hashed and expire; production reset requests do
-not expose raw tokens in the response.
+not expose raw tokens in the response. In production, set `EMAIL_PROVIDER=resend`
+and `RESEND_API_KEY` so reset links are sent by email.
 
 Responses include defensive browser headers, including a restrictive content
 security policy. Requests with a `Content-Length` larger than
@@ -114,6 +115,7 @@ security policy. Requests with a `Content-Length` larger than
 
 - `APP_ENV`: `development` by default. Use `production` in cloud hosting.
 - `LOG_LEVEL`: Python log level, default `INFO`.
+- `APP_PUBLIC_URL`: public base URL used for password reset links.
 - `HOST`: bind host, default `127.0.0.1`.
 - `PORT`: bind port, default `8000`. Cloud hosts usually provide this.
 - `RELOAD`: enables Uvicorn reload. Defaults off in production.
@@ -125,6 +127,10 @@ security policy. Requests with a `Content-Length` larger than
 - `RATE_LIMIT_WINDOW_SECONDS`: rate-limit window, default `60`.
 - `MAX_REQUEST_BYTES`: maximum accepted request body size, default `1000000`.
 - `PASSWORD_RESET_MINUTES`: reset token lifetime, default `30`.
+- `EMAIL_PROVIDER`: `console` locally or `resend` for real email delivery.
+- `RESEND_API_KEY`: Resend API key for production password reset email.
+- `PASSWORD_RESET_FROM`: verified reset-email sender address.
+- `PASSWORD_RESET_SUBJECT`: reset-email subject.
 - `FRONTEND_ORIGINS`: comma-separated CORS origins.
 - `FRONTEND_DIR`: path to the static frontend, default `frontend/`.
 - `DATABASE_URL`: managed Postgres connection string for production.

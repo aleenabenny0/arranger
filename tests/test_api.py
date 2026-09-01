@@ -7,6 +7,7 @@ These run when the optional API dependencies are installed:
 """
 
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -17,7 +18,8 @@ except ImportError:
     TestClient = None
 
 if TestClient is not None:
-    from arranger_api.main import app, get_storage
+    import arranger_api.main as api_main
+    from arranger_api.main import app, get_email_sender, get_storage
     from arranger_api.storage import Storage, connect, init_db
 
 
@@ -67,7 +69,21 @@ PLAN = {
 }
 
 
-def client(storage=None):
+class FakeEmailSender:
+    def __init__(self):
+        self.sent = []
+
+    def send_password_reset(self, email, reset_link, expires_minutes):
+        self.sent.append(
+            {
+                "email": email,
+                "reset_link": reset_link,
+                "expires_minutes": expires_minutes,
+            }
+        )
+
+
+def client(storage=None, email_sender=None):
     if TestClient is None:
         raise RuntimeError("FastAPI is not installed; install with pip install -e .[api]")
     app.dependency_overrides.clear()
@@ -76,6 +92,11 @@ def client(storage=None):
             yield storage
 
         app.dependency_overrides[get_storage] = override_storage
+    if email_sender is not None:
+        def override_email_sender():
+            return email_sender
+
+        app.dependency_overrides[get_email_sender] = override_email_sender
     return TestClient(app)
 
 
@@ -405,7 +426,8 @@ if TestClient is not None:
     def test_password_reset_flow_revokes_sessions():
         conn = connect(":memory:")
         init_db(conn)
-        api = client(Storage(conn))
+        fake_email = FakeEmailSender()
+        api = client(Storage(conn), fake_email)
         register(api, "reset@example.com", "Password12345")
 
         reset_response = api.post(
@@ -414,6 +436,9 @@ if TestClient is not None:
         )
         assert reset_response.status_code == 200
         reset_token = reset_response.json()["reset_token"]
+        assert reset_response.json()["reset_link"].endswith(f"?reset_token={reset_token}")
+        assert fake_email.sent[0]["email"] == "reset@example.com"
+        assert fake_email.sent[0]["reset_link"].endswith(f"?reset_token={reset_token}")
 
         confirm_response = api.post(
             "/auth/password-reset/confirm",
@@ -427,6 +452,37 @@ if TestClient is not None:
             json={"email": "reset@example.com", "password": "NewPassword12345"},
         )
         assert login_response.status_code == 200
+
+
+    def test_production_password_reset_sends_link_without_returning_token():
+        conn = connect(":memory:")
+        init_db(conn)
+        fake_email = FakeEmailSender()
+        old_settings = api_main.settings
+        api_main.settings = replace(
+            old_settings,
+            app_env="production",
+            app_public_url="https://arranger.example",
+            password_reset_minutes=45,
+        )
+        try:
+            api = client(Storage(conn), fake_email)
+            register(api, "prod-reset@example.com", "Password12345")
+
+            reset_response = api.post(
+                "/auth/password-reset/request",
+                json={"email": "prod-reset@example.com"},
+            )
+            assert reset_response.status_code == 200
+            assert reset_response.json() == {"accepted": True}
+            assert len(fake_email.sent) == 1
+            assert fake_email.sent[0]["email"] == "prod-reset@example.com"
+            assert fake_email.sent[0]["expires_minutes"] == 45
+            assert fake_email.sent[0]["reset_link"].startswith(
+                "https://arranger.example/?reset_token="
+            )
+        finally:
+            api_main.settings = old_settings
 
 
 if __name__ == "__main__":

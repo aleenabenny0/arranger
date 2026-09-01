@@ -863,16 +863,42 @@ async function resetPassword() {
     if (!email) throw new Error("Enter your email first.");
     const request = await authRequest("/auth/password-reset/request", { email });
     if (!request.reset_token) {
-      state.authStatus = "Reset requested. Email delivery is the next provider step.";
+      state.authStatus = "Reset email sent if the account exists.";
       renderAuth();
       return;
     }
+    state.authStatus = "Reset link generated for local development.";
+    renderAuth();
     const password = window.prompt("New password");
     if (!password) return;
     await authRequest("/auth/password-reset/confirm", {
       token: request.reset_token,
       password,
     });
+    state.authStatus = "Password reset. You can log in now.";
+    renderAuth();
+  } catch (error) {
+    state.authStatus = error.message;
+    renderAuth();
+  }
+}
+
+async function handlePasswordResetLink() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("reset_token");
+  if (!token) return;
+
+  const cleanUrl = `${window.location.origin}${window.location.pathname}${window.location.hash}`;
+  window.history.replaceState({}, document.title, cleanUrl);
+
+  try {
+    const password = window.prompt("Enter your new Arranger password");
+    if (!password) {
+      state.authStatus = "Password reset canceled.";
+      renderAuth();
+      return;
+    }
+    await authRequest("/auth/password-reset/confirm", { token, password });
     state.authStatus = "Password reset. You can log in now.";
     renderAuth();
   } catch (error) {
@@ -1120,3 +1146,4 @@ els.apiUrl.value = window.location.protocol.startsWith("http")
 renderProfileInputs();
 refresh();
 bootstrapAuth();
+handlePasswordResetLink();

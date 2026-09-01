@@ -94,7 +94,9 @@ owner.
 
 Unsafe cookie-authenticated writes require a double-submit CSRF token. Auth and
 write paths are rate-limited in process. Password reset tokens are stored only
-as hashes and are consumed once, revoking active sessions for that user.
+as hashes and are consumed once, revoking active sessions for that user. Reset
+delivery goes through an email provider port so production can use Resend while
+local development can log reset links without external services.
 
 ## Ports
 
@@ -123,8 +125,9 @@ Avoid these:
 1. Move MusicXML/PDF work into adapters, not the domain core.
 2. Replace greedy hand assignment behind the existing `assign_hands` boundary.
 3. Move rate limiting to Redis or the hosting edge before multi-replica scale.
-4. Add an email provider for production password reset delivery.
-5. Add object storage for generated MIDI/MusicXML/PDF artifacts once export exists.
+4. Add object storage for generated MIDI/MusicXML/PDF artifacts once export exists.
+5. Move rate limiting and session invalidation metadata to Redis before
+   multi-replica scale.
 6. Convert the repair loop to LangGraph only after the use cases and artifacts
    are stable.
 
