@@ -85,6 +85,7 @@ const els = {
   authPassword: document.querySelector("#authPassword"),
   loginBtn: document.querySelector("#loginBtn"),
   registerBtn: document.querySelector("#registerBtn"),
+  resetPasswordBtn: document.querySelector("#resetPasswordBtn"),
   logoutBtn: document.querySelector("#logoutBtn"),
   signedOutPanel: document.querySelector("#signedOutPanel"),
   signedInPanel: document.querySelector("#signedInPanel"),
@@ -587,6 +588,22 @@ function downloadJson(name, value) {
   URL.revokeObjectURL(url);
 }
 
+function cookieValue(name) {
+  const prefix = `${name}=`;
+  return document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix))
+    ?.slice(prefix.length) || "";
+}
+
+function jsonHeaders(includeCsrf = false) {
+  const headers = { "Content-Type": "application/json" };
+  const csrfToken = cookieValue("arranger_csrf");
+  if (includeCsrf && csrfToken) headers["X-CSRF-Token"] = csrfToken;
+  return headers;
+}
+
 async function loadJsonFile(file) {
   return JSON.parse(await file.text());
 }
@@ -602,7 +619,7 @@ async function runBackend() {
       ? await fetch(`${baseUrl}/arrangements/render-and-verify`, {
           method: "POST",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: jsonHeaders(true),
           body: JSON.stringify({
             score_id: state.saved.score_id,
             profile_id: state.saved.profile_id,
@@ -611,7 +628,7 @@ async function runBackend() {
         })
       : await fetch(`${baseUrl}/render-and-verify`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: jsonHeaders(false),
           body: JSON.stringify({
             source: state.score,
             profile: state.profile,
@@ -663,7 +680,7 @@ async function postJson(path, payload) {
   const response = await fetch(`${baseUrl}${path}`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: jsonHeaders(true),
     body: JSON.stringify(payload),
   });
   const body = await response.json();
@@ -679,7 +696,7 @@ async function authRequest(path, payload = null) {
   const options = {
     method: payload ? "POST" : "GET",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: jsonHeaders(path === "/auth/logout"),
   };
   if (payload) options.body = JSON.stringify(payload);
 
@@ -724,6 +741,30 @@ async function logout() {
     state.authStatus = "Signed out";
     renderAuth();
     renderStorageStatus();
+  }
+}
+
+async function resetPassword() {
+  try {
+    const email = els.authEmail.value.trim();
+    if (!email) throw new Error("Enter your email first.");
+    const request = await authRequest("/auth/password-reset/request", { email });
+    if (!request.reset_token) {
+      state.authStatus = "Reset requested. Email delivery is the next provider step.";
+      renderAuth();
+      return;
+    }
+    const password = window.prompt("New password");
+    if (!password) return;
+    await authRequest("/auth/password-reset/confirm", {
+      token: request.reset_token,
+      password,
+    });
+    state.authStatus = "Password reset. You can log in now.";
+    renderAuth();
+  } catch (error) {
+    state.authStatus = error.message;
+    renderAuth();
   }
 }
 
@@ -797,6 +838,7 @@ els.runBackendBtn.addEventListener("click", runBackend);
 els.saveWorkBtn.addEventListener("click", saveWork);
 els.loginBtn.addEventListener("click", () => loginOrRegister("/auth/login"));
 els.registerBtn.addEventListener("click", () => loginOrRegister("/auth/register"));
+els.resetPasswordBtn.addEventListener("click", resetPassword);
 els.logoutBtn.addEventListener("click", logout);
 
 els.scoreFile.addEventListener("change", async (event) => {

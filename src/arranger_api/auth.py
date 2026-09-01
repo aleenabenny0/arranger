@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from fastapi import HTTPException, Response
 
 SESSION_COOKIE = "arranger_session"
+CSRF_COOKIE = "arranger_csrf"
+CSRF_HEADER = "x-csrf-token"
 
 
 @dataclass(frozen=True)
@@ -40,6 +42,23 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def new_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def password_problems(password: str) -> list[str]:
+    problems = []
+    if len(password) < 12:
+        problems.append("Password must be at least 12 characters.")
+    if not any(char.islower() for char in password):
+        problems.append("Password must include a lowercase letter.")
+    if not any(char.isupper() for char in password):
+        problems.append("Password must include an uppercase letter.")
+    if not any(char.isdigit() for char in password):
+        problems.append("Password must include a number.")
+    return problems
+
+
 def set_session_cookie(
     response: Response,
     token: str,
@@ -57,8 +76,26 @@ def set_session_cookie(
     )
 
 
+def set_csrf_cookie(
+    response: Response,
+    token: str,
+    *,
+    secure: bool = False,
+    max_age: int = 60 * 60 * 24 * 30,
+) -> None:
+    response.set_cookie(
+        CSRF_COOKIE,
+        token,
+        httponly=False,
+        secure=secure,
+        samesite="lax",
+        max_age=max_age,
+    )
+
+
 def clear_session_cookie(response: Response, *, secure: bool = False) -> None:
     response.delete_cookie(SESSION_COOKIE, httponly=True, secure=secure, samesite="lax")
+    response.delete_cookie(CSRF_COOKIE, httponly=False, secure=secure, samesite="lax")
 
 
 def unauthorized() -> HTTPException:
@@ -66,3 +103,7 @@ def unauthorized() -> HTTPException:
         status_code=401,
         detail={"error": "unauthorized", "detail": "Sign in to access saved work."},
     )
+
+
+def forbidden(detail: str) -> HTTPException:
+    return HTTPException(status_code=403, detail={"error": "forbidden", "detail": detail})

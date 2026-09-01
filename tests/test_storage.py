@@ -127,6 +127,15 @@ def test_users_cannot_read_each_others_scores():
     assert storage.get_score(other_id, score["id"]) is None
 
 
+def test_migrations_are_recorded():
+    conn = connect(":memory:")
+    init_db(conn)
+    migrations = {row["id"] for row in conn.execute("SELECT id FROM schema_migrations")}
+
+    assert "0001_initial_storage" in migrations
+    assert "0002_auth_hardening" in migrations
+
+
 if __name__ == "__main__":
     tests = [(k, v) for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0

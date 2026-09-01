@@ -74,19 +74,39 @@ class Storage:
         ).fetchone()
         return decode_row(row)
 
-    def create_session(self, user_id: str, token_hash: str, days: int = 30) -> dict:
+    def create_session(
+        self,
+        user_id: str,
+        token_hash: str,
+        days: int = 30,
+        *,
+        csrf_token_hash: str | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        max_sessions: int | None = None,
+    ) -> dict:
         now_dt = datetime.now(timezone.utc)
         record_id = new_id()
+        self.prune_expired_sessions(user_id)
+        if max_sessions:
+            self.trim_user_sessions(user_id, keep=max_sessions - 1)
         self.conn.execute(
             """
             INSERT INTO sessions
-                (id, user_id, token_hash, created_at, expires_at, revoked_at)
-            VALUES (?, ?, ?, ?, ?, NULL)
+                (
+                    id, user_id, token_hash, csrf_token_hash, ip_address,
+                    user_agent, last_seen_at, created_at, expires_at, revoked_at
+                )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
             """,
             (
                 record_id,
                 user_id,
                 token_hash,
+                csrf_token_hash,
+                ip_address,
+                user_agent,
+                now_dt.isoformat(),
                 now_dt.isoformat(),
                 (now_dt + timedelta(days=days)).isoformat(),
             ),
@@ -111,6 +131,25 @@ class Storage:
             """,
             (token_hash, now),
         ).fetchone()
+        if row is not None:
+            self.conn.execute(
+                "UPDATE sessions SET last_seen_at = ? WHERE token_hash = ?",
+                (now, token_hash),
+            )
+            self.conn.commit()
+        return decode_row(row)
+
+    def session_for_token(self, token_hash: str) -> dict | None:
+        now = utc_now()
+        row = self.conn.execute(
+            """
+            SELECT * FROM sessions
+            WHERE token_hash = ?
+              AND revoked_at IS NULL
+              AND expires_at > ?
+            """,
+            (token_hash, now),
+        ).fetchone()
         return decode_row(row)
 
     def revoke_session(self, token_hash: str) -> bool:
@@ -120,6 +159,98 @@ class Storage:
         )
         self.conn.commit()
         return cur.rowcount > 0
+
+    def prune_expired_sessions(self, user_id: str) -> None:
+        self.conn.execute(
+            """
+            UPDATE sessions
+            SET revoked_at = ?
+            WHERE user_id = ?
+              AND revoked_at IS NULL
+              AND expires_at <= ?
+            """,
+            (utc_now(), user_id, utc_now()),
+        )
+        self.conn.commit()
+
+    def trim_user_sessions(self, user_id: str, keep: int) -> None:
+        rows = list(
+            self.conn.execute(
+                """
+                SELECT id FROM sessions
+                WHERE user_id = ? AND revoked_at IS NULL
+                ORDER BY created_at DESC
+                """,
+                (user_id,),
+            )
+        )
+        for row in rows[max(keep, 0):]:
+            self.conn.execute(
+                "UPDATE sessions SET revoked_at = ? WHERE id = ?",
+                (utc_now(), row["id"]),
+            )
+        self.conn.commit()
+
+    def create_password_reset_token(
+        self,
+        user_id: str,
+        token_hash: str,
+        minutes: int,
+    ) -> dict:
+        now_dt = datetime.now(timezone.utc)
+        record_id = new_id()
+        self.conn.execute(
+            """
+            INSERT INTO password_reset_tokens
+                (id, user_id, token_hash, created_at, expires_at, used_at)
+            VALUES (?, ?, ?, ?, ?, NULL)
+            """,
+            (
+                record_id,
+                user_id,
+                token_hash,
+                now_dt.isoformat(),
+                (now_dt + timedelta(minutes=minutes)).isoformat(),
+            ),
+        )
+        self.conn.commit()
+        return self.get_password_reset_token(token_hash)
+
+    def get_password_reset_token(self, token_hash: str) -> dict | None:
+        row = self.conn.execute(
+            """
+            SELECT * FROM password_reset_tokens
+            WHERE token_hash = ?
+              AND used_at IS NULL
+              AND expires_at > ?
+            """,
+            (token_hash, utc_now()),
+        ).fetchone()
+        return decode_row(row)
+
+    def consume_password_reset_token(self, token_hash: str, password_hash: str) -> dict | None:
+        token = self.get_password_reset_token(token_hash)
+        if token is None:
+            return None
+        now = utc_now()
+        self.conn.execute(
+            "UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?",
+            (password_hash, now, token["user_id"]),
+        )
+        self.conn.execute(
+            "UPDATE password_reset_tokens SET used_at = ? WHERE id = ?",
+            (now, token["id"]),
+        )
+        self.conn.execute(
+            """
+            UPDATE sessions
+            SET revoked_at = ?
+            WHERE user_id = ? AND revoked_at IS NULL
+            """,
+            (now, token["user_id"]),
+        )
+        self.conn.commit()
+        return self.get_user(token["user_id"])
 
     # --- profiles -------------------------------------------------------
 

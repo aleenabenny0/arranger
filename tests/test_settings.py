@@ -51,6 +51,27 @@ def test_frontend_dir_can_come_from_environment():
     with_env({"FRONTEND_DIR": "custom-frontend"}, check)
 
 
+def test_security_settings_come_from_environment():
+    def check():
+        settings = load_settings()
+        assert settings.max_sessions_per_user == 2
+        assert not settings.csrf_protection
+        assert settings.rate_limit_requests == 10
+        assert settings.rate_limit_window_seconds == 5
+        assert settings.password_reset_minutes == 15
+
+    with_env(
+        {
+            "MAX_SESSIONS_PER_USER": "2",
+            "CSRF_PROTECTION": "false",
+            "RATE_LIMIT_REQUESTS": "10",
+            "RATE_LIMIT_WINDOW_SECONDS": "5",
+            "PASSWORD_RESET_MINUTES": "15",
+        },
+        check,
+    )
+
+
 if __name__ == "__main__":
     tests = [(k, v) for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0

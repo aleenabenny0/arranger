@@ -92,6 +92,10 @@ The stateless compute endpoints are public. Persistent endpoints are private:
 profiles, scores, plans, arrangements, and runs can only be accessed by their
 owner.
 
+Unsafe cookie-authenticated writes require a double-submit CSRF token. Auth and
+write paths are rate-limited in process. Password reset tokens are stored only
+as hashes and are consumed once, revoking active sessions for that user.
+
 ## Ports
 
 `arranger.ports` names infrastructure-facing protocols. Today it defines the
@@ -118,7 +122,8 @@ Avoid these:
 
 1. Move MusicXML/PDF work into adapters, not the domain core.
 2. Replace greedy hand assignment behind the existing `assign_hands` boundary.
-3. Add schema migrations before changing production tables after launch.
-4. Add MusicXML/PDF artifact records once export exists.
-5. Convert the repair loop to LangGraph only after the use cases and artifacts
+3. Move rate limiting to Redis or the hosting edge before multi-replica scale.
+4. Add an email provider for production password reset delivery.
+5. Add MusicXML/PDF artifact records once export exists.
+6. Convert the repair loop to LangGraph only after the use cases and artifacts
    are stable.

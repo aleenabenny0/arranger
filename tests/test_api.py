@@ -81,7 +81,10 @@ def client(storage=None):
 
 if TestClient is not None:
 
-    def register(api, email="user@example.com", password="password123"):
+    def csrf_headers(api):
+        return {"X-CSRF-Token": api.cookies.get("arranger_csrf")}
+
+    def register(api, email="user@example.com", password="Password12345"):
         response = api.post(
             "/auth/register",
             json={
@@ -151,21 +154,28 @@ if TestClient is not None:
         api = client(Storage(conn))
         register(api)
 
-        profile_response = api.post("/profiles", json=PROFILE)
+        headers = csrf_headers(api)
+
+        profile_response = api.post("/profiles", json=PROFILE, headers=headers)
         assert profile_response.status_code == 200
         profile_id = profile_response.json()["record"]["id"]
 
-        score_response = api.post("/scores", json=SCORE)
+        score_response = api.post("/scores", json=SCORE, headers=headers)
         assert score_response.status_code == 200
         score_id = score_response.json()["record"]["id"]
 
-        plan_response = api.post("/plans", json={"score_id": score_id, "plan": PLAN})
+        plan_response = api.post(
+            "/plans",
+            json={"score_id": score_id, "plan": PLAN},
+            headers=headers,
+        )
         assert plan_response.status_code == 200
         plan_id = plan_response.json()["record"]["id"]
 
         arrangement_response = api.post(
             "/arrangements/render-and-verify",
             json={"score_id": score_id, "profile_id": profile_id, "plan_id": plan_id},
+            headers=headers,
         )
         assert arrangement_response.status_code == 200
         arrangement = arrangement_response.json()["record"]
@@ -179,6 +189,7 @@ if TestClient is not None:
         run_response = api.post(
             "/runs/dry-run",
             json={"score_id": score_id, "profile_id": profile_id, "max_attempts": 1},
+            headers=headers,
         )
         assert run_response.status_code == 200
         assert run_response.json()["record"]["payload"]["title"] == "api fixture"
@@ -194,7 +205,7 @@ if TestClient is not None:
         assert me_response.status_code == 200
         assert me_response.json()["user"]["id"] == user["id"]
 
-        logout_response = api.post("/auth/logout")
+        logout_response = api.post("/auth/logout", headers=csrf_headers(api))
         assert logout_response.status_code == 200
         assert api.get("/auth/me").status_code == 401
 
@@ -216,13 +227,59 @@ if TestClient is not None:
         other = client(storage)
 
         register(owner, "owner@example.com")
-        score_response = owner.post("/scores", json=SCORE)
+        score_response = owner.post("/scores", json=SCORE, headers=csrf_headers(owner))
         assert score_response.status_code == 200
         score_id = score_response.json()["record"]["id"]
 
         register(other, "other@example.com")
         blocked = other.get(f"/scores/{score_id}")
         assert blocked.status_code == 404
+
+
+    def test_protected_write_requires_csrf_token():
+        conn = connect(":memory:")
+        init_db(conn)
+        api = client(Storage(conn))
+        register(api, "csrf@example.com")
+
+        response = api.post("/scores", json=SCORE)
+        assert response.status_code == 403
+
+
+    def test_weak_password_is_rejected():
+        api = client()
+        response = api.post(
+            "/auth/register",
+            json={"email": "weak@example.com", "password": "password123", "display_name": ""},
+        )
+        assert response.status_code == 422 or response.status_code == 400
+
+
+    def test_password_reset_flow_revokes_sessions():
+        conn = connect(":memory:")
+        init_db(conn)
+        api = client(Storage(conn))
+        register(api, "reset@example.com", "Password12345")
+
+        reset_response = api.post(
+            "/auth/password-reset/request",
+            json={"email": "reset@example.com"},
+        )
+        assert reset_response.status_code == 200
+        reset_token = reset_response.json()["reset_token"]
+
+        confirm_response = api.post(
+            "/auth/password-reset/confirm",
+            json={"token": reset_token, "password": "NewPassword12345"},
+        )
+        assert confirm_response.status_code == 200
+        assert api.get("/auth/me").status_code == 401
+
+        login_response = api.post(
+            "/auth/login",
+            json={"email": "reset@example.com", "password": "NewPassword12345"},
+        )
+        assert login_response.status_code == 200
 
 
 if __name__ == "__main__":

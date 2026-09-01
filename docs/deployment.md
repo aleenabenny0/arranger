@@ -56,6 +56,10 @@ should use Railway Postgres or another managed Postgres provider.
 FRONTEND_ORIGINS=https://your-generated-domain.up.railway.app
 COOKIE_SECURE=true
 APP_ENV=production
+CSRF_PROTECTION=true
+MAX_SESSIONS_PER_USER=5
+RATE_LIMIT_REQUESTS=120
+RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
 If `DATABASE_URL` is present and starts with `postgres://` or `postgresql://`,
@@ -100,6 +104,11 @@ manual copy is needed. If it does not:
 - `RELOAD`: set `false` in production.
 - `COOKIE_SECURE`: set `true` on HTTPS.
 - `SESSION_DAYS`: session lifetime.
+- `MAX_SESSIONS_PER_USER`: active session cap per user.
+- `CSRF_PROTECTION`: require CSRF cookie/header matches for unsafe cookie requests.
+- `RATE_LIMIT_REQUESTS`: per-window limit for auth/write requests.
+- `RATE_LIMIT_WINDOW_SECONDS`: size of the rate-limit window.
+- `PASSWORD_RESET_MINUTES`: password reset token lifetime.
 - `FRONTEND_ORIGINS`: comma-separated CORS origins.
 - `FRONTEND_DIR`: static frontend directory.
 - `DATABASE_URL`: managed Postgres connection string for production.

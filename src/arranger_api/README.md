@@ -79,6 +79,9 @@ a `postgres://` or `postgresql://` URL. Local runs fall back to SQLite at
 `data/arranger.db` by default, and tests override storage with an in-memory
 SQLite database.
 
+Startup runs ordered migrations through `arranger_api.storage.migrations`.
+Applied migration IDs are recorded in `schema_migrations`.
+
 To run the real Postgres integration test:
 
 ```powershell
@@ -97,6 +100,11 @@ tokens are stored as SHA-256 hashes, and passwords are stored with PBKDF2-SHA256
 hashes. Local development cookies use `secure=False`; production HTTPS should
 switch that to `secure=True`.
 
+Unsafe cookie-authenticated requests require a matching `arranger_csrf` cookie
+and `X-CSRF-Token` header. Auth and write traffic is rate-limited in process.
+Password reset tokens are stored hashed and expire; production reset requests do
+not expose raw tokens in the response.
+
 ## Environment
 
 - `APP_ENV`: `development` by default. Use `production` in cloud hosting.
@@ -105,6 +113,11 @@ switch that to `secure=True`.
 - `RELOAD`: enables Uvicorn reload. Defaults off in production.
 - `COOKIE_SECURE`: secure auth cookies. Defaults on in production.
 - `SESSION_DAYS`: session lifetime, default `30`.
+- `MAX_SESSIONS_PER_USER`: active session cap per user, default `5`.
+- `CSRF_PROTECTION`: enables CSRF checks, default `true`.
+- `RATE_LIMIT_REQUESTS`: per-window request limit, default `120`.
+- `RATE_LIMIT_WINDOW_SECONDS`: rate-limit window, default `60`.
+- `PASSWORD_RESET_MINUTES`: reset token lifetime, default `30`.
 - `FRONTEND_ORIGINS`: comma-separated CORS origins.
 - `FRONTEND_DIR`: path to the static frontend, default `frontend/`.
 - `DATABASE_URL`: managed Postgres connection string for production.

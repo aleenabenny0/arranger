@@ -2,20 +2,26 @@
 
 from __future__ import annotations
 
-import secrets
 from dataclasses import asdict
 from typing import Iterator
 
-from fastapi import Cookie, Depends, FastAPI, Response
+from fastapi import Cookie, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .auth import (
+    CSRF_COOKIE,
+    CSRF_HEADER,
     SESSION_COOKIE,
     CurrentUser,
     clear_session_cookie,
+    forbidden,
     hash_password,
     hash_token,
+    new_token,
+    password_problems,
+    set_csrf_cookie,
     set_session_cookie,
     unauthorized,
     verify_password,
@@ -40,6 +46,8 @@ from .schemas import (
     PersistentRenderVerifyRequest,
     PlanCreateRequest,
     PlayerProfileIn,
+    PasswordResetConfirmRequest,
+    PasswordResetRequest,
     RecordResponse,
     RecordsResponse,
     RegisterRequest,
@@ -58,11 +66,19 @@ from .schemas import (
     to_score,
     verdict_to_dict,
 )
+from .security import RateLimiter, client_ip
 from .storage import INTEGRITY_ERRORS, Storage, connect, init_db
 from .settings import load_settings
 
 
 settings = load_settings()
+rate_limiter = RateLimiter(settings.rate_limit_requests, settings.rate_limit_window_seconds)
+CSRF_EXEMPT_PATHS = {
+    "/auth/register",
+    "/auth/login",
+    "/auth/password-reset/request",
+    "/auth/password-reset/confirm",
+}
 
 
 app = FastAPI(
@@ -78,6 +94,37 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def security_middleware(request: Request, call_next):
+    if request.url.path.startswith("/auth") or request.method in {"POST", "PUT", "DELETE"}:
+        try:
+            rate_limiter.check(f"{client_ip(request)}:{request.url.path}")
+        except HTTPException as exc:
+            return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+    if (
+        settings.csrf_protection
+        and request.method in {"POST", "PUT", "PATCH", "DELETE"}
+        and request.url.path not in CSRF_EXEMPT_PATHS
+    ):
+        session_token = request.cookies.get(SESSION_COOKIE)
+        csrf_cookie = request.cookies.get(CSRF_COOKIE)
+        csrf_header = request.headers.get(CSRF_HEADER)
+        if session_token:
+            if not csrf_cookie or not csrf_header or csrf_cookie != csrf_header:
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": {
+                            "error": "forbidden",
+                            "detail": "Missing or invalid CSRF token.",
+                        }
+                    },
+                )
+
+    return await call_next(request)
 
 
 def get_storage() -> Iterator[Storage]:
@@ -124,23 +171,37 @@ def health() -> dict:
 def register_endpoint(
     request: RegisterRequest,
     response: Response,
+    http_request: Request,
     storage: Storage = Depends(get_storage),
 ) -> dict:
     try:
+        if problems := password_problems(request.password):
+            raise ValueError(" ".join(problems))
         display_name = request.display_name or request.email.split("@", 1)[0]
         user = storage.create_user(
             request.email,
             hash_password(request.password),
             display_name,
         )
-        token = secrets.token_urlsafe(32)
-        storage.create_session(user["id"], hash_token(token), settings.session_days)
+        token = new_token()
+        csrf_token = new_token()
+        max_age = 60 * 60 * 24 * settings.session_days
+        storage.create_session(
+            user["id"],
+            hash_token(token),
+            settings.session_days,
+            csrf_token_hash=hash_token(csrf_token),
+            ip_address=client_ip(http_request),
+            user_agent=http_request.headers.get("user-agent", ""),
+            max_sessions=settings.max_sessions_per_user,
+        )
         set_session_cookie(
             response,
             token,
             secure=settings.cookie_secure,
-            max_age=60 * 60 * 24 * settings.session_days,
+            max_age=max_age,
         )
+        set_csrf_cookie(response, csrf_token, secure=settings.cookie_secure, max_age=max_age)
         return {"user": user_payload(user)}
     except INTEGRITY_ERRORS as exc:
         raise domain_error(ValueError("email is already registered")) from exc
@@ -150,19 +211,31 @@ def register_endpoint(
 def login_endpoint(
     request: LoginRequest,
     response: Response,
+    http_request: Request,
     storage: Storage = Depends(get_storage),
 ) -> dict:
     user = storage.get_user_with_password(request.email)
     if user is None or not verify_password(request.password, user["password_hash"]):
         raise unauthorized()
-    token = secrets.token_urlsafe(32)
-    storage.create_session(user["id"], hash_token(token), settings.session_days)
+    token = new_token()
+    csrf_token = new_token()
+    max_age = 60 * 60 * 24 * settings.session_days
+    storage.create_session(
+        user["id"],
+        hash_token(token),
+        settings.session_days,
+        csrf_token_hash=hash_token(csrf_token),
+        ip_address=client_ip(http_request),
+        user_agent=http_request.headers.get("user-agent", ""),
+        max_sessions=settings.max_sessions_per_user,
+    )
     set_session_cookie(
         response,
         token,
         secure=settings.cookie_secure,
-        max_age=60 * 60 * 24 * settings.session_days,
+        max_age=max_age,
     )
+    set_csrf_cookie(response, csrf_token, secure=settings.cookie_secure, max_age=max_age)
     return {"user": user_payload(user)}
 
 
@@ -180,6 +253,42 @@ def logout_endpoint(
 
 @app.get("/auth/me", response_model=UserResponse)
 def me_endpoint(user: CurrentUser = Depends(get_current_user)) -> dict:
+    return {"user": user_payload(user)}
+
+
+@app.post("/auth/password-reset/request")
+def request_password_reset_endpoint(
+    request: PasswordResetRequest,
+    storage: Storage = Depends(get_storage),
+) -> dict:
+    user = storage.get_user_with_password(request.email)
+    response = {"accepted": True}
+    if user is None:
+        return response
+    token = new_token()
+    storage.create_password_reset_token(
+        user["id"],
+        hash_token(token),
+        settings.password_reset_minutes,
+    )
+    if settings.app_env != "production":
+        response["reset_token"] = token
+    return response
+
+
+@app.post("/auth/password-reset/confirm", response_model=UserResponse)
+def confirm_password_reset_endpoint(
+    request: PasswordResetConfirmRequest,
+    storage: Storage = Depends(get_storage),
+) -> dict:
+    if problems := password_problems(request.password):
+        raise domain_error(ValueError(" ".join(problems)))
+    user = storage.consume_password_reset_token(
+        hash_token(request.token),
+        hash_password(request.password),
+    )
+    if user is None:
+        raise forbidden("Password reset token is invalid or expired.")
     return {"user": user_payload(user)}
 
 

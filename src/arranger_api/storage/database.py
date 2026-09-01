@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from .migrations import run_migrations
+
 
 POSTGRES_SCHEMES = {"postgres", "postgresql"}
 
@@ -85,10 +87,7 @@ def connect(path: str | Path | None = None) -> sqlite3.Connection | PostgresConn
 
 
 def init_db(conn: sqlite3.Connection | PostgresConnection) -> None:
-    if isinstance(conn, PostgresConnection):
-        init_postgres(conn)
-        return
-    init_sqlite(conn)
+    run_migrations(conn)
 
 
 def init_sqlite(conn: sqlite3.Connection) -> None:

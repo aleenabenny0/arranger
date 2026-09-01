@@ -109,13 +109,22 @@ class ArrangeRequest(ApiModel):
 
 class RegisterRequest(ApiModel):
     email: str
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=12)
     display_name: str = ""
 
 
 class LoginRequest(ApiModel):
     email: str
     password: str
+
+
+class PasswordResetRequest(ApiModel):
+    email: str
+
+
+class PasswordResetConfirmRequest(ApiModel):
+    token: str
+    password: str = Field(min_length=12)
 
 
 class UserResponse(ApiModel):

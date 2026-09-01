@@ -36,6 +36,11 @@ class Settings:
     reload: bool
     cookie_secure: bool
     session_days: int
+    max_sessions_per_user: int
+    csrf_protection: bool
+    rate_limit_requests: int
+    rate_limit_window_seconds: int
+    password_reset_minutes: int
     cors_origins: list[str]
     frontend_dir: Path
 
@@ -52,6 +57,11 @@ def load_settings() -> Settings:
         reload=env_bool("RELOAD", app_env != "production"),
         cookie_secure=env_bool("COOKIE_SECURE", app_env == "production"),
         session_days=env_int("SESSION_DAYS", 30),
+        max_sessions_per_user=env_int("MAX_SESSIONS_PER_USER", 5),
+        csrf_protection=env_bool("CSRF_PROTECTION", True),
+        rate_limit_requests=env_int("RATE_LIMIT_REQUESTS", 120),
+        rate_limit_window_seconds=env_int("RATE_LIMIT_WINDOW_SECONDS", 60),
+        password_reset_minutes=env_int("PASSWORD_RESET_MINUTES", 30),
         cors_origins=env_list(
             "FRONTEND_ORIGINS",
             ["http://127.0.0.1:8000", "http://localhost:8000", "null"],
