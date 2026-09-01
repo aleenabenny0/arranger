@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from typing import Iterator
 
 from fastapi import Cookie, Depends, FastAPI, HTTPException, Query, Request, Response
@@ -193,6 +193,25 @@ async def request_logging_middleware(request: Request, call_next):
             response.headers["X-Request-ID"] = rid
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception(
+        "unhandled_exception",
+        extra={"path": request.url.path, "method": request.method},
+    )
+    return add_security_headers(
+        JSONResponse(
+            status_code=500,
+            content={
+                "detail": {
+                    "error": "internal_server_error",
+                    "detail": "Internal server error.",
+                }
+            },
+        )
+    )
+
+
 def get_storage() -> Iterator[Storage]:
     conn = connect()
     init_db(conn)
@@ -203,7 +222,11 @@ def get_storage() -> Iterator[Storage]:
 
 
 def get_email_sender() -> EmailSender:
-    return build_email_sender(settings)
+    try:
+        return build_email_sender(settings)
+    except Exception:
+        logger.exception("email_sender_configuration_failed")
+        return build_email_sender(replace(settings, email_provider="console"))
 
 
 def get_current_user(

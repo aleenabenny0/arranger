@@ -701,7 +701,7 @@ async function runBackend() {
           }),
         });
 
-    const body = await response.json();
+    const body = await readResponseBody(response);
     if (!response.ok) {
       const detail = body.detail?.detail || body.detail || "Backend request failed.";
       throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
@@ -748,7 +748,7 @@ async function postJson(path, payload) {
     headers: jsonHeaders(true),
     body: JSON.stringify(payload),
   });
-  const body = await response.json();
+  const body = await readResponseBody(response);
   if (!response.ok) {
     const detail = body.detail?.detail || body.detail || "Backend request failed.";
     throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
@@ -763,7 +763,7 @@ async function getJson(path) {
     credentials: "include",
     headers: jsonHeaders(false),
   });
-  const body = await response.json();
+  const body = await readResponseBody(response);
   if (!response.ok) {
     const detail = body.detail?.detail || body.detail || "Backend request failed.";
     throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
@@ -779,7 +779,7 @@ async function putJson(path, payload) {
     headers: jsonHeaders(true),
     body: JSON.stringify(payload),
   });
-  const body = await response.json();
+  const body = await readResponseBody(response);
   if (!response.ok) {
     const detail = body.detail?.detail || body.detail || "Backend request failed.";
     throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
@@ -797,12 +797,25 @@ async function authRequest(path, payload = null) {
   if (payload) options.body = JSON.stringify(payload);
 
   const response = await fetch(`${baseUrl}${path}`, options);
-  const body = await response.json();
+  const body = await readResponseBody(response);
   if (!response.ok) {
     const detail = body.detail?.detail || body.detail || "Auth request failed.";
     throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
   return body;
+}
+
+async function readResponseBody(response) {
+  const text = await response.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}: ${text}`);
+    }
+    throw new Error("Server returned an invalid JSON response.");
+  }
 }
 
 function apiBaseUrl() {
