@@ -42,6 +42,9 @@ MIDI file → io.read_midi → Score
 | `arranger.render` | Plan → internal `Score` (melody/chord extraction, left-hand realisation) | stdlib only |
 | `arranger.fidelity` | Melodic recall / fidelity scoring against the source | stdlib only |
 | `arranger.agent` | Bounded repair loop, calls the Claude API directly | `anthropic` (only when not run with `--dry-run`) |
+| `arranger.application` | Use-case layer for CLI/API/worker entry points | stdlib only |
+| `arranger.adapters` | External file-format adapters | adapter-specific; JSON/MIDI path is stdlib today |
+| `arranger.ports` | Protocols for infrastructure boundaries | stdlib only |
 
 **Not built yet.** These have been described elsewhere as if live; nothing in
 `src/` implements them:
@@ -59,6 +62,11 @@ MIDI file → io.read_midi → Score
 **`arranger.verify` has zero third-party dependencies and must stay that way.**
 It is the component every other component's correctness is measured against.
 It cannot be allowed to break because a library changed under it.
+
+See `docs/architecture.md` for the layer boundaries. New CLIs, APIs, web UI
+handlers, and background workers should call `arranger.application` use cases
+rather than wiring domain modules together themselves. New file formats belong
+under `arranger.adapters`.
 
 ## Working rules
 

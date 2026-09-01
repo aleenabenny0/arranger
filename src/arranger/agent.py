@@ -567,7 +567,7 @@ def brute_force_baseline(source: Score, profile: PlayerProfile) -> tuple[float, 
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
-    from .io import read_midi
+    from .adapters.midi import read_midi
 
     ap = argparse.ArgumentParser(prog="arranger-agent")
     ap.add_argument("midi", type=Path)

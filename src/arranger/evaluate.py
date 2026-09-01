@@ -25,8 +25,8 @@ import statistics
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .adapters.midi import read_midi
 from .agent import ClaudeModel, RunResult, arrange, brute_force_baseline
-from .io import read_midi
 from .profile import PlayerProfile
 
 

@@ -112,6 +112,8 @@ Not built yet:
 
 ## Design notes
 
+- `docs/architecture.md` — current layers and where future APIs/adapters fit
+- `docs/deployment.md` — Docker/Railway hosting setup and cloud environment
 - `docs/build-log/why-plans-not-notes.md` — why the model never emits notation
 - `docs/build-log/limitations.md` — what's knowingly wrong and what fixes it
 - `docs/build-log/eval-protocol.md` — pre-registered design for the "does

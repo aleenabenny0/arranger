@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Arranger Workspace</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Arranger</h1>
+          <p id="scoreSummary">Playable-for-you piano arrangement workspace</p>
+        </div>
+        <div class="topbar-actions">
+          <input id="apiUrl" class="api-url" type="url" placeholder="API URL">
+          <button id="saveWorkBtn" type="button">Save Work</button>
+          <button id="runBackendBtn" type="button">Verify Plan</button>
+          <button id="loadSampleBtn" type="button">Load Sample</button>
+          <button id="exportPlanBtn" type="button">Export Plan</button>
+          <button id="exportVerdictBtn" type="button">Export Verdict</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="sidebar">
+          <section class="panel">
+            <h2>Account</h2>
+            <div id="signedOutPanel" class="auth-panel">
+              <label>
+                Email
+                <input id="authEmail" type="email" autocomplete="email">
+              </label>
+              <label>
+                Password
+                <input id="authPassword" type="password" autocomplete="current-password">
+              </label>
+              <div class="button-row">
+                <button id="loginBtn" type="button">Login</button>
+                <button id="registerBtn" type="button">Register</button>
+              </div>
+            </div>
+            <div id="signedInPanel" class="auth-panel hidden">
+              <strong id="currentUser">Signed in</strong>
+              <button id="logoutBtn" type="button">Logout</button>
+            </div>
+            <p id="authStatus" class="backend-status">Sign in to save work.</p>
+          </section>
+
+          <section class="panel">
+            <h2>Source</h2>
+            <label class="dropzone" for="scoreFile">
+              <span>Upload score JSON</span>
+              <small>Uses the same shape as tests/fixtures/too_hard.json</small>
+            </label>
+            <input id="scoreFile" type="file" accept="application/json,.json">
+            <dl class="stats">
+              <div><dt>Title</dt><dd id="sourceTitle">-</dd></div>
+              <div><dt>Bars</dt><dd id="sourceBars">-</dd></div>
+              <div><dt>Notes</dt><dd id="sourceNotes">-</dd></div>
+              <div><dt>Tempo</dt><dd id="sourceTempo">-</dd></div>
+            </dl>
+          </section>
+
+          <section class="panel">
+            <h2>Profile</h2>
+            <label class="dropzone compact" for="profileFile">
+              <span>Upload profile JSON</span>
+            </label>
+            <input id="profileFile" type="file" accept="application/json,.json">
+            <div class="field-grid">
+              <label>
+                Name
+                <input id="profileName" type="text">
+              </label>
+              <label>
+                Skill
+                <input id="skillLevel" type="number" min="1" max="10" step="1">
+              </label>
+              <label>
+                Max span
+                <input id="maxSpan" type="number" min="1" max="24" step="1">
+              </label>
+              <label>
+                Comfort
+                <input id="comfortableSpan" type="number" min="1" max="24" step="1">
+              </label>
+              <label>
+                Fingers
+                <input id="maxNotesPerHand" type="number" min="1" max="5" step="1">
+              </label>
+              <label>
+                Leap speed
+                <input id="maxLeapRate" type="number" min="1" max="240" step="1">
+              </label>
+            </div>
+          </section>
+        </aside>
+
+        <section class="mainstage">
+          <div class="tabs" role="tablist" aria-label="Workspace views">
+            <button class="tab active" data-view="plan" type="button">Plan</button>
+            <button class="tab" data-view="timeline" type="button">Timeline</button>
+            <button class="tab" data-view="json" type="button">JSON</button>
+          </div>
+
+          <section id="planView" class="view active">
+            <div class="section-header">
+              <div>
+                <h2>Arrangement Plan</h2>
+                <p>Draft the high-level arrangement decisions.</p>
+              </div>
+              <button id="addSectionBtn" type="button">Add Section</button>
+            </div>
+            <div id="sectionsList" class="sections-list"></div>
+          </section>
+
+          <section id="timelineView" class="view">
+            <div class="section-header">
+              <div>
+                <h2>Bar Timeline</h2>
+                <p>Bars with hard violations are red; strain is amber.</p>
+              </div>
+            </div>
+            <div id="timeline" class="timeline"></div>
+          </section>
+
+          <section id="jsonView" class="view">
+            <div class="json-grid">
+              <label>
+                Score JSON
+                <textarea id="scoreJson" spellcheck="false"></textarea>
+              </label>
+              <label>
+                Plan JSON
+                <textarea id="planJson" spellcheck="false"></textarea>
+              </label>
+              <label>
+                Verdict JSON
+                <textarea id="verdictJson" spellcheck="false" readonly></textarea>
+              </label>
+            </div>
+          </section>
+        </section>
+
+        <aside class="inspector">
+          <section class="verdict-panel" id="verdictPanel">
+            <div>
+              <p id="verdictEyebrow" class="eyebrow">Source Verdict</p>
+              <h2 id="verdictTitle">-</h2>
+              <p id="backendStatus" class="backend-status">Local preview mode</p>
+            </div>
+            <div class="verdict-counts">
+              <div><strong id="hardCount">0</strong><span>Hard</span></div>
+              <div><strong id="strainCount">0</strong><span>Strain</span></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Violations</h2>
+            <div id="violationsList" class="violations-list"></div>
+          </section>
+
+          <section class="panel">
+            <h2>Workspace</h2>
+            <div id="storageStatus" class="backend-status">Nothing saved yet</div>
+          </section>
+
+          <section class="panel">
+            <h2>Plan Health</h2>
+            <div id="planHealth" class="plan-health"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

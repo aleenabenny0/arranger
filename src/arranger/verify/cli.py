@@ -18,31 +18,9 @@ import json
 import sys
 from pathlib import Path
 
-from ..ir import Score, Note
+from ..adapters.score_json import load_score_json
+from ..application import verify_score
 from ..profile import PlayerProfile, PRESETS
-from .constraints import verify
-
-
-def load_score(path: Path) -> Score:
-    """Load a Score from JSON.
-
-    MusicXML and MIDI loaders arrive at milestone 2 and land in arranger.io.
-    JSON is the format the verifier's own tests use, so it stays supported
-    forever as the debugging format.
-    """
-    data = json.loads(path.read_text())
-    notes = [
-        Note(
-            pitch=n["pitch"], onset=float(n["onset"]), duration=float(n["duration"]),
-            staff=n.get("staff"), bar=n.get("bar"), voice=n.get("voice", 1),
-        )
-        for n in data["notes"]
-    ]
-    return Score(
-        notes=notes,
-        tempo_bpm=float(data.get("tempo_bpm", 100.0)),
-        title=data.get("title", path.stem),
-    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -61,12 +39,12 @@ def main(argv: list[str] | None = None) -> int:
             if args.profile in PRESETS
             else PlayerProfile.load(args.profile)
         )
-        score = load_score(args.score)
+        score = load_score_json(args.score)
     except (OSError, ValueError, KeyError) as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
         return 2
 
-    verdict = verify(score, profile)
+    verdict = verify_score(score, profile)
     print(verdict.to_json())
 
     if not args.quiet:
