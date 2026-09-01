@@ -278,6 +278,25 @@ if TestClient is not None:
         assert api.get("/auth/me").status_code == 401
 
 
+    def test_duplicate_registration_returns_clear_error():
+        conn = connect(":memory:")
+        init_db(conn)
+        api = client(Storage(conn))
+
+        register(api, "duplicate@example.com")
+        response = api.post(
+            "/auth/register",
+            json={
+                "email": "duplicate@example.com",
+                "password": "Password12345",
+                "display_name": "Duplicate",
+            },
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"]["detail"] == "email is already registered"
+
+
     def test_storage_requires_authentication():
         conn = connect(":memory:")
         init_db(conn)

@@ -375,7 +375,73 @@ def m0002_postgres(conn: Any) -> None:
     conn.execute("CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_hash ON password_reset_tokens(token_hash)")
 
 
+UNUSABLE_PASSWORD_HASH = "unusable_password_hash"
+
+
+def m0003_sqlite(conn: sqlite3.Connection) -> None:
+    sqlite_add_column(conn, "users", "password_hash", "password_hash TEXT")
+    sqlite_add_column(conn, "users", "display_name", "display_name TEXT")
+    sqlite_add_column(conn, "users", "created_at", "created_at TEXT")
+    sqlite_add_column(conn, "users", "updated_at", "updated_at TEXT")
+    conn.execute(
+        "UPDATE users SET password_hash = ? WHERE password_hash IS NULL OR password_hash = ''",
+        (UNUSABLE_PASSWORD_HASH,),
+    )
+    conn.execute(
+        """
+        UPDATE users
+        SET display_name = substr(email, 1, instr(email || '@', '@') - 1)
+        WHERE display_name IS NULL OR display_name = ''
+        """
+    )
+    conn.execute(
+        "UPDATE users SET created_at = datetime('now') WHERE created_at IS NULL OR created_at = ''"
+    )
+    conn.execute(
+        "UPDATE users SET updated_at = created_at WHERE updated_at IS NULL OR updated_at = ''"
+    )
+
+    sqlite_add_column(conn, "sessions", "csrf_token_hash", "csrf_token_hash TEXT")
+    sqlite_add_column(conn, "sessions", "ip_address", "ip_address TEXT")
+    sqlite_add_column(conn, "sessions", "user_agent", "user_agent TEXT")
+    sqlite_add_column(conn, "sessions", "last_seen_at", "last_seen_at TEXT")
+
+
+def m0003_postgres(conn: Any) -> None:
+    postgres_add_column(conn, "users", "password_hash TEXT")
+    postgres_add_column(conn, "users", "display_name TEXT")
+    postgres_add_column(conn, "users", "created_at TEXT")
+    postgres_add_column(conn, "users", "updated_at TEXT")
+    conn.execute(
+        "UPDATE users SET password_hash = ? WHERE password_hash IS NULL OR password_hash = ''",
+        (UNUSABLE_PASSWORD_HASH,),
+    )
+    conn.execute(
+        """
+        UPDATE users
+        SET display_name = split_part(email, '@', 1)
+        WHERE display_name IS NULL OR display_name = ''
+        """
+    )
+    conn.execute(
+        "UPDATE users SET created_at = CURRENT_TIMESTAMP::text WHERE created_at IS NULL OR created_at = ''"
+    )
+    conn.execute(
+        "UPDATE users SET updated_at = created_at WHERE updated_at IS NULL OR updated_at = ''"
+    )
+    conn.execute("ALTER TABLE users ALTER COLUMN password_hash SET NOT NULL")
+    conn.execute("ALTER TABLE users ALTER COLUMN display_name SET NOT NULL")
+    conn.execute("ALTER TABLE users ALTER COLUMN created_at SET NOT NULL")
+    conn.execute("ALTER TABLE users ALTER COLUMN updated_at SET NOT NULL")
+
+    postgres_add_column(conn, "sessions", "csrf_token_hash TEXT")
+    postgres_add_column(conn, "sessions", "ip_address TEXT")
+    postgres_add_column(conn, "sessions", "user_agent TEXT")
+    postgres_add_column(conn, "sessions", "last_seen_at TEXT")
+
+
 MIGRATIONS = [
     Migration("0001_initial_storage", m0001_sqlite, m0001_postgres),
     Migration("0002_auth_hardening", m0002_sqlite, m0002_postgres),
+    Migration("0003_auth_schema_backfill", m0003_sqlite, m0003_postgres),
 ]

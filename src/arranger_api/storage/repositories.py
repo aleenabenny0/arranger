@@ -44,6 +44,28 @@ class Storage:
 
     def ping(self) -> bool:
         self.conn.execute("SELECT 1").fetchone()
+        self.conn.execute(
+            """
+            SELECT id, email, password_hash, display_name, created_at, updated_at
+            FROM users
+            LIMIT 0
+            """
+        )
+        self.conn.execute(
+            """
+            SELECT id, user_id, token_hash, csrf_token_hash, ip_address, user_agent,
+                   last_seen_at, created_at, expires_at, revoked_at
+            FROM sessions
+            LIMIT 0
+            """
+        )
+        self.conn.execute(
+            """
+            SELECT id, user_id, token_hash, created_at, expires_at, used_at
+            FROM password_reset_tokens
+            LIMIT 0
+            """
+        )
         return True
 
     # --- users and sessions --------------------------------------------

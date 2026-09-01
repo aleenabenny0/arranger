@@ -147,6 +147,44 @@ def test_migrations_are_recorded():
 
     assert "0001_initial_storage" in migrations
     assert "0002_auth_hardening" in migrations
+    assert "0003_auth_schema_backfill" in migrations
+
+
+def test_legacy_user_schema_is_backfilled():
+    conn = connect(":memory:")
+    conn.execute(
+        """
+        CREATE TABLE users (
+            id TEXT PRIMARY KEY,
+            email TEXT NOT NULL UNIQUE
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE sessions (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            token_hash TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL,
+            expires_at TEXT NOT NULL,
+            revoked_at TEXT
+        )
+        """
+    )
+    conn.execute(
+        "INSERT INTO users (id, email) VALUES (?, ?)",
+        ("legacy-user", "legacy@example.com"),
+    )
+
+    init_db(conn)
+
+    storage = Storage(conn)
+    assert storage.ping()
+    user = storage.get_user_with_password("legacy@example.com")
+    assert user["password_hash"] == "unusable_password_hash"
+    created = storage.create_user("new@example.com", "hash", "New User")
+    assert created["email"] == "new@example.com"
 
 
 if __name__ == "__main__":
