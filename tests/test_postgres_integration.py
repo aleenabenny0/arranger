@@ -8,7 +8,7 @@ import os
 import sys
 import uuid
 from pathlib import Path
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -67,7 +67,8 @@ def with_query_param(url: str, key: str, value: str) -> str:
     parts = urlsplit(url)
     query = dict(parse_qsl(parts.query, keep_blank_values=True))
     query[key] = value
-    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+    encoded = urlencode(query, quote_via=quote)
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, encoded, parts.fragment))
 
 
 def with_env(values, fn):
@@ -136,6 +137,15 @@ def test_real_postgres_storage_flow() -> bool:
     return True
 
 
+def test_postgres_options_url_uses_percent_encoded_space():
+    url = with_query_param(
+        "postgresql://postgres:postgres@localhost:5432/arranger_test",
+        "options",
+        "-c search_path=arranger_test_schema",
+    )
+    assert "options=-c%20search_path%3Darranger_test_schema" in url
+
+
 if __name__ == "__main__":
     failed = 0
     ran = False
@@ -143,11 +153,13 @@ if __name__ == "__main__":
         ran = test_real_postgres_storage_flow()
         if ran:
             print("  PASS  test_real_postgres_storage_flow")
+        test_postgres_options_url_uses_percent_encoded_space()
+        print("  PASS  test_postgres_options_url_uses_percent_encoded_space")
     except AssertionError as exc:
         failed = 1
-        print(f"  FAIL  test_real_postgres_storage_flow  {exc}")
+        print(f"  FAIL  postgres integration tests  {exc}")
     if ran:
-        print(f"\n{1 - failed}/1 passed")
+        print(f"\n{2 - failed}/2 passed")
     else:
-        print("\n0/1 run")
+        print(f"\n{1 - failed}/2 passed, 1 skipped")
     raise SystemExit(failed)
