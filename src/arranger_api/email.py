@@ -13,6 +13,7 @@ from typing import Protocol
 from .settings import Settings
 
 logger = logging.getLogger("arranger_api.email")
+USER_AGENT = "arranger-api/0.1"
 
 
 class EmailSender(Protocol):
@@ -70,6 +71,7 @@ class ResendEmailSender:
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
+                "User-Agent": USER_AGENT,
             },
         )
 

@@ -3,10 +3,11 @@
 import sys
 from dataclasses import replace
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from arranger_api.email import build_email_sender, build_password_reset_link  # noqa: E402
+from arranger_api.email import ResendEmailSender, build_email_sender, build_password_reset_link  # noqa: E402
 from arranger_api.settings import load_settings  # noqa: E402
 
 
@@ -22,6 +23,18 @@ def test_console_email_sender_is_default():
     sender = build_email_sender(load_settings())
 
     assert sender.__class__.__name__ == "ConsoleEmailSender"
+
+
+def test_resend_sender_includes_user_agent_header():
+    sender = ResendEmailSender("re_test", "onboarding@resend.dev", "Reset")
+
+    with patch("urllib.request.urlopen") as urlopen:
+        urlopen.return_value.__enter__.return_value.status = 200
+
+        sender.send_password_reset("user@example.com", "https://example.com/?reset_token=t", 30)
+
+    request = urlopen.call_args.args[0]
+    assert request.headers["User-agent"] == "arranger-api/0.1"
 
 
 if __name__ == "__main__":
