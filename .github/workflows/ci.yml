@@ -55,8 +55,30 @@ jobs:
       - name: Run the constraint tests standalone
         run: python tests/test_constraints.py
 
+      # One pytest run: line coverage gated by fail_under in pyproject.toml, a
+      # JUnit file, the ten slowest tests, and up to two reruns of a failing
+      # test. A test that passes only on a rerun is listed as flaky in the
+      # job summary rather than silently counted as a pass.
       - name: Run the whole test suite
-        run: python -m pytest -q --ignore=tests/test_browser_e2e.py -rs
+        run: >-
+          python -m pytest --cov=src --cov-report=xml:reports/coverage.xml --cov-report=term
+          --junitxml=reports/junit.xml --durations=10 --reruns 2 -rRs
+          --ignore=tests/test_browser_e2e.py
+
+      - name: Write the quality summary
+        if: always()
+        run: >-
+          python scripts/test_report.py --junit reports/junit.xml --coverage reports/coverage.xml
+          --title "Python tests (${{ matrix.python-version }})"
+
+      - name: Keep the test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-python-${{ matrix.python-version }}
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Run Ruff lint
         run: ruff check .
@@ -91,7 +113,22 @@ jobs:
       - name: Drive the product through a real browser
         env:
           E2E_SCREENSHOT_DIR: ${{ runner.temp }}/e2e-shots
-        run: python -m pytest -q tests/test_browser_e2e.py -rs
+        run: >-
+          python -m pytest tests/test_browser_e2e.py --junitxml=reports/junit-browser.xml
+          --durations=10 --reruns 2 -rRs
+
+      - name: Write the quality summary
+        if: always()
+        run: python scripts/test_report.py --junit reports/junit-browser.xml --title "Browser tests"
+
+      - name: Keep the test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-browser
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Keep the screenshots
         if: always()
@@ -202,7 +239,22 @@ jobs:
       - name: Run real Postgres storage and project flow
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/arranger_test
-        run: python tests/test_postgres_integration.py
+        run: >-
+          python -m pytest tests/test_postgres_integration.py
+          --junitxml=reports/junit-postgres.xml --durations=10 --reruns 2 -rRs
+
+      - name: Write the quality summary
+        if: always()
+        run: python scripts/test_report.py --junit reports/junit-postgres.xml --title "Postgres integration"
+
+      - name: Keep the test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-postgres
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 14
 
   docker-build:
     name: Docker build and smoke test
