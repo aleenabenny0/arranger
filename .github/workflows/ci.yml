@@ -481,6 +481,120 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  c-midi:
+    name: C MIDI parser (CMake, Unity, ASan/UBSan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      # Warnings are errors, and the tests run under AddressSanitizer and
+      # UndefinedBehaviorSanitizer: an out-of-bounds read on a malformed file
+      # fails the job rather than passing by luck.
+      - name: Configure
+        run: cmake -S c/midi -B c/midi/build -DCMAKE_BUILD_TYPE=Debug -DMIDI_SANITIZE=ON
+
+      - name: Build
+        run: cmake --build c/midi/build
+
+      - name: Unit tests
+        run: ctest --test-dir c/midi/build --output-on-failure
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install the Python reader
+        run: python -m pip install -e .
+
+      - name: Fetch the public-domain evaluation corpus
+        run: python fetch_corpus.py
+
+      # The same files through both parsers: every real piece in the corpus,
+      # 300 pieces written by the project's MIDI writer, and 1000 corrupted
+      # variants of those (truncations, bit flips, inserted and dropped bytes).
+      - name: Diff the C parser against the Python reader
+        run: |
+          python scripts/midi_diff.py --dump c/midi/build/midi_dump --generated 300 --mutations 1000 evals/corpus/*.mid | tee midi-diff.log
+          {
+            echo "### C MIDI parser vs Python reader"
+            echo
+            echo '```'
+            tail -n 1 midi-diff.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  firmware-host:
+    name: ESP32 firmware host tests (frame protocol, voice)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Configure
+        run: cmake -S firmware/esp32-player/host -B firmware/esp32-player/host/build -DCMAKE_BUILD_TYPE=Debug -DFIRMWARE_SANITIZE=ON
+
+      - name: Build
+        run: cmake --build firmware/esp32-player/host/build
+
+      - name: Test
+        run: ctest --test-dir firmware/esp32-player/host/build --output-on-failure
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      # The host script's encoder is pinned to the firmware's parser by golden bytes.
+      - name: Test the host script
+        run: |
+          python -m pip install -e ".[dev]"
+          python -m pytest tests/test_esp32_sender.py tests/test_midi_raw.py -q
+
+  esp32-build:
+    name: ESP32 firmware build (ESP-IDF 5.2)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      # The real toolchain, from Espressif's image; no hardware is needed to
+      # prove the firmware compiles and links.
+      - name: Build with idf.py
+        run: |
+          docker run --rm -v "$PWD/firmware/esp32-player:/project" -w /project \
+            espressif/idf:release-v5.2 idf.py build 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" != "0" ]; then
+            grep -nE "error:|Error |undefined reference|FAILED" build.log | head -n 20 | while IFS= read -r line; do
+              echo "::error title=ESP-IDF build::${line:0:900}"
+            done
+            exit "$status"
+          fi
+          {
+            echo "### ESP32 firmware"
+            echo
+            echo '```'
+            grep -A 12 "Total sizes" build.log || grep -E "bin binary size|Used static" build.log || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the firmware image
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: esp32-player-firmware
+          path: |
+            firmware/esp32-player/build/arranger_player.bin
+            firmware/esp32-player/build/bootloader/bootloader.bin
+            firmware/esp32-player/build/partition_table/partition-table.bin
+          if-no-files-found: warn
+          retention-days: 14
+
   shell-checks:
     name: ShellCheck
     runs-on: ubuntu-latest
