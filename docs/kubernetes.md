@@ -10,12 +10,12 @@ and `scripts/smoke.sh` is run through a port-forward (the `kubernetes` job in
 
 | File | What it declares |
 |---|---|
-| `namespace.yaml` | The `arranger` namespace everything else lives in |
-| `postgres.yaml` | A one-replica Postgres 16 StatefulSet with a 1 GiB PersistentVolumeClaim, readiness and liveness probes, and its Service |
-| `configmap.yaml` | Non-secret settings: development mode, files and rate limits in Postgres, migrations at startup, one job worker per pod |
-| `secret.example.yaml` | Placeholder secrets for a throwaway cluster; copy to `secret.yaml` for anything real |
-| `deployment.yaml` | The API: 2 replicas, resource requests and limits, readiness on `/ready`, liveness on `/health`, `envFrom` the ConfigMap and Secret, an init container that waits for Postgres, non-root |
-| `service.yaml` | ClusterIP Service on port 80 in front of the pods |
+| `00-namespace.yaml` | The `arranger` namespace everything else lives in; numbered first so `kubectl apply -f k8s/` creates it before the rest |
+| `20-postgres.yaml` | A one-replica Postgres 16 StatefulSet with a 1 GiB PersistentVolumeClaim, readiness and liveness probes, and its Service |
+| `10-configmap.yaml` | Non-secret settings: development mode, files and rate limits in Postgres, migrations at startup, one job worker per pod |
+| `11-secret.example.yaml` | Placeholder secrets for a throwaway cluster; copy to `secret.yaml` for anything real |
+| `30-deployment.yaml` | The API: 2 replicas, resource requests and limits, readiness on `/ready`, liveness on `/health`, `envFrom` the ConfigMap and Secret, an init container that waits for Postgres, non-root |
+| `31-service.yaml` | ClusterIP Service on port 80 in front of the pods |
 
 Files are stored as rows (`ARTIFACT_BACKEND=database`) and rate-limit
 counters in Postgres (`RATE_LIMIT_BACKEND=database`), so the replicas share
@@ -51,12 +51,12 @@ Open <http://127.0.0.1:8000> in a browser to use the app. Tear down with
 
 ### Real secrets
 
-`secret.example.yaml` is applied with the rest of the directory so that a
+`11-secret.example.yaml` is applied with the rest of the directory so that a
 fresh cluster works; its values are placeholders. For any cluster that is not
 thrown away:
 
 ```bash
-cp k8s/secret.example.yaml k8s/secret.yaml    # git-ignored
+cp k8s/11-secret.example.yaml k8s/secret.yaml    # git-ignored
 # edit k8s/secret.yaml: a real POSTGRES_PASSWORD, the same password inside DATABASE_URL, RESEND_API_KEY, METRICS_TOKEN
 kubectl apply -f k8s/ && kubectl apply -f k8s/secret.yaml
 kubectl -n arranger rollout restart statefulset/postgres deployment/arranger
@@ -67,7 +67,7 @@ volume by `initdb` and a later change to the Secret does not update it.
 
 ### Production settings
 
-`configmap.yaml` runs the app in development mode so the CI smoke test can
+`10-configmap.yaml` runs the app in development mode so the CI smoke test can
 sign in over plain http. For production set `APP_ENV=production`,
 `COOKIE_SECURE=true`, `PUBLIC_BASE_URL` and `FRONTEND_ORIGINS` to the https
 address, `EMAIL_PROVIDER=resend` with `RESEND_API_KEY` in the Secret, and
@@ -104,5 +104,5 @@ Everything below assumes `-n arranger`; `kubectl config set-context --current
 
 Things worth practising on the kind cluster: delete a pod and watch the
 Deployment replace it (`kubectl delete pod <pod>`), break the image name in
-`deployment.yaml` and read `describe` to find `ImagePullBackOff`, then
+`30-deployment.yaml` and read `describe` to find `ImagePullBackOff`, then
 `rollout undo` to recover.

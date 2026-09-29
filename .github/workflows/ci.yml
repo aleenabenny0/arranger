@@ -406,8 +406,11 @@ jobs:
       - name: Load the image into the cluster
         run: kind load docker-image arranger:local --name arranger
 
+      # The namespace goes first: the other manifests live in it. The files are
+      # numbered so a plain `kubectl apply -f k8s/` (alphabetical) has the same order.
       - name: Deploy
         run: |
+          kubectl apply -f k8s/00-namespace.yaml
           kubectl apply -f k8s/
           kubectl -n arranger rollout status statefulset/postgres --timeout=120s
           kubectl -n arranger rollout status deployment/arranger --timeout=120s
