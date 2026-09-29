@@ -6,3 +6,19 @@
 # reason on the line above it, and prefer fixing the finding in the app.
 #
 # Reference: https://www.zaproxy.org/docs/docker/baseline-scan/#configuration-file
+#
+# Findings from the first scan (run 36517913550) and what was done about them:
+#   CSP: style-src unsafe-inline (Medium)        -> fixed: the policy no longer allows inline styles
+#   Cross-Origin-Embedder-Policy missing (Low)   -> fixed: the header is sent on every response
+#   the three informational alerts below         -> accepted, reasons given
+
+# Comments in the app's own unminified JavaScript. They document the code and
+# contain no credentials, hostnames or internal paths (Gitleaks covers secrets).
+10027	IGNORE	Information Disclosure - Suspicious Comments
+# It is a single-page app. The alert only says that a spider will miss routes
+# that JavaScript builds; every route is covered by the browser tests instead.
+10109	IGNORE	Modern Web Application
+# Cache headers are deliberate: API responses are private and not storable,
+# application modules are revalidated on every load so a deploy cannot leave a
+# browser running an old module (see arranger_api.middleware).
+10049	IGNORE	Content Cacheability

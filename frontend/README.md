@@ -24,10 +24,14 @@ list the site's origin in the API's `FRONTEND_ORIGINS`.
 
 ## Rules this code keeps
 
-- **No `innerHTML`, no inline script, no `eval`.** The content security policy
-  forbids them and CI greps for them. Text from the server or the user is always
-  set as text. Notation SVG is parsed and adopted node by node after scripts,
-  `foreignObject` and event-handler attributes are removed.
+- **No `innerHTML`, no inline script, no inline style, no `eval`.** The content
+  security policy forbids them and CI greps for them. Text from the server or
+  the user is always set as text. Notation SVG is parsed and adopted node by
+  node after scripts, `foreignObject`, `style` attributes, event handlers and
+  external references are removed; the `<style>` elements Verovio emits (its
+  element rules and embedded music font) are cut out of the text first and
+  applied through a constructed `CSSStyleSheet`, which the policy does not
+  govern.
 - **Nothing is faked.** Every number on screen comes from the API. When the
   server has no LilyPond or no audio model, the interface says so instead of
   showing a button that cannot work.

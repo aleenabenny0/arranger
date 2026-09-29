@@ -355,14 +355,23 @@ jobs:
           allow_issue_writing: false
           artifact_name: zap-baseline-report
 
+      # Plugin id, name, risk and count of every alert, so a new finding can be
+      # matched to a rule in .zap/rules.tsv without opening the report artifact.
       - name: Show the ZAP findings as annotations
         if: always()
         run: |
-          if [ -f report_md.md ]; then
-            summary="$(sed -n '/^## Alerts/,/^## Alert Detail/p' report_md.md | grep -E '^\| ' | grep -vE 'PASS|Risk Level|---' | tr '\n' ' ' | cut -c1-3500)"
-            echo "::warning title=ZAP alerts::${summary:-none}"
+          if [ -f report_json.json ]; then
+            python3 - <<'PY'
+          import json
+          data = json.load(open("report_json.json"))
+          lines = []
+          for site in data.get("site", []):
+              for alert in site.get("alerts", []):
+                  lines.append(f"[{alert.get('pluginid')}] {alert.get('alert')} ({alert.get('riskdesc')}) x{alert.get('count')}")
+          print("::warning title=ZAP alerts::" + (" | ".join(lines)[:3500] or "none"))
+          PY
           else
-            echo "::warning title=ZAP::no report_md.md was written"
+            echo "::warning title=ZAP::no report_json.json was written"
           fi
 
       # Annotations can be read from the run page and the API without the log.

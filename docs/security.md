@@ -103,8 +103,13 @@ These are real and should be read before a public launch.
 8. **SQLite mode is single-host.** Rate limits and job claims are correct across
    processes on one machine, not across machines. Use Postgres for more than
    one host.
-9. **`style-src` allows `'unsafe-inline'`** because the notation SVG carries
-   inline style attributes. Script policy is unaffected.
+9. **The notation renderer's CSS bypasses `style-src` by design.** The policy
+   allows no inline styles. Verovio puts its element rules and its embedded
+   music font into `<style>` elements inside the SVG it renders; the frontend
+   cuts those out of the SVG text before parsing it and applies them through a
+   constructed `CSSStyleSheet`, which the policy does not govern. The SVG is
+   still stripped of scripts, `foreignObject`, event handlers, external
+   references and `style` attributes before it is adopted.
 10. **Backups are not made by the application.** See the runbook.
 11. **Dependency pinning is partial.** `requirements.lock` was generated on
     Windows, so Linux-only transitive packages are not pinned. `pip-audit` runs
