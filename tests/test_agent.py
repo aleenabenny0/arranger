@@ -13,19 +13,27 @@ escalation when the budget runs out.
 """
 
 import sys
+import time
+
+import pytest
+import json
 from dataclasses import asdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from arranger.agent import (  # noqa: E402
-    FIDELITY_FLOOR, Attempt, ScriptedModel, TruncatedResponse, arrange,
+    FIDELITY_FLOOR, ScriptedModel, TruncatedResponse, arrange,
     brute_force_baseline, cost, describe_score, describe_verdict, _parse_plan,
 )
 from arranger.fidelity import Fidelity, measure  # noqa: E402
 from arranger.ir import Note, Score  # noqa: E402
+from arranger.agent import (  # noqa: E402
+    ModelRefused, ProviderError, RepairBudget, _fingerprint,
+)
+from arranger.engine import Cancelled  # noqa: E402
 from arranger.plan import ArrangementPlan, LHPattern, Section, simple_plan  # noqa: E402
-from arranger.profile import PlayerProfile, PRESETS  # noqa: E402
+from arranger.profile import PRESETS, PlayerProfile  # noqa: E402
 from arranger.render import render, last_bar  # noqa: E402
 from arranger.verify import verify  # noqa: E402
 
@@ -83,8 +91,12 @@ def test_truncation_is_reported_as_truncation():
             raise TruncatedResponse("response hit the token limit")
 
     result = arrange(SOURCE, PROFILE, Truncating(), max_attempts=2, verbose=False)
+    assert len(result.attempts) == 2
     assert all("token limit" in (a.error or "") for a in result.attempts)
-    assert result.escalated
+    # The model never delivered a plan. That used to mean escalation; now the
+    # deterministic draft stands, so a useless model costs nothing but money.
+    assert result.best_origin in ("deterministic", "local_repair")
+    assert result.accepted and not result.escalated
 
 
 def test_response_with_no_json_raises():
@@ -112,6 +124,73 @@ def test_summary_warns_when_melody_exceeds_one_hand():
         for i in range(9)
     ], title="rising")
     assert "octave displacement" in describe_score(rising, PROFILE)
+
+
+def test_first_prompt_includes_deterministic_draft():
+    class CapturingModel:
+        input_tokens = output_tokens = 0
+        messages = None
+
+        def __call__(self, messages):
+            CapturingModel.messages = messages
+            return json.dumps(plan_dict(LHPattern.PEDAL_TONE, 1))
+
+    arrange(SOURCE, PRESETS["advanced"], CapturingModel(), max_attempts=1, verbose=False)
+    assert CapturingModel.messages is not None
+    first = CapturingModel.messages[0]["content"]
+    assert "deterministic draft" in first
+    assert "ARRANGING GUIDANCE RETRIEVED FOR THIS SCORE" in first
+    assert "Lowest-priority notes to thin first" in first
+    assert '"sections"' in first
+
+
+def test_retry_feedback_includes_deterministic_repair_suggestions():
+    source = Score(
+        notes=[
+            Note(48, 0.0, 1.0, bar=1),
+            Note(52, 0.0, 1.0, bar=1),
+            Note(55, 0.0, 1.0, bar=1),
+            Note(58, 0.0, 1.0, bar=1),
+            Note(72, 0.0, 1.0, bar=1),
+        ],
+        title="thick chord",
+    )
+    bad = asdict(
+        ArrangementPlan(
+            title="bad",
+            sections=[Section(1, 1, LHPattern.BLOCK, lh_voices=4)],
+        )
+    )
+    good = asdict(
+        ArrangementPlan(
+            title="good",
+            sections=[Section(1, 1, LHPattern.PEDAL_TONE, lh_voices=1)],
+        )
+    )
+
+    class CapturingBadThenGood:
+        input_tokens = output_tokens = 0
+        messages = None
+        calls = 0
+
+        def __call__(self, messages):
+            CapturingBadThenGood.messages = messages
+            CapturingBadThenGood.calls += 1
+            if CapturingBadThenGood.calls == 1:
+                return json.dumps(bad)
+            return json.dumps(good)
+
+    arrange(
+        source,
+        PRESETS["beginner"],
+        CapturingBadThenGood(),
+        max_attempts=2,
+        verbose=False,
+    )
+    assert CapturingBadThenGood.messages is not None
+    retry = CapturingBadThenGood.messages[-1]["content"]
+    assert "DETERMINISTIC REPAIR SUGGESTIONS" in retry
+    assert "lh_pattern" in retry or "lh_voices" in retry
 
 
 def test_feedback_names_the_section_to_edit():
@@ -173,7 +252,8 @@ def test_malformed_output_is_feedback_not_a_crash():
     result = arrange(SOURCE, PROFILE, Broken(), max_attempts=2, verbose=False)
     assert len(result.attempts) == 2
     assert all(a.error for a in result.attempts)
-    assert result.escalated
+    assert result.best_origin in ("deterministic", "local_repair")
+    assert result.stop_reason == "attempts_exhausted"
 
 
 def test_invalid_plans_are_rejected_and_reported():
@@ -204,6 +284,192 @@ def test_run_log_records_every_attempt():
     assert len(log["attempts"]) == 2
     assert log["baseline_hard"] == len(verify(SOURCE, PROFILE).hard)
     assert all(a["error"] for a in log["attempts"])
+
+
+# --- the deterministic draft is candidate zero ---------------------------
+
+IMPOSSIBLE = PlayerProfile(
+    name="impossible", max_span=2, comfortable_span=1, max_notes_per_hand=1,
+    max_leap_rate=0.5, leap_slack=0, lowest_pitch=70, highest_pitch=72,
+)
+
+
+class Recording:
+    """A model that returns scripted replies and records what it was asked."""
+
+    def __init__(self, replies):
+        self.replies = list(replies)
+        self.calls = 0
+        self.seen: list[list[dict]] = []
+        self.input_tokens = self.output_tokens = 0
+
+    def __call__(self, messages):
+        self.seen.append(list(messages))
+        reply = self.replies[min(self.calls, len(self.replies) - 1)]
+        self.calls += 1
+        if isinstance(reply, Exception):
+            raise reply
+        return reply if isinstance(reply, str) else json.dumps(reply)
+
+
+def test_no_model_means_a_deterministic_arrangement_not_an_error():
+    result = arrange(SOURCE, PROFILE, None, verbose=False)
+    assert result.accepted and result.best_plan and not result.attempts
+    assert result.best_origin in ("deterministic", "local_repair")
+    assert result.draft is not None and result.draft.number == 0
+    assert result.cost_usd == 0 and result.algorithm_version
+
+
+def test_a_model_cannot_make_the_result_worse_than_the_draft():
+    alone = arrange(SOURCE, PRESETS["beginner"], None, verbose=False)
+    model = Recording([plan_dict(LHPattern.BROKEN_OCTAVE, 5)])
+    helped = arrange(SOURCE, PRESETS["beginner"], model, max_attempts=3, verbose=False)
+    assert helped.best_cost <= alone.best_cost
+    if helped.best_origin != "model":
+        assert helped.best_plan == alone.best_plan
+
+
+def test_an_equally_good_model_plan_does_not_displace_the_draft():
+    alone = arrange(SOURCE, PROFILE, None, verbose=False)
+    echo = Recording([alone.best_plan])
+    result = arrange(SOURCE, PROFILE, echo, max_attempts=1, verbose=False)
+    assert result.best_origin != "model"
+
+
+def test_a_hosted_run_does_not_pay_to_improve_an_acceptable_draft():
+    model = Recording([plan_dict(LHPattern.BLOCK)])
+    result = arrange(SOURCE, PROFILE, model, verbose=False,
+                     budget=RepairBudget(skip_model_when_draft_accepted=True))
+    assert model.calls == 0 and result.stop_reason == "draft_accepted" and result.accepted
+
+
+def test_the_model_is_told_what_it_has_to_beat():
+    model = Recording([plan_dict(LHPattern.BLOCK)])
+    arrange(SOURCE, PROFILE, model, max_attempts=1, verbose=False)
+    assert "will be discarded in its favour" in model.seen[0][0]["content"]
+
+
+def test_escalation_means_nothing_acceptable_was_found_by_anyone():
+    model = Recording([plan_dict(LHPattern.PEDAL_TONE, 1)])
+    result = arrange(SOURCE, IMPOSSIBLE, model, max_attempts=2, verbose=False)
+    assert result.escalated and not result.accepted
+    assert result.best_plan is not None, "even a failed run hands back its best effort"
+
+
+# --- every way the loop stops ----------------------------------------------
+
+
+def test_stops_when_the_same_plan_keeps_coming_back():
+    model = Recording([plan_dict(LHPattern.BROKEN_OCTAVE, 5)])
+    result = arrange(SOURCE, IMPOSSIBLE, model, verbose=False,
+                     budget=RepairBudget(max_attempts=8, patience=99))
+    assert result.stop_reason == "repeated_plan"
+    assert model.calls == 3, "one original, one tolerated repeat, one too many"
+    assert "renders identically" in model.seen[2][-1]["content"]
+
+
+def test_relabelling_a_plan_does_not_make_it_new():
+    first = plan_dict(LHPattern.BROKEN_OCTAVE, 5)
+    second = json.loads(json.dumps(first))
+    second["title"] = "completely different, honest"
+    second["notes"] = "new reasoning"
+    second["sections"][0]["label"] = "renamed"
+    assert _fingerprint(ArrangementPlan.from_dict(first)) == _fingerprint(ArrangementPlan.from_dict(second))
+    second["sections"][0]["lh_voices"] = 2
+    assert _fingerprint(ArrangementPlan.from_dict(first)) != _fingerprint(ArrangementPlan.from_dict(second))
+
+
+def test_stops_when_valid_attempts_stop_improving():
+    plans = [plan_dict(LHPattern.BROKEN_OCTAVE, v) for v in (5, 4, 3, 2)]
+    model = Recording(plans)
+    result = arrange(SOURCE, IMPOSSIBLE, model, verbose=False,
+                     budget=RepairBudget(max_attempts=8, patience=2, max_repeated_plans=99))
+    assert result.stop_reason == "no_improvement" and model.calls == 2
+
+
+def test_stops_on_the_time_budget():
+    class Slow(Recording):
+        def __call__(self, messages):
+            time.sleep(0.3)
+            return super().__call__(messages)
+
+    model = Slow([plan_dict(LHPattern.BROKEN_OCTAVE, v) for v in (5, 4, 3, 2, 1)])
+    result = arrange(SOURCE, IMPOSSIBLE, model, verbose=False,
+                     budget=RepairBudget(max_attempts=50, max_seconds=1.6, patience=99, max_repeated_plans=99))
+    assert result.stop_reason == "time_budget" and model.calls < 10
+
+
+def test_stops_on_the_cost_budget():
+    class Pricey(Recording):
+        cost_usd = 0.0
+
+        def __call__(self, messages, **options):
+            Pricey.cost_usd += 0.4
+            self.options = options
+            return super().__call__(messages)
+
+    Pricey.cost_usd = 0.0
+    model = Pricey([plan_dict(LHPattern.BROKEN_OCTAVE, v) for v in (5, 4, 3, 2)])
+    result = arrange(SOURCE, IMPOSSIBLE, model, verbose=False,
+                     budget=RepairBudget(max_attempts=9, max_cost_usd=1.0, patience=99, max_repeated_plans=99))
+    assert result.stop_reason == "cost_budget" and model.calls == 3
+    assert result.cost_usd == pytest.approx(1.2)
+    assert model.options["max_tokens"] >= 1024 and model.options["timeout"] > 0
+
+
+def test_provider_failures_end_the_run_and_keep_the_draft():
+    fatal = Recording([ProviderError("bad key", retryable=False)])
+    result = arrange(SOURCE, PROFILE, fatal, max_attempts=4, verbose=False)
+    assert result.stop_reason == "provider_failure" and fatal.calls == 1
+    assert result.accepted and result.best_origin != "model"
+
+    flaky = Recording([ProviderError("503", retryable=True)])
+    result = arrange(SOURCE, PROFILE, flaky, max_attempts=6, verbose=False)
+    assert result.stop_reason == "provider_failure" and flaky.calls == 2
+    assert all("ProviderError" in a.error for a in result.attempts)
+
+
+def test_a_transient_provider_failure_is_not_fed_back_as_a_bad_plan():
+    model = Recording([ProviderError("503", retryable=True), plan_dict(LHPattern.BLOCK)])
+    arrange(SOURCE, IMPOSSIBLE, model, max_attempts=2, verbose=False)
+    assert len(model.seen[1]) == 1, "the model never answered, so there is nothing to correct"
+
+
+def test_a_refusal_ends_the_run():
+    model = Recording([ModelRefused("declined")])
+    result = arrange(SOURCE, PROFILE, model, max_attempts=4, verbose=False)
+    assert result.stop_reason == "model_refused" and model.calls == 1
+
+
+def test_an_oversized_response_is_rejected_before_parsing():
+    huge = "{" + " " * 5000 + "}"
+    model = Recording([huge])
+    result = arrange(SOURCE, PROFILE, model, verbose=False,
+                     budget=RepairBudget(max_attempts=1, max_response_chars=1000))
+    assert "the limit is 1000" in result.attempts[0].error
+
+
+def test_a_plan_that_does_not_fit_the_piece_is_rejected_with_the_reason():
+    short = asdict(ArrangementPlan(sections=[Section(1, 2)]))
+    result = arrange(SOURCE, PROFILE, Recording([short]), max_attempts=1, verbose=False)
+    assert "not covered" in result.attempts[0].error
+
+
+def test_cancellation_stops_promptly():
+    calls = {"n": 0}
+
+    def cancel():
+        calls["n"] += 1
+        return calls["n"] > 2
+
+    with pytest.raises(Cancelled):
+        arrange(SOURCE, IMPOSSIBLE, Recording([plan_dict(LHPattern.BLOCK)]), verbose=False, should_cancel=cancel)
+
+
+def test_progress_is_reported_and_ends_at_one():
+    seen: list[float] = []
+    arrange(SOURCE, PROFILE, None, verbose=False, progress=lambda f, _stage: seen.append(f))
+    assert seen == sorted(seen) and seen[-1] == 1.0 and 0 < seen[0] < 1
 
 
 # --- the baseline the agent must beat -----------------------------------

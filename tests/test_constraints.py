@@ -104,21 +104,34 @@ def test_two_octave_leap_in_20ms_is_infeasible():
     assert Rule.LEAP_INFEASIBLE in rules(v)
 
 
-def test_lone_line_stays_in_one_hand_and_its_leaps_are_checked():
-    # REVERSED in M2. This test previously asserted the opposite: that a fast
-    # wide leap should be excused because the other hand is idle and could
-    # take it. That rule let a single melodic line drift into whichever hand
-    # was momentarily nearer, and Fur Elise showed the cost — 58 phantom leap
-    # violations from a melody being relabelled back and forth.
+def test_a_free_hand_may_rescue_a_leap():
+    # History, because this test has now flipped twice.
     #
-    # Charging a price to wake a resting hand fixed that, at the cost of no
-    # longer excusing genuine two-hand rescues in isolated fragments. That
-    # trade is worth it: a per-instant solver cannot tell whether the other
-    # hand is free over the whole phrase, only at this moment. The proper
-    # answer is the global solver in M3.
+    # M1 asserted this. M2 reversed it: the per-instant greedy solver excused
+    # leaps whenever the other hand was idle *at that instant*, which let a
+    # single melodic line drift between hands, and Fur Elise reported 58
+    # phantom leap violations from a melody being relabelled back and forth.
+    # M2 charged a price to wake a resting hand and accepted the cost: genuine
+    # two-hand rescues were no longer excused. Its comment said the proper
+    # answer was a global solver.
+    #
+    # This is that solver. It decides the whole phrase at once, so it can tell
+    # a real rescue (the other hand is free and stays free) from drift. Two
+    # unstaffed notes two octaves apart, 20ms apart, are one note per hand.
     score = Score.from_tuples([(36, 0.0, 0.02), (60, 0.02, 0.5)])
     v = verify(score, PlayerProfile(name="t", max_leap_rate=70.0, leap_slack=5))
-    assert Rule.LEAP_INFEASIBLE in rules(v)
+    assert Rule.LEAP_INFEASIBLE not in rules(v)
+    # The violating case is the test above: same notes, forced into one hand.
+
+
+def test_a_lone_melodic_line_does_not_bounce_between_hands():
+    # The failure M2 was protecting against, asserted directly. A stepwise
+    # line with no accompaniment must stay in one hand and report no leaps.
+    score = Score.from_tuples([(72 + (i % 5) - 2, i * 0.12, 0.12) for i in range(40)])
+    assert verify(score, STD).playable
+    from arranger.verify import solve_hands
+
+    assert len(set(solve_hands(score, STD).hands.values())) == 1
 
 
 def test_resting_hand_gets_credit_for_the_time_it_rested():
