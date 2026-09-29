@@ -4,6 +4,7 @@
 #   scripts/test.sh                 # everything but the browser tests, with coverage and reports/
 #   scripts/test.sh --quick         # no coverage, no reports, no lint: fastest feedback
 #   scripts/test.sh --browser       # include the Playwright browser journey
+#   scripts/test.sh --no-web        # skip the web app's type check and unit tests
 #   scripts/test.sh -- -k solver    # pass extra arguments to pytest after --
 #
 # The coverage gate (fail_under in pyproject.toml), the JUnit file and the
@@ -15,11 +16,13 @@ cd "$(dirname "$0")/.."
 
 quick=0
 browser=0
+web=1
 extra=()
 while (( $# > 0 )); do
   case "$1" in
     --quick) quick=1 ;;
     --browser) browser=1 ;;
+    --no-web) web=0 ;;
     --)
       shift
       extra=("$@")
@@ -63,4 +66,19 @@ fi
 if (( ! quick )); then
   "$VENV_PY" scripts/test_report.py --junit reports/junit.xml --coverage reports/coverage.xml --title "Local run"
   "$VENV_PY" -m ruff check .
+fi
+
+# The web app: type check and unit tests, the same commands as the CI job.
+if (( web )); then
+  if [[ -d frontend-react/node_modules ]]; then
+    npm --prefix frontend-react run typecheck
+    if (( quick )); then
+      npm --prefix frontend-react test
+    else
+      (cd frontend-react && npx vitest run --coverage --coverage.reporter=text-summary)
+    fi
+  else
+    echo "frontend-react/node_modules is missing; run scripts/setup.sh (or pass --no-web)" >&2
+    exit 2
+  fi
 fi
