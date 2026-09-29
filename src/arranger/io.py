@@ -367,26 +367,11 @@ def sniff_midi(data: bytes) -> bool:
     return len(data) >= 14 and data[:4] == b"MThd"
 
 
-def read_midi_bytes(
-    data: bytes,
-    *,
-    filename: str | None = None,
-    limits: ImportLimits = DEFAULT_LIMITS,
-    include_drums: bool = False,
-    max_tracks: int | None = None,
-) -> Score:
-    """Parse a Standard MIDI File held in memory.
+def _walk_tracks(data: bytes, limits: ImportLimits) -> tuple[int, int, int, list[_RawTrack], list[str]]:
+    """The header and every MTrk chunk, as raw tracks in absolute ticks.
 
-    A "part" is one (track, channel) pair that carries notes. Format 0 files
-    put every instrument on one track and separate them by channel; format 1
-    files usually use one track per instrument. Splitting on both makes track
-    selection in the UI meaningful for either.
-
-    Staff assignment: if exactly two parts carry notes, they are treated as
-    the two hands (higher average pitch = staff 1 = right). That is the usual
-    convention in piano MIDI. With any other number of parts, staff is left
-    unset and the verifier infers hands itself - which is the safer default,
-    since guessing wrong produces confident nonsense.
+    Shared by `read_midi_bytes` and `read_midi_raw`, so the two views of a
+    file cannot drift apart.
     """
     if len(data) > limits.max_bytes:
         raise LimitExceeded(
@@ -440,6 +425,65 @@ def read_midi_bytes(
         warnings.append(
             f"The header promises {n_tracks} tracks but only {len(raw_tracks)} were found."
         )
+    return fmt, n_tracks, division, raw_tracks, warnings
+
+
+def read_midi_raw(data: bytes, *, limits: ImportLimits = DEFAULT_LIMITS) -> dict:
+    """What the parser read, before any of it becomes a Score.
+
+    Notes in absolute ticks per track, with the tempo, time signature, key
+    signature, pedal and program events, the track names, and the counts the
+    parser keeps. This is the view `c/midi/midi_dump` prints for the same
+    file; `scripts/midi_diff.py` compares the two. The same errors are raised
+    as by `read_midi_bytes`.
+    """
+    fmt, n_tracks, division, raw_tracks, warnings = _walk_tracks(data, limits)
+    return {
+        "format": fmt,
+        "division": division,
+        "declared_tracks": n_tracks,
+        "truncated": any(w.startswith("The file is truncated") for w in warnings),
+        "tracks": [
+            {
+                "name": t.name,
+                "instrument": t.instrument,
+                "end_tick": t.end_tick,
+                "events": t.events,
+                "unclosed": t.unclosed,
+                "programs": sorted([channel, program] for channel, program in t.programs.items()),
+                "notes": sorted([n.start, n.end, n.pitch, n.channel, n.velocity] for n in t.notes),
+                "tempos": [[tick, usec] for tick, usec in t.tempos],
+                "time_signatures": [[tick, num, den] for tick, num, den in t.sigs],
+                "key_signatures": [[tick, fifths, mode] for tick, fifths, mode in t.keys],
+                "pedal": [[tick, channel, down] for tick, channel, down in t.pedal],
+            }
+            for t in raw_tracks
+        ],
+    }
+
+
+def read_midi_bytes(
+    data: bytes,
+    *,
+    filename: str | None = None,
+    limits: ImportLimits = DEFAULT_LIMITS,
+    include_drums: bool = False,
+    max_tracks: int | None = None,
+) -> Score:
+    """Parse a Standard MIDI File held in memory.
+
+    A "part" is one (track, channel) pair that carries notes. Format 0 files
+    put every instrument on one track and separate them by channel; format 1
+    files usually use one track per instrument. Splitting on both makes track
+    selection in the UI meaningful for either.
+
+    Staff assignment: if exactly two parts carry notes, they are treated as
+    the two hands (higher average pitch = staff 1 = right). That is the usual
+    convention in piano MIDI. With any other number of parts, staff is left
+    unset and the verifier infers hands itself - which is the safer default,
+    since guessing wrong produces confident nonsense.
+    """
+    fmt, n_tracks, division, raw_tracks, warnings = _walk_tracks(data, limits)
 
     timeline = _build_timeline(
         [ev for t in raw_tracks for ev in t.tempos],
