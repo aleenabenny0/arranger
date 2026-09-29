@@ -1,0 +1,5793 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "Arranger API",
+  "description": "HTTP interface for rendering and verifying playable piano arrangements.",
+  "version": "0.1.0"
+ },
+ "paths": {
+  "/health": {
+   "get": {
+    "tags": [
+     "system"
+    ],
+    "summary": "Health",
+    "description": "Liveness. Touches nothing: no database, no email, no rate-limit store.",
+    "operationId": "health_health_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Health Health Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/version": {
+   "get": {
+    "tags": [
+     "system"
+    ],
+    "summary": "Version",
+    "operationId": "version_version_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Version Version Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/ready": {
+   "get": {
+    "tags": [
+     "system"
+    ],
+    "summary": "Ready",
+    "description": "Readiness: database reachable, schema current, files storable, and how email is doing.",
+    "operationId": "ready_ready_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Ready Ready Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/register": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Register Endpoint",
+    "operationId": "register_endpoint_auth_register_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RegisterRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/login": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Login Endpoint",
+    "operationId": "login_endpoint_auth_login_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LoginRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/logout": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Logout Endpoint",
+    "operationId": "logout_endpoint_auth_logout_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Logout Endpoint Auth Logout Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/logout-all": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Logout All Endpoint",
+    "operationId": "logout_all_endpoint_auth_logout_all_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Logout All Endpoint Auth Logout All Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/me": {
+   "get": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Me Endpoint",
+    "operationId": "me_endpoint_auth_me_get",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/sessions": {
+   "get": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "List Sessions Endpoint",
+    "operationId": "list_sessions_endpoint_auth_sessions_get",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionsResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/sessions/{session_id}": {
+   "delete": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Revoke Session Endpoint",
+    "operationId": "revoke_session_endpoint_auth_sessions__session_id__delete",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Revoke Session Endpoint Auth Sessions  Session Id  Delete"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/password/change": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Change Password Endpoint",
+    "operationId": "change_password_endpoint_auth_password_change_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PasswordChangeRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/password-reset/request": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Request Password Reset Endpoint",
+    "description": "Always answers `{\"accepted\": true}`: the response, and how long it takes,\nmust not depend on whether the account exists or the email went out.\nDelivery runs after the response; a failure shows up as an error log, the\n`arranger_email_send_total{outcome=\"failed\"}` counter and `/ready`.",
+    "operationId": "request_password_reset_endpoint_auth_password_reset_request_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PasswordResetRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Request Password Reset Endpoint Auth Password Reset Request Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/password-reset/confirm": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Confirm Password Reset Endpoint",
+    "operationId": "confirm_password_reset_endpoint_auth_password_reset_confirm_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PasswordResetConfirmRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/email/verify": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Verify Email Endpoint",
+    "operationId": "verify_email_endpoint_auth_email_verify_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EmailVerifyRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/auth/email/resend": {
+   "post": {
+    "tags": [
+     "auth"
+    ],
+    "summary": "Resend Verification Endpoint",
+    "operationId": "resend_verification_endpoint_auth_email_resend_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Resend Verification Endpoint Auth Email Resend Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/verify": {
+   "post": {
+    "summary": "Verify Endpoint",
+    "operationId": "verify_endpoint_verify_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VerifyRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Verify Endpoint Verify Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/render": {
+   "post": {
+    "summary": "Render Endpoint",
+    "operationId": "render_endpoint_render_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RenderRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RenderResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/render-and-verify": {
+   "post": {
+    "summary": "Render And Verify Endpoint",
+    "operationId": "render_and_verify_endpoint_render_and_verify_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RenderVerifyRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RenderVerifyResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/arrange/dry-run": {
+   "post": {
+    "summary": "Arrange Dry Run Endpoint",
+    "operationId": "arrange_dry_run_endpoint_arrange_dry_run_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ArrangeRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ArrangeResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/plan/deterministic": {
+   "post": {
+    "summary": "Deterministic Plan Endpoint",
+    "operationId": "deterministic_plan_endpoint_plan_deterministic_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VerifyRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/plan/analysis": {
+   "post": {
+    "summary": "Plan Analysis Endpoint",
+    "operationId": "plan_analysis_endpoint_plan_analysis_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VerifyRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanAnalysisResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/profiles": {
+   "post": {
+    "summary": "Create Profile Endpoint",
+    "operationId": "create_profile_endpoint_profiles_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PlayerProfileIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "summary": "List Profiles Endpoint",
+    "operationId": "list_profiles_endpoint_profiles_get",
+    "parameters": [
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 25,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordsResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/profiles/{profile_id}": {
+   "get": {
+    "summary": "Get Profile Endpoint",
+    "operationId": "get_profile_endpoint_profiles__profile_id__get",
+    "parameters": [
+     {
+      "name": "profile_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Profile Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "summary": "Update Profile Endpoint",
+    "operationId": "update_profile_endpoint_profiles__profile_id__put",
+    "parameters": [
+     {
+      "name": "profile_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Profile Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PlayerProfileIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "summary": "Delete Profile Endpoint",
+    "operationId": "delete_profile_endpoint_profiles__profile_id__delete",
+    "parameters": [
+     {
+      "name": "profile_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Profile Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Delete Profile Endpoint Profiles  Profile Id  Delete"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/scores": {
+   "post": {
+    "summary": "Create Score Endpoint",
+    "operationId": "create_score_endpoint_scores_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScoreIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "summary": "List Scores Endpoint",
+    "operationId": "list_scores_endpoint_scores_get",
+    "parameters": [
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 25,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordsResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/scores/{score_id}": {
+   "get": {
+    "summary": "Get Score Endpoint",
+    "operationId": "get_score_endpoint_scores__score_id__get",
+    "parameters": [
+     {
+      "name": "score_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Score Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "summary": "Delete Score Endpoint",
+    "operationId": "delete_score_endpoint_scores__score_id__delete",
+    "parameters": [
+     {
+      "name": "score_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Score Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Delete Score Endpoint Scores  Score Id  Delete"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/plans": {
+   "post": {
+    "summary": "Create Plan Endpoint",
+    "operationId": "create_plan_endpoint_plans_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PlanCreateRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "summary": "List Plans Endpoint",
+    "operationId": "list_plans_endpoint_plans_get",
+    "parameters": [
+     {
+      "name": "score_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Score Id"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 25,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordsResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/plans/{plan_id}": {
+   "get": {
+    "summary": "Get Plan Endpoint",
+    "operationId": "get_plan_endpoint_plans__plan_id__get",
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Plan Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "summary": "Update Plan Endpoint",
+    "operationId": "update_plan_endpoint_plans__plan_id__put",
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Plan Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ArrangementPlanIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "summary": "Delete Plan Endpoint",
+    "operationId": "delete_plan_endpoint_plans__plan_id__delete",
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Plan Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Delete Plan Endpoint Plans  Plan Id  Delete"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/arrangements/render-and-verify": {
+   "post": {
+    "summary": "Create Arrangement Endpoint",
+    "operationId": "create_arrangement_endpoint_arrangements_render_and_verify_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PersistentRenderVerifyRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/arrangements": {
+   "get": {
+    "summary": "List Arrangements Endpoint",
+    "operationId": "list_arrangements_endpoint_arrangements_get",
+    "parameters": [
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 25,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordsResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/arrangements/export": {
+   "get": {
+    "summary": "Export Arrangements Endpoint",
+    "description": "Every saved arrangement of the signed-in user, streamed as NDJSON.\n\nOne JSON object per line, oldest first, in the shape `GET /arrangements`\nreturns. The rows are read `EXPORT_BATCH_SIZE` at a time: on Postgres from\na server-side cursor, on SQLite by iterating the statement. The stream\nholds its own connection for as long as it runs, so the request-scoped\none is not tied up and nothing is buffered in memory.",
+    "operationId": "export_arrangements_endpoint_arrangements_export_get",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/arrangements/{arrangement_id}": {
+   "get": {
+    "summary": "Get Arrangement Endpoint",
+    "operationId": "get_arrangement_endpoint_arrangements__arrangement_id__get",
+    "parameters": [
+     {
+      "name": "arrangement_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Arrangement Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/arrangements/{arrangement_id}/verdict": {
+   "get": {
+    "summary": "Get Arrangement Verdict Endpoint",
+    "operationId": "get_arrangement_verdict_endpoint_arrangements__arrangement_id__verdict_get",
+    "parameters": [
+     {
+      "name": "arrangement_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Arrangement Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Get Arrangement Verdict Endpoint Arrangements  Arrangement Id  Verdict Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/runs/dry-run": {
+   "post": {
+    "summary": "Create Dry Run Endpoint",
+    "operationId": "create_dry_run_endpoint_runs_dry_run_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PersistentArrangeRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/candidate-rankings": {
+   "get": {
+    "summary": "List Candidate Rankings Endpoint",
+    "operationId": "list_candidate_rankings_endpoint_candidate_rankings_get",
+    "parameters": [
+     {
+      "name": "run_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Run Id"
+      }
+     },
+     {
+      "name": "score_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Score Id"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 500,
+       "minimum": 1,
+       "default": 100,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordsResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/feedback": {
+   "post": {
+    "summary": "Create Feedback Endpoint",
+    "operationId": "create_feedback_endpoint_feedback_post",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FeedbackCreateRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "summary": "List Feedback Endpoint",
+    "operationId": "list_feedback_endpoint_feedback_get",
+    "parameters": [
+     {
+      "name": "candidate_ranking_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Candidate Ranking Id"
+      }
+     },
+     {
+      "name": "arrangement_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arrangement Id"
+      }
+     },
+     {
+      "name": "label",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Label"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 500,
+       "minimum": 1,
+       "default": 100,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordsResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/runs": {
+   "get": {
+    "summary": "List Runs Endpoint",
+    "operationId": "list_runs_endpoint_runs_get",
+    "parameters": [
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 25,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordsResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/runs/{run_id}": {
+   "get": {
+    "summary": "Get Run Endpoint",
+    "operationId": "get_run_endpoint_runs__run_id__get",
+    "parameters": [
+     {
+      "name": "run_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Run Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecordResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/catalog": {
+   "get": {
+    "tags": [
+     "catalog"
+    ],
+    "summary": "Catalog",
+    "operationId": "catalog_catalog_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Catalog Catalog Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/catalog/calibrate": {
+   "post": {
+    "tags": [
+     "catalog"
+    ],
+    "summary": "Calibrate",
+    "description": "Turn the guided measurements into a profile. Nothing is stored.",
+    "operationId": "calibrate_catalog_calibrate_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CalibrationIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Calibrate Catalog Calibrate Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/legal/config": {
+   "get": {
+    "tags": [
+     "catalog"
+    ],
+    "summary": "Legal Config",
+    "description": "Who runs this service, as configured by whoever deployed it.\n\nBlank values are reported as blank. The legal pages show \"not provided by\nthe operator\" rather than inventing a company, an address or a jurisdiction.",
+    "operationId": "legal_config_legal_config_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Legal Config Legal Config Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/import": {
+   "post": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Import Project",
+    "description": "Upload a file as the request body. MIDI and MusicXML import at once;\na recording is queued for transcription (HTTP 202).",
+    "operationId": "import_project_projects_import_post",
+    "parameters": [
+     {
+      "name": "filename",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "maxLength": 255,
+       "default": "",
+       "title": "Filename"
+      }
+     },
+     {
+      "name": "title",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "maxLength": 200,
+       "default": "",
+       "title": "Title"
+      }
+     },
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Import Project Projects Import Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "List Projects",
+    "operationId": "list_projects_projects_get",
+    "parameters": [
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "maxLength": 100,
+       "default": "",
+       "title": "Q"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "default": 20,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100000,
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response List Projects Projects Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/{project_id}": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Get Project",
+    "operationId": "get_project_projects__project_id__get",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Get Project Projects  Project Id  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "patch": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Patch Project",
+    "operationId": "patch_project_projects__project_id__patch",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProjectPatch"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Patch Project Projects  Project Id  Patch"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Delete Project",
+    "operationId": "delete_project_projects__project_id__delete",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Delete Project Projects  Project Id  Delete"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/{project_id}/sources/{source_id}": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Get Source",
+    "operationId": "get_source_projects__project_id__sources__source_id__get",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "source_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Source Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Get Source Projects  Project Id  Sources  Source Id  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/{project_id}/sources/{source_id}/musicxml": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Get Source Musicxml",
+    "operationId": "get_source_musicxml_projects__project_id__sources__source_id__musicxml_get",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "source_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Source Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/{project_id}/sources": {
+   "post": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Add Source Revision",
+    "description": "Save corrections to the source as a new revision. The import itself is never edited.",
+    "operationId": "add_source_revision_projects__project_id__sources_post",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SourceRevisionIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Add Source Revision Projects  Project Id  Sources Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/{project_id}/arrangements": {
+   "post": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Start Arrangement",
+    "operationId": "start_arrangement_projects__project_id__arrangements_post",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ArrangeIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "202": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Start Arrangement Projects  Project Id  Arrangements Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/{project_id}/arrangements/{arrangement_id}": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Get Arrangement",
+    "operationId": "get_arrangement_projects__project_id__arrangements__arrangement_id__get",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "arrangement_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Arrangement Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Get Arrangement Projects  Project Id  Arrangements  Arrangement Id  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "patch": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Label Arrangement",
+    "operationId": "label_arrangement_projects__project_id__arrangements__arrangement_id__patch",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "arrangement_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Arrangement Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LabelIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Label Arrangement Projects  Project Id  Arrangements  Arrangement Id  Patch"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/{project_id}/arrangements/{arrangement_id}/musicxml": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Get Arrangement Musicxml",
+    "description": "The MusicXML the notation preview renders. Same bytes as the download.",
+    "operationId": "get_arrangement_musicxml_projects__project_id__arrangements__arrangement_id__musicxml_get",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "arrangement_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Arrangement Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/{project_id}/arrangements/{arrangement_id}/exports/{kind}": {
+   "post": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Export Arrangement",
+    "description": "Get a downloadable file. MIDI and MusicXML are made at once; a PDF is engraved by a job.",
+    "operationId": "export_arrangement_projects__project_id__arrangements__arrangement_id__exports__kind__post",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "arrangement_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Arrangement Id"
+      }
+     },
+     {
+      "name": "kind",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "enum": [
+        "midi",
+        "musicxml",
+        "mxl",
+        "pdf"
+       ],
+       "type": "string",
+       "title": "Kind"
+      }
+     },
+     {
+      "name": "paper",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "a4",
+        "letter"
+       ],
+       "type": "string",
+       "default": "a4",
+       "title": "Paper"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Export Arrangement Projects  Project Id  Arrangements  Arrangement Id  Exports  Kind  Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/projects/{project_id}/compare": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Compare Arrangements",
+    "description": "Two revisions side by side: what changed in the plan and in the outcome.",
+    "operationId": "compare_arrangements_projects__project_id__compare_get",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "a",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "A"
+      }
+     },
+     {
+      "name": "b",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "B"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Compare Arrangements Projects  Project Id  Compare Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/jobs": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "List Jobs",
+    "operationId": "list_jobs_jobs_get",
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 64,
+         "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "active",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": false,
+       "title": "Active"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response List Jobs Jobs Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/jobs/{job_id}": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Get Job",
+    "operationId": "get_job_jobs__job_id__get",
+    "parameters": [
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Job Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Get Job Jobs  Job Id  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/jobs/{job_id}/cancel": {
+   "post": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Cancel Job",
+    "operationId": "cancel_job_jobs__job_id__cancel_post",
+    "parameters": [
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Job Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Cancel Job Jobs  Job Id  Cancel Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/jobs/{job_id}/retry": {
+   "post": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Retry Job",
+    "operationId": "retry_job_jobs__job_id__retry_post",
+    "parameters": [
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Job Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Retry Job Jobs  Job Id  Retry Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/artifacts/{artifact_id}/download": {
+   "get": {
+    "tags": [
+     "projects"
+    ],
+    "summary": "Download Artifact",
+    "description": "Authenticated streaming. There are no public file URLs to leak or guess.",
+    "operationId": "download_artifact_artifacts__artifact_id__download_get",
+    "parameters": [
+     {
+      "name": "artifact_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64,
+       "pattern": "^[A-Za-z0-9_-]+$",
+       "title": "Artifact Id"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/account/usage": {
+   "get": {
+    "tags": [
+     "account"
+    ],
+    "summary": "Usage",
+    "operationId": "usage_account_usage_get",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Usage Account Usage Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/account/export": {
+   "get": {
+    "tags": [
+     "account"
+    ],
+    "summary": "Export Account",
+    "description": "Everything stored about this account, as one zip: JSON records plus every file.",
+    "operationId": "export_account_account_export_get",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/account": {
+   "delete": {
+    "tags": [
+     "account"
+    ],
+    "summary": "Delete Account",
+    "description": "Delete the account and everything in it. Needs the password and the word DELETE.",
+    "operationId": "delete_account_account_delete",
+    "parameters": [
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DeleteAccountIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Delete Account Account Delete"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/jobs/arrange": {
+   "post": {
+    "tags": [
+     "jobs"
+    ],
+    "summary": "Start Arrange Job",
+    "description": "Queue an arrangement of one of the user's projects. 202 with the job to poll.",
+    "operationId": "start_arrange_job_jobs_arrange_post",
+    "parameters": [
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "name": "arranger_session",
+      "in": "cookie",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Arranger Session"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ArrangeJobIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "202": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Start Arrange Job Jobs Arrange Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "ArrangeIn": {
+    "properties": {
+     "source_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9_-]+$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Id"
+     },
+     "profile": {
+      "$ref": "#/components/schemas/PlayerProfileIn"
+     },
+     "use_model": {
+      "type": "boolean",
+      "title": "Use Model",
+      "default": false
+     },
+     "plan": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ArrangementPlanIn"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "label": {
+      "type": "string",
+      "maxLength": 120,
+      "title": "Label",
+      "default": ""
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "profile"
+    ],
+    "title": "ArrangeIn"
+   },
+   "ArrangeJobIn": {
+    "properties": {
+     "source_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9_-]+$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Id"
+     },
+     "profile": {
+      "$ref": "#/components/schemas/PlayerProfileIn"
+     },
+     "use_model": {
+      "type": "boolean",
+      "title": "Use Model",
+      "default": false
+     },
+     "plan": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ArrangementPlanIn"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "label": {
+      "type": "string",
+      "maxLength": 120,
+      "title": "Label",
+      "default": ""
+     },
+     "project_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Project Id"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "profile",
+     "project_id"
+    ],
+    "title": "ArrangeJobIn"
+   },
+   "ArrangeRequest": {
+    "properties": {
+     "source": {
+      "$ref": "#/components/schemas/ScoreIn"
+     },
+     "profile": {
+      "$ref": "#/components/schemas/PlayerProfileIn"
+     },
+     "max_attempts": {
+      "type": "integer",
+      "maximum": 8.0,
+      "minimum": 1.0,
+      "title": "Max Attempts",
+      "default": 4
+     },
+     "countdown": {
+      "type": "boolean",
+      "title": "Countdown",
+      "default": true
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "source",
+     "profile"
+    ],
+    "title": "ArrangeRequest"
+   },
+   "ArrangeResponse": {
+    "properties": {
+     "result": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Result"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "result"
+    ],
+    "title": "ArrangeResponse"
+   },
+   "ArrangementPlanIn": {
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Title",
+      "default": "untitled"
+     },
+     "target_skill": {
+      "type": "integer",
+      "maximum": 10.0,
+      "minimum": 1.0,
+      "title": "Target Skill",
+      "default": 5
+     },
+     "sections": {
+      "items": {
+       "$ref": "#/components/schemas/SectionIn"
+      },
+      "type": "array",
+      "maxItems": 128,
+      "minItems": 1,
+      "title": "Sections"
+     },
+     "reductions": {
+      "items": {
+       "$ref": "#/components/schemas/ReductionIn"
+      },
+      "type": "array",
+      "maxItems": 256,
+      "title": "Reductions"
+     },
+     "pedal_bars": {
+      "items": {
+       "type": "integer",
+       "maximum": 4000.0,
+       "minimum": 1.0
+      },
+      "type": "array",
+      "maxItems": 4000,
+      "title": "Pedal Bars"
+     },
+     "notes": {
+      "type": "string",
+      "maxLength": 4000,
+      "title": "Notes",
+      "default": ""
+     },
+     "tempo_scale": {
+      "type": "number",
+      "maximum": 1.0,
+      "minimum": 0.4,
+      "title": "Tempo Scale",
+      "default": 1.0
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "sections"
+    ],
+    "title": "ArrangementPlanIn"
+   },
+   "CalibrationIn": {
+    "properties": {
+     "base_preset": {
+      "type": "string",
+      "maxLength": 40,
+      "title": "Base Preset",
+      "default": "intermediate"
+     },
+     "name": {
+      "type": "string",
+      "maxLength": 80,
+      "title": "Name",
+      "default": "My hands"
+     },
+     "left_comfortable_white_keys": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 12.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Left Comfortable White Keys"
+     },
+     "left_max_white_keys": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 12.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Left Max White Keys"
+     },
+     "right_comfortable_white_keys": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 12.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Right Comfortable White Keys"
+     },
+     "right_max_white_keys": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 12.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Right Max White Keys"
+     },
+     "two_octave_leap_seconds": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 5.0,
+        "minimum": 0.05
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Two Octave Leap Seconds"
+     },
+     "repeated_notes_per_second": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 30.0,
+        "minimum": 0.5
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Repeated Notes Per Second"
+     },
+     "skill_level": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 10.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Skill Level"
+     },
+     "left_fingers": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer",
+         "maximum": 5.0,
+         "minimum": 1.0
+        },
+        "type": "array",
+        "maxItems": 5,
+        "minItems": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Left Fingers"
+     },
+     "right_fingers": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer",
+         "maximum": 5.0,
+         "minimum": 1.0
+        },
+        "type": "array",
+        "maxItems": 5,
+        "minItems": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Right Fingers"
+     },
+     "lowest_pitch": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 127.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lowest Pitch"
+     },
+     "highest_pitch": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 127.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Highest Pitch"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "CalibrationIn"
+   },
+   "DeleteAccountIn": {
+    "properties": {
+     "password": {
+      "type": "string",
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "Password"
+     },
+     "confirm": {
+      "type": "string",
+      "maxLength": 32,
+      "title": "Confirm"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "password",
+     "confirm"
+    ],
+    "title": "DeleteAccountIn"
+   },
+   "EmailVerifyRequest": {
+    "properties": {
+     "token": {
+      "type": "string",
+      "maxLength": 256,
+      "minLength": 16,
+      "title": "Token"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "token"
+    ],
+    "title": "EmailVerifyRequest"
+   },
+   "FeedbackCreateRequest": {
+    "properties": {
+     "label": {
+      "type": "string",
+      "enum": [
+       "accepted",
+       "rejected",
+       "edited"
+      ],
+      "title": "Label"
+     },
+     "candidate_ranking_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9_-]+$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Candidate Ranking Id"
+     },
+     "arrangement_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9_-]+$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Arrangement Id"
+     },
+     "edited_plan": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ArrangementPlanIn"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "notes": {
+      "type": "string",
+      "maxLength": 1000,
+      "title": "Notes",
+      "default": ""
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "label"
+    ],
+    "title": "FeedbackCreateRequest"
+   },
+   "FidelityOut": {
+    "properties": {
+     "melodic_recall": {
+      "type": "number",
+      "title": "Melodic Recall"
+     },
+     "harmonic_coverage": {
+      "type": "number",
+      "title": "Harmonic Coverage"
+     },
+     "accompaniment": {
+      "type": "number",
+      "title": "Accompaniment"
+     },
+     "rhythm": {
+      "type": "number",
+      "title": "Rhythm",
+      "default": 1.0
+     },
+     "contour": {
+      "type": "number",
+      "title": "Contour",
+      "default": 1.0
+     },
+     "bass": {
+      "type": "number",
+      "title": "Bass",
+      "default": 1.0
+     },
+     "score": {
+      "type": "number",
+      "title": "Score"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "melodic_recall",
+     "harmonic_coverage",
+     "accompaniment",
+     "score"
+    ],
+    "title": "FidelityOut"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "LabelIn": {
+    "properties": {
+     "label": {
+      "type": "string",
+      "maxLength": 120,
+      "title": "Label"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "label"
+    ],
+    "title": "LabelIn"
+   },
+   "LoginRequest": {
+    "properties": {
+     "email": {
+      "type": "string",
+      "maxLength": 254,
+      "minLength": 3,
+      "title": "Email"
+     },
+     "password": {
+      "type": "string",
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "Password"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "email",
+     "password"
+    ],
+    "title": "LoginRequest"
+   },
+   "NoteIn": {
+    "properties": {
+     "pitch": {
+      "type": "integer",
+      "maximum": 127.0,
+      "minimum": 0.0,
+      "title": "Pitch"
+     },
+     "onset": {
+      "type": "number",
+      "maximum": 21600.0,
+      "minimum": 0.0,
+      "title": "Onset"
+     },
+     "duration": {
+      "type": "number",
+      "maximum": 600.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Duration"
+     },
+     "staff": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 2.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Staff"
+     },
+     "bar": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 4000.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bar"
+     },
+     "voice": {
+      "type": "integer",
+      "maximum": 64.0,
+      "minimum": 1.0,
+      "title": "Voice",
+      "default": 1
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "pitch",
+     "onset",
+     "duration"
+    ],
+    "title": "NoteIn"
+   },
+   "NoteOut": {
+    "properties": {
+     "pitch": {
+      "type": "integer",
+      "title": "Pitch"
+     },
+     "onset": {
+      "type": "number",
+      "title": "Onset"
+     },
+     "duration": {
+      "type": "number",
+      "title": "Duration"
+     },
+     "staff": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Staff"
+     },
+     "bar": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bar"
+     },
+     "voice": {
+      "type": "integer",
+      "title": "Voice",
+      "default": 1
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "pitch",
+     "onset",
+     "duration"
+    ],
+    "title": "NoteOut",
+    "description": "A rendered note. Output is produced by the engine, so it is typed, not bounded."
+   },
+   "PasswordChangeRequest": {
+    "properties": {
+     "current_password": {
+      "type": "string",
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "Current Password"
+     },
+     "new_password": {
+      "type": "string",
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "New Password"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "current_password",
+     "new_password"
+    ],
+    "title": "PasswordChangeRequest"
+   },
+   "PasswordResetConfirmRequest": {
+    "properties": {
+     "token": {
+      "type": "string",
+      "maxLength": 256,
+      "minLength": 16,
+      "title": "Token"
+     },
+     "password": {
+      "type": "string",
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "Password"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "token",
+     "password"
+    ],
+    "title": "PasswordResetConfirmRequest"
+   },
+   "PasswordResetRequest": {
+    "properties": {
+     "email": {
+      "type": "string",
+      "maxLength": 254,
+      "minLength": 3,
+      "title": "Email"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "email"
+    ],
+    "title": "PasswordResetRequest"
+   },
+   "PersistentArrangeRequest": {
+    "properties": {
+     "score_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Score Id"
+     },
+     "profile_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Profile Id"
+     },
+     "max_attempts": {
+      "type": "integer",
+      "maximum": 8.0,
+      "minimum": 1.0,
+      "title": "Max Attempts",
+      "default": 4
+     },
+     "countdown": {
+      "type": "boolean",
+      "title": "Countdown",
+      "default": true
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "score_id",
+     "profile_id"
+    ],
+    "title": "PersistentArrangeRequest"
+   },
+   "PersistentRenderVerifyRequest": {
+    "properties": {
+     "score_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Score Id"
+     },
+     "profile_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Profile Id"
+     },
+     "plan_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Plan Id"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "score_id",
+     "profile_id",
+     "plan_id"
+    ],
+    "title": "PersistentRenderVerifyRequest"
+   },
+   "PlanAnalysisResponse": {
+    "properties": {
+     "analysis": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Analysis"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "analysis"
+    ],
+    "title": "PlanAnalysisResponse"
+   },
+   "PlanCreateRequest": {
+    "properties": {
+     "score_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Score Id"
+     },
+     "plan": {
+      "$ref": "#/components/schemas/ArrangementPlanIn"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "score_id",
+     "plan"
+    ],
+    "title": "PlanCreateRequest"
+   },
+   "PlanResponse": {
+    "properties": {
+     "plan": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Plan"
+     },
+     "verdict": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Verdict"
+     },
+     "fidelity": {
+      "$ref": "#/components/schemas/FidelityOut"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "plan",
+     "verdict",
+     "fidelity"
+    ],
+    "title": "PlanResponse"
+   },
+   "PlayerProfileIn": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 80,
+      "title": "Name",
+      "default": "default"
+     },
+     "instrument": {
+      "type": "string",
+      "maxLength": 40,
+      "title": "Instrument",
+      "default": "piano"
+     },
+     "lowest_pitch": {
+      "type": "integer",
+      "maximum": 127.0,
+      "minimum": 0.0,
+      "title": "Lowest Pitch",
+      "default": 21
+     },
+     "highest_pitch": {
+      "type": "integer",
+      "maximum": 127.0,
+      "minimum": 0.0,
+      "title": "Highest Pitch",
+      "default": 108
+     },
+     "max_span": {
+      "type": "integer",
+      "maximum": 24.0,
+      "minimum": 1.0,
+      "title": "Max Span",
+      "default": 12
+     },
+     "comfortable_span": {
+      "type": "integer",
+      "maximum": 24.0,
+      "minimum": 1.0,
+      "title": "Comfortable Span",
+      "default": 9
+     },
+     "max_notes_per_hand": {
+      "type": "integer",
+      "maximum": 5.0,
+      "minimum": 1.0,
+      "title": "Max Notes Per Hand",
+      "default": 5
+     },
+     "max_leap_rate": {
+      "type": "number",
+      "maximum": 1000.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Max Leap Rate",
+      "default": 70.0
+     },
+     "leap_slack": {
+      "type": "integer",
+      "maximum": 24.0,
+      "minimum": 0.0,
+      "title": "Leap Slack",
+      "default": 5
+     },
+     "skill_level": {
+      "type": "integer",
+      "maximum": 10.0,
+      "minimum": 1.0,
+      "title": "Skill Level",
+      "default": 5
+     },
+     "left_max_span": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 24.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Left Max Span"
+     },
+     "right_max_span": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 24.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Right Max Span"
+     },
+     "left_comfortable_span": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 24.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Left Comfortable Span"
+     },
+     "right_comfortable_span": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 24.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Right Comfortable Span"
+     },
+     "left_fingers": {
+      "items": {
+       "type": "integer",
+       "maximum": 5.0,
+       "minimum": 1.0
+      },
+      "type": "array",
+      "maxItems": 5,
+      "minItems": 1,
+      "title": "Left Fingers"
+     },
+     "right_fingers": {
+      "items": {
+       "type": "integer",
+       "maximum": 5.0,
+       "minimum": 1.0
+      },
+      "type": "array",
+      "maxItems": 5,
+      "minItems": 1,
+      "title": "Right Fingers"
+     },
+     "max_repeat_rate": {
+      "type": "number",
+      "maximum": 30.0,
+      "minimum": 0.5,
+      "title": "Max Repeat Rate",
+      "default": 8.0
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "PlayerProfileIn"
+   },
+   "ProjectPatch": {
+    "properties": {
+     "title": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "composer": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Composer"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "ProjectPatch"
+   },
+   "RecordResponse": {
+    "properties": {
+     "record": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Record"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "record"
+    ],
+    "title": "RecordResponse"
+   },
+   "RecordsResponse": {
+    "properties": {
+     "records": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Records"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "records"
+    ],
+    "title": "RecordsResponse"
+   },
+   "ReductionIn": {
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "doubling",
+       "inner_voice",
+       "bass_movement",
+       "harmonic_colour",
+       "countermelody"
+      ],
+      "title": "Kind"
+     },
+     "start_bar": {
+      "type": "integer",
+      "maximum": 4000.0,
+      "minimum": 1.0,
+      "title": "Start Bar"
+     },
+     "end_bar": {
+      "type": "integer",
+      "maximum": 4000.0,
+      "minimum": 1.0,
+      "title": "End Bar"
+     },
+     "rationale": {
+      "type": "string",
+      "maxLength": 500,
+      "title": "Rationale",
+      "default": ""
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "kind",
+     "start_bar",
+     "end_bar"
+    ],
+    "title": "ReductionIn"
+   },
+   "RegisterRequest": {
+    "properties": {
+     "email": {
+      "type": "string",
+      "maxLength": 254,
+      "minLength": 3,
+      "title": "Email"
+     },
+     "password": {
+      "type": "string",
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "Password"
+     },
+     "display_name": {
+      "type": "string",
+      "maxLength": 80,
+      "title": "Display Name",
+      "default": ""
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "email",
+     "password"
+    ],
+    "title": "RegisterRequest"
+   },
+   "RenderRequest": {
+    "properties": {
+     "source": {
+      "$ref": "#/components/schemas/ScoreIn"
+     },
+     "plan": {
+      "$ref": "#/components/schemas/ArrangementPlanIn"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "source",
+     "plan"
+    ],
+    "title": "RenderRequest"
+   },
+   "RenderResponse": {
+    "properties": {
+     "score": {
+      "$ref": "#/components/schemas/ScoreOut"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "score"
+    ],
+    "title": "RenderResponse"
+   },
+   "RenderVerifyRequest": {
+    "properties": {
+     "source": {
+      "$ref": "#/components/schemas/ScoreIn"
+     },
+     "profile": {
+      "$ref": "#/components/schemas/PlayerProfileIn"
+     },
+     "plan": {
+      "$ref": "#/components/schemas/ArrangementPlanIn"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "source",
+     "profile",
+     "plan"
+    ],
+    "title": "RenderVerifyRequest"
+   },
+   "RenderVerifyResponse": {
+    "properties": {
+     "arranged": {
+      "$ref": "#/components/schemas/ScoreOut"
+     },
+     "verdict": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Verdict"
+     },
+     "fidelity": {
+      "$ref": "#/components/schemas/FidelityOut"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "arranged",
+     "verdict",
+     "fidelity"
+    ],
+    "title": "RenderVerifyResponse"
+   },
+   "ScoreIn": {
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Title",
+      "default": "untitled"
+     },
+     "tempo_bpm": {
+      "type": "number",
+      "maximum": 1000.0,
+      "minimum": 5.0,
+      "title": "Tempo Bpm",
+      "default": 100.0
+     },
+     "notes": {
+      "items": {
+       "$ref": "#/components/schemas/NoteIn"
+      },
+      "type": "array",
+      "maxItems": 60000,
+      "minItems": 1,
+      "title": "Notes"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "notes"
+    ],
+    "title": "ScoreIn"
+   },
+   "ScoreOut": {
+    "properties": {
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "tempo_bpm": {
+      "type": "number",
+      "title": "Tempo Bpm"
+     },
+     "notes": {
+      "items": {
+       "$ref": "#/components/schemas/NoteOut"
+      },
+      "type": "array",
+      "title": "Notes"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "title",
+     "tempo_bpm",
+     "notes"
+    ],
+    "title": "ScoreOut"
+   },
+   "SectionIn": {
+    "properties": {
+     "start_bar": {
+      "type": "integer",
+      "maximum": 4000.0,
+      "minimum": 1.0,
+      "title": "Start Bar"
+     },
+     "end_bar": {
+      "type": "integer",
+      "maximum": 4000.0,
+      "minimum": 1.0,
+      "title": "End Bar"
+     },
+     "lh_pattern": {
+      "type": "string",
+      "enum": [
+       "block",
+       "pedal_tone",
+       "broken_octave",
+       "arpeggio",
+       "alberti",
+       "walking",
+       "stride",
+       "broken_tenth"
+      ],
+      "title": "Lh Pattern",
+      "default": "block"
+     },
+     "melody_shift": {
+      "type": "integer",
+      "maximum": 24.0,
+      "minimum": -24.0,
+      "title": "Melody Shift",
+      "default": 0
+     },
+     "lh_octave": {
+      "type": "integer",
+      "maximum": 6.0,
+      "minimum": 0.0,
+      "title": "Lh Octave",
+      "default": 3
+     },
+     "lh_voices": {
+      "type": "integer",
+      "maximum": 5.0,
+      "minimum": 0.0,
+      "title": "Lh Voices",
+      "default": 3
+     },
+     "roll_wide_chords": {
+      "type": "boolean",
+      "title": "Roll Wide Chords",
+      "default": false
+     },
+     "melody_fold_window": {
+      "type": "integer",
+      "maximum": 24.0,
+      "minimum": 0.0,
+      "title": "Melody Fold Window",
+      "default": 0
+     },
+     "label": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Label",
+      "default": ""
+     },
+     "voicing": {
+      "type": "string",
+      "enum": [
+       "root",
+       "smooth"
+      ],
+      "title": "Voicing",
+      "default": "root"
+     },
+     "bass": {
+      "type": "string",
+      "enum": [
+       "root",
+       "source"
+      ],
+      "title": "Bass",
+      "default": "root"
+     },
+     "harmonic_rhythm": {
+      "type": "string",
+      "enum": [
+       "bar",
+       "detected"
+      ],
+      "title": "Harmonic Rhythm",
+      "default": "bar"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "start_bar",
+     "end_bar"
+    ],
+    "title": "SectionIn"
+   },
+   "SessionsResponse": {
+    "properties": {
+     "sessions": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Sessions"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "sessions"
+    ],
+    "title": "SessionsResponse"
+   },
+   "SourceRevisionIn": {
+    "properties": {
+     "based_on": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Based On"
+     },
+     "selection": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Selection"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "based_on"
+    ],
+    "title": "SourceRevisionIn"
+   },
+   "UserResponse": {
+    "properties": {
+     "user": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "User"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "user"
+    ],
+    "title": "UserResponse"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   },
+   "VerifyRequest": {
+    "properties": {
+     "score": {
+      "$ref": "#/components/schemas/ScoreIn"
+     },
+     "profile": {
+      "$ref": "#/components/schemas/PlayerProfileIn"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "score",
+     "profile"
+    ],
+    "title": "VerifyRequest"
+   }
+  }
+ }
+}
