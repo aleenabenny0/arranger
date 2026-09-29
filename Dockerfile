@@ -1,4 +1,4 @@
-# Arranger: API, static frontend and background worker in one image.
+# Arranger: API, web app and background worker in one image.
 #
 #   docker build -t arranger .
 #   docker build -t arranger --build-arg WITH_AUDIO=0 --build-arg WITH_LILYPOND=0 .   # smallest image
@@ -7,6 +7,16 @@
 #   web     arranger-api                      (default; also runs JOB_WORKERS in-process workers)
 #   worker  arranger-worker --workers 2       (set JOB_WORKERS=0 on the web service when you use this)
 
+# --- stage 1: the web app, built by Vite into static files -------------------
+FROM node:22-alpine AS webapp
+
+WORKDIR /build
+COPY frontend-react/package.json frontend-react/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY frontend-react/ ./
+RUN npm run build
+
+# --- stage 2: the Python image that serves the API and the built app ----------
 FROM python:3.13-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -50,10 +60,11 @@ RUN set -eux; \
       pip install --no-cache-dir --no-deps --constraint requirements.lock basic-pitch; \
     fi
 
-# The notation engine is fetched at build time and checked against pinned SHA-256 digests.
-COPY frontend ./frontend
+# The built web app, and the notation engine it loads on demand: fetched at
+# build time and checked against pinned SHA-256 digests.
+COPY --from=webapp /build/dist ./frontend
 COPY fetch_vendor.py ./
-RUN python fetch_vendor.py
+RUN python fetch_vendor.py --target frontend/vendor
 
 # Run as an unprivileged user. /data holds SQLite and local artifacts when those backends are
 # chosen; mount a volume there. With Postgres and ARTIFACT_BACKEND=database or s3 it stays empty.

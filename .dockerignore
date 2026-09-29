@@ -30,4 +30,8 @@ evals
 docs
 .github
 .claude
-frontend/vendor
+frontend-react/node_modules
+frontend-react/dist
+frontend-react/coverage
+frontend-react/reports
+frontend-react/public/vendor
