@@ -84,11 +84,18 @@ export function CalibrateDialog({ catalog, basePreset, onClose, onProfile }: Cal
 export function HandsPanel({ catalog, profile, preset, onChange }: HandsPanelProps) {
   const { toast, announce } = useToast();
   const [drafts, setDrafts] = useState(() => draftsOf(profile));
+  const [shown, setShown] = useState(profile);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [presetHint, setPresetHint] = useState("");
   const [measuring, setMeasuring] = useState(false);
 
-  useEffect(() => { setDrafts(draftsOf(profile)); }, [profile]);
+  // A profile that arrived from outside (a preset, a measurement) replaces the
+  // drafts in the same render, not after an effect: a test or a screen reader
+  // that reads the field the instant the preset changes must see the new value.
+  if (shown !== profile) {
+    setShown(profile);
+    setDrafts(draftsOf(profile));
+  }
 
   function choosePreset(id: string) {
     const chosen = catalog.presets.find((p) => p.id === id);

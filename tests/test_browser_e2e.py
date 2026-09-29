@@ -26,6 +26,7 @@ import pytest
 from conftest import PASSWORD, FakeEmailSender, build_settings
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="playwright is not installed")
+PlaywrightTimeoutError = sync_api.TimeoutError
 uvicorn = pytest.importorskip("uvicorn")
 
 from arranger.adapters.midi_writer import write_midi  # noqa: E402
@@ -184,6 +185,19 @@ def focused_text(page) -> str:
     return page.evaluate("() => (document.activeElement.textContent || '').trim()")
 
 
+def wait_for_heading(page, name: str, timeout: float = 30_000):
+    """Wait for the view's heading; on a timeout, say where the page actually is."""
+    try:
+        page.get_by_role("heading", level=1, name=name).wait_for(timeout=timeout)
+    except PlaywrightTimeoutError as error:
+        where = page.evaluate(
+            "() => ({ url: location.href, title: document.title, "
+            "main: (document.querySelector('main')?.innerText || '').slice(0, 400), "
+            "alerts: [...document.querySelectorAll('[role=alert]')].map((el) => el.textContent).filter(Boolean) })"
+        )
+        raise AssertionError(f"no heading {name!r} within {timeout / 1000:.0f}s; the page is at {where}") from error
+
+
 def register_and_verify(page, server, email):
     origin, sender = server["origin"], server["sender"]
     page.goto(origin + "/")
@@ -192,7 +206,7 @@ def register_and_verify(page, server, email):
     page.get_by_label("Email address").fill(email)
     page.get_by_label("Password").fill(PASSWORD)
     page.get_by_role("button", name="Create account").click()
-    page.get_by_role("heading", level=1, name="Your pieces").wait_for()
+    wait_for_heading(page, "Your pieces")
     # Unverified: the page says so, and says what to do about it.
     assert page.get_by_text("Verify your email address to upload and arrange.").is_visible()
     link = next(v["verify_link"] for v in reversed(sender.verifications) if v["email"] == email)
