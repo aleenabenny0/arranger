@@ -8,7 +8,7 @@
 #   worker  arranger-worker --workers 2       (set JOB_WORKERS=0 on the web service when you use this)
 
 # --- stage 1: the web app, built by Vite into static files -------------------
-FROM node:22-alpine AS webapp
+FROM node:22-bookworm-slim AS webapp
 
 WORKDIR /build
 COPY frontend-react/package.json frontend-react/package-lock.json ./
