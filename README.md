@@ -74,6 +74,36 @@ python scripts/test_report.py --junit reports/junit.xml --coverage reports/cover
 A test that passes only after a rerun is listed as flaky in that table; it is
 a bug to fix, not a pass.
 
+## Scripts
+
+Bash scripts for the three routine jobs, written for Git Bash on Windows and
+for bash on Linux and macOS (CI lints them with ShellCheck). PowerShell users
+have the equivalents next to each.
+
+| Job | Bash | PowerShell |
+|---|---|---|
+| Set up a machine | `scripts/setup.sh` (`--audio`, `--e2e`) | the block under "Run the app" |
+| Test like CI | `scripts/test.sh` (`--quick`, `--browser`, `-- <pytest args>`) | the two commands under "Tests" |
+| Smoke-test a running server | `scripts/smoke.sh http://127.0.0.1:8000` | the snippet below |
+
+`smoke.sh` checks `/health` and `/ready`, that `/auth/me` is 401 without a
+session, then registers a throwaway account, signs in with a cookie jar and the
+CSRF header, lists profiles and signs out. It prints one `ok`/`FAIL` line per
+check and exits non-zero on any failure. `SMOKE_CAPABILITIES=export_pdf,import_audio`
+also checks `/catalog`; CI runs it that way against the freshly built image.
+
+```powershell
+$base = "http://127.0.0.1:8000"
+(Invoke-WebRequest "$base/health").StatusCode
+(Invoke-WebRequest "$base/ready").StatusCode
+$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+$body = @{ email = "smoke-$(Get-Random)@example.com"; password = "smoke-passphrase-$(Get-Random)"; display_name = "Smoke" } | ConvertTo-Json
+Invoke-RestMethod "$base/auth/register" -Method Post -ContentType "application/json" -Headers @{ Origin = $base } -Body $body -WebSession $session
+$csrf = ($session.Cookies.GetCookies($base) | Where-Object Name -eq "arranger_csrf").Value
+Invoke-RestMethod "$base/profiles" -WebSession $session
+Invoke-RestMethod "$base/auth/logout" -Method Post -Headers @{ Origin = $base; "X-CSRF-Token" = $csrf } -WebSession $session
+```
+
 ## Try the verifier alone
 
 ```bash
