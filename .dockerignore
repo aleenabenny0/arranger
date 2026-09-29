@@ -13,3 +13,21 @@ evals/corpus/*.mid
 evals/corpus/*.midi
 .pytest_cache
 .ruff_cache
+
+# Never send secrets, local state or development tools to the build context.
+.env
+.env.*
+*.db
+*.sqlite
+*.sqlite3
+.cache
+runs
+pytest-cache-files-*
+
+# Not needed in the image. The notation engine is fetched and verified during the build.
+tests
+evals
+docs
+.github
+.claude
+frontend/vendor

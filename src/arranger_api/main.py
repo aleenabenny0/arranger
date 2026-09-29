@@ -1,448 +1,228 @@
-"""FastAPI entry point for Arranger."""
+"""FastAPI entry point for Arranger.
+
+`create_app(settings)` builds a fully wired application; `app` at the bottom of
+this module is the default instance uvicorn serves. Nothing here reads
+configuration at request time from module globals: routes get what they need
+from `request.app.state` through the dependencies in `arranger_api.deps`.
+"""
 
 from __future__ import annotations
 
-import logging
+import hmac
+import threading
 import time
-from dataclasses import asdict, replace
-from typing import Iterator
+from contextlib import asynccontextmanager
+from dataclasses import asdict
 
-from fastapi import Cookie, Depends, FastAPI, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from .auth import (
-    CSRF_COOKIE,
-    CSRF_HEADER,
-    SESSION_COOKIE,
-    CurrentUser,
-    clear_session_cookie,
-    forbidden,
-    hash_password,
-    hash_token,
-    new_token,
-    password_problems,
-    set_csrf_cookie,
-    set_session_cookie,
-    unauthorized,
-    verify_password,
-)
+from . import __version__
+from arranger.adapters.lilypond import LilyPondEngraver
 from arranger.agent import ScriptedModel
 from arranger.application import (
     arrange_score,
     fidelity_for,
+    plan_analysis,
+    plan_score,
     render_plan,
     verify_score,
 )
 from arranger.plan import ArrangementPlan, LHPattern, Section
 from arranger.render import last_bar
 
-from .errors import domain_error, not_found
-from .email import EmailSender, build_email_sender, build_password_reset_link, email_diagnostics
-from .observability import configure_logging, log_event, monotonic_ms, request_id
+from .auth import CurrentUser, PasswordService
+from .auth_routes import router as auth_router
+from .deps import (
+    enforce_rate_limit,
+    get_current_user,
+    get_email_health,
+    get_email_sender,
+    get_settings,
+    get_storage,
+    require_verified_user,
+)
+from .email import EmailHealth, build_email_sender, email_diagnostics
+from .errors import api_error, conflict, domain_error, not_found, public_error_body, service_unavailable
+from .artifacts import build_artifact_store
+from .jobs import JobRunner, JobServices
+from .metrics import AppMetrics
+from .middleware import BodyLimitMiddleware, RequestContextMiddleware, RequestGuardMiddleware
+from .observability import configure_logging, get_logger, log_event
 from .schemas import (
     ArrangeRequest,
     ArrangeResponse,
     ArrangementPlanIn,
-    LoginRequest,
+    FeedbackCreateRequest,
     PersistentArrangeRequest,
     PersistentRenderVerifyRequest,
+    PlanAnalysisResponse,
     PlanCreateRequest,
+    PlanResponse,
     PlayerProfileIn,
-    PasswordResetConfirmRequest,
-    PasswordResetRequest,
     RecordResponse,
     RecordsResponse,
-    RegisterRequest,
     RenderRequest,
     RenderResponse,
     RenderVerifyRequest,
     RenderVerifyResponse,
     ScoreIn,
-    UserResponse,
     VerifyRequest,
     fidelity_to_dict,
+    plan_from_payload,
+    profile_from_payload,
     run_result_to_dict,
+    score_from_payload,
     score_to_dict,
+    stored_profile_dict,
+    stored_score_dict,
     to_plan,
     to_profile,
     to_score,
     verdict_to_dict,
 )
-from .security import RateLimiter, client_ip
-from .storage import INTEGRITY_ERRORS, Storage, connect, init_db
-from .settings import load_settings
+from .security import FallbackRateLimitStore, InMemoryRateLimitStore, RateLimits, RateLimitStore
+from .settings import Settings, load_settings, validate_settings
+from .storage import Database, DatabaseUnavailable, Storage
+from .storage.rate_limits import DatabaseRateLimitStore
+
+logger = get_logger("arranger_api")
+
+__all__ = [
+    "app",
+    "create_app",
+    "get_current_user",
+    "get_email_sender",
+    "get_settings",
+    "get_storage",
+    "require_verified_user",
+]
+
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+CORS_ALLOW_HEADERS = ["Accept", "Content-Type", "X-CSRF-Token", "X-Request-ID"]
+CORS_EXPOSE_HEADERS = ["X-Request-ID", "Retry-After"]
+
+system_router = APIRouter(tags=["system"])
+router = APIRouter()
 
 
-settings = load_settings()
-configure_logging(settings.log_level)
-logger = logging.getLogger("arranger_api")
-log_event(logger, "email_config", **email_diagnostics(settings))
-rate_limiter = RateLimiter(settings.rate_limit_requests, settings.rate_limit_window_seconds)
-CSRF_EXEMPT_PATHS = {
-    "/auth/register",
-    "/auth/login",
-    "/auth/password-reset/request",
-    "/auth/password-reset/confirm",
-}
-SECURITY_HEADERS = {
-    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
-    "X-Content-Type-Options": "nosniff",
-    "Referrer-Policy": "same-origin",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
-    "X-Frame-Options": "DENY",
-}
+# --- system endpoints --------------------------------------------------------
 
 
-def add_security_headers(response: Response) -> Response:
-    for key, value in SECURITY_HEADERS.items():
-        response.headers.setdefault(key, value)
-    return response
-
-
-app = FastAPI(
-    title="Arranger API",
-    version="0.1.0",
-    description="HTTP interface for rendering and verifying playable piano arrangements.",
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.middleware("http")
-async def security_middleware(request: Request, call_next):
-    content_length = request.headers.get("content-length")
-    if content_length:
-        try:
-            too_large = int(content_length) > settings.max_request_bytes
-        except ValueError:
-            too_large = False
-        if too_large:
-            return add_security_headers(
-                JSONResponse(
-                    status_code=413,
-                    content={
-                        "detail": {
-                            "error": "request_too_large",
-                            "detail": "Request body is too large.",
-                        }
-                    },
-                )
-            )
-
-    if request.url.path.startswith("/auth") or request.method in {"POST", "PUT", "DELETE"}:
-        try:
-            rate_limiter.check(f"{client_ip(request)}:{request.url.path}")
-        except HTTPException as exc:
-            return add_security_headers(
-                JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-            )
-
-    if (
-        settings.csrf_protection
-        and request.method in {"POST", "PUT", "PATCH", "DELETE"}
-        and request.url.path not in CSRF_EXEMPT_PATHS
+def require_metrics_token(request: Request) -> None:
+    """Bearer-token gate for operational endpoints. 404 when no token is configured,
+    so an unconfigured deployment does not even admit the endpoint exists."""
+    expected = request.app.state.settings.metrics_token
+    if not expected:
+        raise HTTPException(status_code=404, detail="Not Found")
+    scheme, _, presented = request.headers.get("authorization", "").partition(" ")
+    if scheme.lower() != "bearer" or not hmac.compare_digest(
+        presented.strip().encode(), expected.encode()
     ):
-        session_token = request.cookies.get(SESSION_COOKIE)
-        csrf_cookie = request.cookies.get(CSRF_COOKIE)
-        csrf_header = request.headers.get(CSRF_HEADER)
-        if session_token:
-            if not csrf_cookie or not csrf_header or csrf_cookie != csrf_header:
-                return add_security_headers(
-                    JSONResponse(
-                        status_code=403,
-                        content={
-                            "detail": {
-                                "error": "forbidden",
-                                "detail": "Missing or invalid CSRF token.",
-                            }
-                        },
-                    )
-                )
-
-    response = await call_next(request)
-    return add_security_headers(response)
-
-
-@app.middleware("http")
-async def request_logging_middleware(request: Request, call_next):
-    start = time.monotonic()
-    rid = request_id(request)
-    response = None
-    try:
-        response = await call_next(request)
-        return response
-    finally:
-        log_event(
-            logger,
-            "http_request",
-            request_id=rid,
-            method=request.method,
-            path=request.url.path,
-            status_code=response.status_code if response else 500,
-            duration_ms=monotonic_ms(start),
-            client_ip=client_ip(request),
+        request.app.state.metrics.auth_failures.inc(reason="metrics_token")
+        raise api_error(
+            401,
+            "unauthorized",
+            "A valid bearer token is required.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-        if response is not None:
-            response.headers["X-Request-ID"] = rid
 
 
-@app.exception_handler(Exception)
-async def unhandled_exception_handler(request: Request, exc: Exception):
-    logger.exception(
-        "unhandled_exception",
-        extra={"path": request.url.path, "method": request.method},
-    )
-    return add_security_headers(
-        JSONResponse(
-            status_code=500,
-            content={
-                "detail": {
-                    "error": "internal_server_error",
-                    "detail": "Internal server error.",
-                }
-            },
-        )
-    )
-
-
-def get_storage() -> Iterator[Storage]:
-    conn = connect()
-    init_db(conn)
-    try:
-        yield Storage(conn)
-    finally:
-        conn.close()
-
-
-def get_email_sender() -> EmailSender:
-    try:
-        return build_email_sender(settings)
-    except Exception:
-        logger.exception("email_sender_configuration_failed")
-        return build_email_sender(replace(settings, email_provider="console"))
-
-
-def get_current_user(
-    storage: Storage = Depends(get_storage),
-    session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE),
-) -> CurrentUser:
-    if not session_token:
-        raise unauthorized()
-    user = storage.user_for_session(hash_token(session_token))
-    if user is None:
-        raise unauthorized()
-    return CurrentUser(
-        id=user["id"],
-        email=user["email"],
-        display_name=user["display_name"],
-    )
-
-
-def user_payload(user: dict | CurrentUser) -> dict:
-    if isinstance(user, CurrentUser):
-        return {"id": user.id, "email": user.email, "display_name": user.display_name}
-    return {
-        "id": user["id"],
-        "email": user["email"],
-        "display_name": user["display_name"],
-    }
-
-
-@app.get("/health")
+@system_router.get("/health")
 def health() -> dict:
+    """Liveness. Touches nothing: no database, no email, no rate-limit store."""
     return {"status": "ok", "service": "arranger-api"}
 
 
-@app.get("/ready")
-def ready(storage: Storage = Depends(get_storage)) -> dict:
-    storage.ping()
-    return {"status": "ready", "service": "arranger-api", "database": "ok"}
+@system_router.get("/version")
+def version(settings: Settings = Depends(get_settings)) -> dict:
+    return {
+        "service": "arranger-api",
+        "version": __version__,
+        "commit_sha": settings.commit_sha,
+        "environment": settings.app_env,
+    }
 
 
-@app.get("/diagnostics/email")
-def email_diagnostics_endpoint() -> dict:
+ARTIFACT_HEALTH_TTL_SECONDS = 30.0
+
+
+def _artifact_store_is_healthy(app: FastAPI) -> bool:
+    """Ask the file store whether it works, at most once every 30 seconds.
+
+    For an object store the check is a network call, and readiness probes arrive
+    every few seconds from every load balancer.
+    """
+    store = getattr(app.state, "artifacts", None)
+    if store is None:
+        return True
+    checked_at, healthy = getattr(app.state, "artifact_health", (0.0, False))
+    now = time.monotonic()
+    if now - checked_at > ARTIFACT_HEALTH_TTL_SECONDS or not healthy:
+        try:
+            healthy = bool(store.healthy())
+        except Exception as exc:  # a store that raises is not healthy
+            logger.error("artifact_store_check_failed", exc_info=exc)
+            healthy = False
+        app.state.artifact_health = (now, healthy)
+    return healthy
+
+
+@system_router.get("/ready")
+def ready(
+    request: Request,
+    storage: Storage = Depends(get_storage),
+    email_health: EmailHealth = Depends(get_email_health),
+) -> dict:
+    """Readiness: database reachable, schema current, files storable, and how email is doing."""
+    try:
+        migrations = storage.migration_status()
+        if migrations["pending"]:
+            raise service_unavailable("migrations_pending")
+        storage.ping()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("readiness_check_failed", exc_info=exc)
+        raise service_unavailable("database_unavailable") from exc
+    # Uploads, arrangements and downloads all need the file store. A server that
+    # cannot reach it should be taken out of rotation, not fail request by request.
+    if not _artifact_store_is_healthy(request.app):
+        raise service_unavailable("artifact_store_unavailable")
+    return {
+        "status": "ready",
+        "service": "arranger-api",
+        "database": "ok",
+        "artifacts": "ok",
+        "migrations": {"current": migrations["current"], "pending": 0},
+        "email": email_health.status(),
+    }
+
+
+@system_router.get("/metrics", include_in_schema=False, dependencies=[Depends(require_metrics_token)])
+def metrics_endpoint(request: Request) -> PlainTextResponse:
+    metrics: AppMetrics = request.app.state.metrics
+    return PlainTextResponse(metrics.render(), media_type=metrics.registry.content_type)
+
+
+@system_router.get(
+    "/diagnostics/email",
+    include_in_schema=False,
+    dependencies=[Depends(require_metrics_token)],
+)
+def email_diagnostics_endpoint(settings: Settings = Depends(get_settings)) -> dict:
     return email_diagnostics(settings)
 
 
-@app.post("/auth/register", response_model=UserResponse)
-def register_endpoint(
-    request: RegisterRequest,
-    response: Response,
-    http_request: Request,
-    storage: Storage = Depends(get_storage),
-) -> dict:
-    try:
-        if problems := password_problems(request.password):
-            raise ValueError(" ".join(problems))
-        display_name = request.display_name or request.email.split("@", 1)[0]
-        user = storage.create_user(
-            request.email,
-            hash_password(request.password),
-            display_name,
-        )
-        token = new_token()
-        csrf_token = new_token()
-        max_age = 60 * 60 * 24 * settings.session_days
-        storage.create_session(
-            user["id"],
-            hash_token(token),
-            settings.session_days,
-            csrf_token_hash=hash_token(csrf_token),
-            ip_address=client_ip(http_request),
-            user_agent=http_request.headers.get("user-agent", ""),
-            max_sessions=settings.max_sessions_per_user,
-        )
-        set_session_cookie(
-            response,
-            token,
-            secure=settings.cookie_secure,
-            max_age=max_age,
-        )
-        set_csrf_cookie(response, csrf_token, secure=settings.cookie_secure, max_age=max_age)
-        return {"user": user_payload(user)}
-    except INTEGRITY_ERRORS as exc:
-        raise domain_error(ValueError("email is already registered")) from exc
+# --- stateless compute -------------------------------------------------------
 
 
-@app.post("/auth/login", response_model=UserResponse)
-def login_endpoint(
-    request: LoginRequest,
-    response: Response,
-    http_request: Request,
-    storage: Storage = Depends(get_storage),
-) -> dict:
-    user = storage.get_user_with_password(request.email)
-    if user is None or not verify_password(request.password, user["password_hash"]):
-        raise unauthorized()
-    token = new_token()
-    csrf_token = new_token()
-    max_age = 60 * 60 * 24 * settings.session_days
-    storage.create_session(
-        user["id"],
-        hash_token(token),
-        settings.session_days,
-        csrf_token_hash=hash_token(csrf_token),
-        ip_address=client_ip(http_request),
-        user_agent=http_request.headers.get("user-agent", ""),
-        max_sessions=settings.max_sessions_per_user,
-    )
-    set_session_cookie(
-        response,
-        token,
-        secure=settings.cookie_secure,
-        max_age=max_age,
-    )
-    set_csrf_cookie(response, csrf_token, secure=settings.cookie_secure, max_age=max_age)
-    return {"user": user_payload(user)}
-
-
-@app.post("/auth/logout")
-def logout_endpoint(
-    response: Response,
-    storage: Storage = Depends(get_storage),
-    session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE),
-) -> dict:
-    if session_token:
-        storage.revoke_session(hash_token(session_token))
-    clear_session_cookie(response, secure=settings.cookie_secure)
-    return {"logged_out": True}
-
-
-@app.get("/auth/me", response_model=UserResponse)
-def me_endpoint(user: CurrentUser = Depends(get_current_user)) -> dict:
-    return {"user": user_payload(user)}
-
-
-@app.post("/auth/password-reset/request")
-def request_password_reset_endpoint(
-    request: PasswordResetRequest,
-    storage: Storage = Depends(get_storage),
-    email_sender: EmailSender = Depends(get_email_sender),
-) -> dict:
-    user = storage.get_user_with_password(request.email)
-    response = {"accepted": True}
-    if user is None:
-        log_event(
-            logger,
-            "password_reset_request",
-            user_found=False,
-            email_domain=request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
-            provider=settings.email_provider,
-            resend_key_configured=bool(settings.resend_api_key),
-        )
-        return response
-    token = new_token()
-    storage.create_password_reset_token(
-        user["id"],
-        hash_token(token),
-        settings.password_reset_minutes,
-    )
-    reset_link = build_password_reset_link(settings, token)
-    log_event(
-        logger,
-        "password_reset_request",
-        user_found=True,
-        email_domain=request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
-        provider=settings.email_provider,
-        resend_key_configured=bool(settings.resend_api_key),
-    )
-    try:
-        email_sender.send_password_reset(
-            request.email,
-            reset_link,
-            settings.password_reset_minutes,
-        )
-        log_event(
-            logger,
-            "password_reset_email_sent",
-            provider=settings.email_provider,
-            email_domain=request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
-        )
-    except Exception as exc:
-        body = getattr(exc, "body", None)
-        log_event(
-            logger,
-            "password_reset_email_failed",
-            provider=settings.email_provider,
-            email_domain=request.email.rsplit("@", 1)[-1].lower() if "@" in request.email else "",
-            error_type=type(exc).__name__,
-            status_code=getattr(exc, "status_code", None),
-            response_body=body[:500] if body else None,
-        )
-        logger.debug("password_reset_email_failed_traceback", exc_info=exc)
-        if settings.app_env != "production":
-            response["email_error"] = "Password reset email could not be sent."
-    if settings.app_env != "production":
-        response["reset_token"] = token
-        response["reset_link"] = reset_link
-    return response
-
-
-@app.post("/auth/password-reset/confirm", response_model=UserResponse)
-def confirm_password_reset_endpoint(
-    request: PasswordResetConfirmRequest,
-    storage: Storage = Depends(get_storage),
-) -> dict:
-    if problems := password_problems(request.password):
-        raise domain_error(ValueError(" ".join(problems)))
-    user = storage.consume_password_reset_token(
-        hash_token(request.token),
-        hash_password(request.password),
-    )
-    if user is None:
-        raise forbidden("Password reset token is invalid or expired.")
-    return {"user": user_payload(user)}
-
-
-@app.post("/verify")
+@router.post("/verify")
 def verify_endpoint(request: VerifyRequest) -> dict:
     try:
         score = to_score(request.score)
@@ -452,7 +232,7 @@ def verify_endpoint(request: VerifyRequest) -> dict:
         raise domain_error(exc) from exc
 
 
-@app.post("/render", response_model=RenderResponse)
+@router.post("/render", response_model=RenderResponse)
 def render_endpoint(request: RenderRequest) -> dict:
     try:
         source = to_score(request.source)
@@ -463,7 +243,7 @@ def render_endpoint(request: RenderRequest) -> dict:
         raise domain_error(exc) from exc
 
 
-@app.post("/render-and-verify", response_model=RenderVerifyResponse)
+@router.post("/render-and-verify", response_model=RenderVerifyResponse)
 def render_and_verify_endpoint(request: RenderVerifyRequest) -> dict:
     try:
         source = to_score(request.source)
@@ -481,7 +261,7 @@ def render_and_verify_endpoint(request: RenderVerifyRequest) -> dict:
         raise domain_error(exc) from exc
 
 
-@app.post("/arrange/dry-run", response_model=ArrangeResponse)
+@router.post("/arrange/dry-run", response_model=ArrangeResponse)
 def arrange_dry_run_endpoint(request: ArrangeRequest) -> dict:
     try:
         source = to_score(request.source)
@@ -510,7 +290,35 @@ def arrange_dry_run_endpoint(request: ArrangeRequest) -> dict:
         raise domain_error(exc) from exc
 
 
-@app.post("/profiles", response_model=RecordResponse)
+@router.post("/plan/deterministic", response_model=PlanResponse)
+def deterministic_plan_endpoint(request: VerifyRequest) -> dict:
+    try:
+        source = to_score(request.score)
+        profile = to_profile(request.profile)
+        plan = plan_score(source, profile)
+        arranged = render_plan(plan, source)
+        verdict = verify_score(arranged, profile)
+        fidelity = fidelity_for(source, arranged)
+        return {
+            "plan": asdict(plan),
+            "verdict": verdict_to_dict(verdict),
+            "fidelity": fidelity_to_dict(fidelity),
+        }
+    except Exception as exc:
+        raise domain_error(exc) from exc
+
+
+@router.post("/plan/analysis", response_model=PlanAnalysisResponse)
+def plan_analysis_endpoint(request: VerifyRequest) -> dict:
+    try:
+        source = to_score(request.score)
+        profile = to_profile(request.profile)
+        return {"analysis": plan_analysis(source, profile)}
+    except Exception as exc:
+        raise domain_error(exc) from exc
+
+
+@router.post("/profiles", response_model=RecordResponse)
 def create_profile_endpoint(
     request: PlayerProfileIn,
     storage: Storage = Depends(get_storage),
@@ -518,12 +326,12 @@ def create_profile_endpoint(
 ) -> dict:
     try:
         profile = to_profile(request)
-        return {"record": storage.create_profile(user.id, asdict(profile))}
+        return {"record": storage.create_profile(user.id, stored_profile_dict(profile))}
     except Exception as exc:
         raise domain_error(exc) from exc
 
 
-@app.get("/profiles", response_model=RecordsResponse)
+@router.get("/profiles", response_model=RecordsResponse)
 def list_profiles_endpoint(
     limit: int = Query(default=25, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -533,7 +341,7 @@ def list_profiles_endpoint(
     return {"records": storage.list_profiles(user.id, limit, offset)}
 
 
-@app.get("/profiles/{profile_id}", response_model=RecordResponse)
+@router.get("/profiles/{profile_id}", response_model=RecordResponse)
 def get_profile_endpoint(
     profile_id: str,
     storage: Storage = Depends(get_storage),
@@ -545,7 +353,7 @@ def get_profile_endpoint(
     return {"record": record}
 
 
-@app.put("/profiles/{profile_id}", response_model=RecordResponse)
+@router.put("/profiles/{profile_id}", response_model=RecordResponse)
 def update_profile_endpoint(
     profile_id: str,
     request: PlayerProfileIn,
@@ -554,7 +362,7 @@ def update_profile_endpoint(
 ) -> dict:
     try:
         profile = to_profile(request)
-        record = storage.update_profile(user.id, profile_id, asdict(profile))
+        record = storage.update_profile(user.id, profile_id, stored_profile_dict(profile))
         if record is None:
             raise not_found("profile", profile_id)
         return {"record": record}
@@ -562,7 +370,7 @@ def update_profile_endpoint(
         raise domain_error(exc) from exc
 
 
-@app.delete("/profiles/{profile_id}")
+@router.delete("/profiles/{profile_id}")
 def delete_profile_endpoint(
     profile_id: str,
     storage: Storage = Depends(get_storage),
@@ -573,7 +381,7 @@ def delete_profile_endpoint(
     return {"deleted": True}
 
 
-@app.post("/scores", response_model=RecordResponse)
+@router.post("/scores", response_model=RecordResponse)
 def create_score_endpoint(
     request: ScoreIn,
     storage: Storage = Depends(get_storage),
@@ -581,12 +389,12 @@ def create_score_endpoint(
 ) -> dict:
     try:
         score = to_score(request)
-        return {"record": storage.create_score(user.id, score_to_dict(score))}
+        return {"record": storage.create_score(user.id, stored_score_dict(score))}
     except Exception as exc:
         raise domain_error(exc) from exc
 
 
-@app.get("/scores", response_model=RecordsResponse)
+@router.get("/scores", response_model=RecordsResponse)
 def list_scores_endpoint(
     limit: int = Query(default=25, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -596,7 +404,7 @@ def list_scores_endpoint(
     return {"records": storage.list_scores(user.id, limit, offset)}
 
 
-@app.get("/scores/{score_id}", response_model=RecordResponse)
+@router.get("/scores/{score_id}", response_model=RecordResponse)
 def get_score_endpoint(
     score_id: str,
     storage: Storage = Depends(get_storage),
@@ -608,7 +416,7 @@ def get_score_endpoint(
     return {"record": record}
 
 
-@app.delete("/scores/{score_id}")
+@router.delete("/scores/{score_id}")
 def delete_score_endpoint(
     score_id: str,
     storage: Storage = Depends(get_storage),
@@ -619,7 +427,7 @@ def delete_score_endpoint(
     return {"deleted": True}
 
 
-@app.post("/plans", response_model=RecordResponse)
+@router.post("/plans", response_model=RecordResponse)
 def create_plan_endpoint(
     request: PlanCreateRequest,
     storage: Storage = Depends(get_storage),
@@ -634,7 +442,7 @@ def create_plan_endpoint(
         raise domain_error(exc) from exc
 
 
-@app.get("/plans", response_model=RecordsResponse)
+@router.get("/plans", response_model=RecordsResponse)
 def list_plans_endpoint(
     score_id: str | None = None,
     limit: int = Query(default=25, ge=1, le=100),
@@ -645,7 +453,7 @@ def list_plans_endpoint(
     return {"records": storage.list_plans(user.id, score_id, limit, offset)}
 
 
-@app.get("/plans/{plan_id}", response_model=RecordResponse)
+@router.get("/plans/{plan_id}", response_model=RecordResponse)
 def get_plan_endpoint(
     plan_id: str,
     storage: Storage = Depends(get_storage),
@@ -657,7 +465,7 @@ def get_plan_endpoint(
     return {"record": record}
 
 
-@app.put("/plans/{plan_id}", response_model=RecordResponse)
+@router.put("/plans/{plan_id}", response_model=RecordResponse)
 def update_plan_endpoint(
     plan_id: str,
     request: ArrangementPlanIn,
@@ -674,7 +482,7 @@ def update_plan_endpoint(
         raise domain_error(exc) from exc
 
 
-@app.delete("/plans/{plan_id}")
+@router.delete("/plans/{plan_id}")
 def delete_plan_endpoint(
     plan_id: str,
     storage: Storage = Depends(get_storage),
@@ -685,11 +493,11 @@ def delete_plan_endpoint(
     return {"deleted": True}
 
 
-@app.post("/arrangements/render-and-verify", response_model=RecordResponse)
+@router.post("/arrangements/render-and-verify", response_model=RecordResponse)
 def create_arrangement_endpoint(
     request: PersistentRenderVerifyRequest,
     storage: Storage = Depends(get_storage),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_verified_user),
 ) -> dict:
     try:
         score_record = storage.get_score(user.id, request.score_id)
@@ -701,10 +509,15 @@ def create_arrangement_endpoint(
             raise not_found("profile", request.profile_id)
         if plan_record is None:
             raise not_found("plan", request.plan_id)
+        if plan_record["score_id"] != request.score_id:
+            raise conflict(
+                "plan_score_mismatch",
+                "This plan was written for a different score.",
+            )
 
-        source = to_score(ScoreIn.model_validate(score_record["payload"]))
-        profile = to_profile(PlayerProfileIn.model_validate(profile_record["payload"]))
-        plan = to_plan(ArrangementPlanIn.model_validate(plan_record["payload"]))
+        source = score_from_payload(score_record["payload"])
+        profile = profile_from_payload(profile_record["payload"])
+        plan = plan_from_payload(plan_record["payload"])
         arranged = render_plan(plan, source)
         verdict = verify_score(arranged, profile)
         fidelity = fidelity_for(source, arranged)
@@ -713,7 +526,7 @@ def create_arrangement_endpoint(
             score_id=request.score_id,
             plan_id=request.plan_id,
             profile_id=request.profile_id,
-            arranged=score_to_dict(arranged),
+            arranged=stored_score_dict(arranged),
             verdict=verdict_to_dict(verdict),
             fidelity=fidelity_to_dict(fidelity),
         )
@@ -722,7 +535,7 @@ def create_arrangement_endpoint(
         raise domain_error(exc) from exc
 
 
-@app.get("/arrangements", response_model=RecordsResponse)
+@router.get("/arrangements", response_model=RecordsResponse)
 def list_arrangements_endpoint(
     limit: int = Query(default=25, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -732,7 +545,7 @@ def list_arrangements_endpoint(
     return {"records": storage.list_arrangements(user.id, limit, offset)}
 
 
-@app.get("/arrangements/{arrangement_id}", response_model=RecordResponse)
+@router.get("/arrangements/{arrangement_id}", response_model=RecordResponse)
 def get_arrangement_endpoint(
     arrangement_id: str,
     storage: Storage = Depends(get_storage),
@@ -744,7 +557,7 @@ def get_arrangement_endpoint(
     return {"record": record}
 
 
-@app.get("/arrangements/{arrangement_id}/verdict")
+@router.get("/arrangements/{arrangement_id}/verdict")
 def get_arrangement_verdict_endpoint(
     arrangement_id: str,
     storage: Storage = Depends(get_storage),
@@ -756,11 +569,11 @@ def get_arrangement_verdict_endpoint(
     return record["verdict"]
 
 
-@app.post("/runs/dry-run", response_model=RecordResponse)
+@router.post("/runs/dry-run", response_model=RecordResponse)
 def create_dry_run_endpoint(
     request: PersistentArrangeRequest,
     storage: Storage = Depends(get_storage),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_verified_user),
 ) -> dict:
     try:
         score_record = storage.get_score(user.id, request.score_id)
@@ -770,8 +583,8 @@ def create_dry_run_endpoint(
         if profile_record is None:
             raise not_found("profile", request.profile_id)
 
-        source = to_score(ScoreIn.model_validate(score_record["payload"]))
-        profile = to_profile(PlayerProfileIn.model_validate(profile_record["payload"]))
+        source = score_from_payload(score_record["payload"])
+        profile = profile_from_payload(profile_record["payload"])
         end = last_bar(source)
         model = ScriptedModel(
             [
@@ -791,18 +604,94 @@ def create_dry_run_endpoint(
             verbose=False,
             countdown=request.countdown,
         )
-        record = storage.create_run(
-            user_id=user.id,
-            score_id=request.score_id,
-            profile_id=request.profile_id,
-            result=run_result_to_dict(result),
-        )
+        rankings = plan_analysis(source, profile)["candidate_rankings"]
+        with storage.transaction():
+            record = storage.create_run(
+                user_id=user.id,
+                score_id=request.score_id,
+                profile_id=request.profile_id,
+                result=run_result_to_dict(result),
+            )
+            storage.create_candidate_rankings(
+                user_id=user.id,
+                run_id=record["id"],
+                score_id=request.score_id,
+                profile_id=request.profile_id,
+                rows=rankings,
+            )
         return {"record": record}
     except Exception as exc:
         raise domain_error(exc) from exc
 
 
-@app.get("/runs", response_model=RecordsResponse)
+@router.get("/candidate-rankings", response_model=RecordsResponse)
+def list_candidate_rankings_endpoint(
+    run_id: str | None = None,
+    score_id: str | None = None,
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    storage: Storage = Depends(get_storage),
+    user: CurrentUser = Depends(get_current_user),
+) -> dict:
+    return {
+        "records": storage.list_candidate_rankings(
+            user.id,
+            run_id=run_id,
+            score_id=score_id,
+            limit=limit,
+            offset=offset,
+        )
+    }
+
+
+@router.post("/feedback", response_model=RecordResponse)
+def create_feedback_endpoint(
+    request: FeedbackCreateRequest,
+    storage: Storage = Depends(get_storage),
+    user: CurrentUser = Depends(get_current_user),
+) -> dict:
+    try:
+        edited_plan = None
+        if request.edited_plan is not None:
+            edited_plan = asdict(to_plan(request.edited_plan))
+        record = storage.create_candidate_feedback(
+            user_id=user.id,
+            candidate_ranking_id=request.candidate_ranking_id,
+            arrangement_id=request.arrangement_id,
+            label=request.label,
+            edited_plan=edited_plan,
+            notes=request.notes,
+        )
+        if record is None:
+            raise not_found("feedback target", "requested target")
+        return {"record": record}
+    except Exception as exc:
+        raise domain_error(exc) from exc
+
+
+@router.get("/feedback", response_model=RecordsResponse)
+def list_feedback_endpoint(
+    candidate_ranking_id: str | None = None,
+    arrangement_id: str | None = None,
+    label: str | None = None,
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    storage: Storage = Depends(get_storage),
+    user: CurrentUser = Depends(get_current_user),
+) -> dict:
+    return {
+        "records": storage.list_candidate_feedback(
+            user.id,
+            candidate_ranking_id=candidate_ranking_id,
+            arrangement_id=arrangement_id,
+            label=label,
+            limit=limit,
+            offset=offset,
+        )
+    }
+
+
+@router.get("/runs", response_model=RecordsResponse)
 def list_runs_endpoint(
     limit: int = Query(default=25, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -812,7 +701,7 @@ def list_runs_endpoint(
     return {"records": storage.list_runs(user.id, limit, offset)}
 
 
-@app.get("/runs/{run_id}", response_model=RecordResponse)
+@router.get("/runs/{run_id}", response_model=RecordResponse)
 def get_run_endpoint(
     run_id: str,
     storage: Storage = Depends(get_storage),
@@ -824,8 +713,236 @@ def get_run_endpoint(
     return {"record": record}
 
 
-if settings.frontend_dir.exists():
-    app.mount("/", StaticFiles(directory=settings.frontend_dir, html=True), name="frontend")
+# --- application factory -----------------------------------------------------
+
+
+def build_rate_limit_store(
+    settings: Settings, database: Database, metrics: AppMetrics
+) -> RateLimitStore:
+    """`memory`: per process. `database`: shared by every instance, with the
+    in-memory store as a fallback so a database outage degrades rate limiting
+    to per-process instead of switching it off or failing requests."""
+    memory = InMemoryRateLimitStore(max_buckets=settings.rate_limit_max_buckets)
+    if settings.rate_limit_backend != "database":
+        return memory
+
+    last_logged = [0.0]
+
+    def on_error(exc: Exception) -> None:
+        metrics.rate_limit_store_errors.inc()
+        now = time.monotonic()
+        if now - last_logged[0] >= 60:
+            last_logged[0] = now
+            logger.error("rate_limit_store_failed", exc_info=exc)
+
+    return FallbackRateLimitStore(DatabaseRateLimitStore(database), memory, on_error=on_error)
+
+
+def run_cleanup(app: FastAPI) -> dict[str, int]:
+    """Delete dead sessions, spent/expired tokens and closed rate-limit windows."""
+    settings: Settings = app.state.settings
+    database: Database = app.state.database
+    with database.connection() as conn:
+        removed = Storage(conn, dialect=database.dialect).cleanup_expired(
+            idle_seconds=settings.session_idle_days * 86_400
+        )
+    removed["rate_limit_buckets"] = app.state.rate_limits.store.cleanup()
+    return removed
+
+
+def _cleanup_loop(app: FastAPI, stop: threading.Event) -> None:
+    interval = max(1, app.state.settings.cleanup_interval_seconds)
+    while True:
+        try:
+            removed = run_cleanup(app)
+            if any(removed.values()):
+                log_event(logger, "cleanup", **removed)
+        except Exception as exc:
+            logger.error("cleanup_failed", exc_info=exc)
+        if stop.wait(interval):
+            return
+
+
+def _schema_is_current(database: Database) -> bool:
+    try:
+        with database.connection() as conn:
+            pending = Storage(conn, dialect=database.dialect).migration_status()["pending"]
+            conn.rollback()
+        return not pending
+    except Exception as exc:
+        logger.error("migration_status_failed", exc_info=exc)
+        return False
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: migrate once (under a database lock), then start housekeeping.
+
+    This is the only place the API applies migrations. With
+    `RUN_MIGRATIONS_ON_STARTUP=false` the deploy is expected to have run
+    `python -m arranger_api.storage.migrate` as a release step.
+    """
+    settings: Settings = app.state.settings
+    database: Database = app.state.database
+    if settings.run_migrations_on_startup:
+        applied = await run_in_threadpool(database.migrate)
+        log_event(logger, "migrations", applied=applied, dialect=database.dialect)
+    else:
+        log_event(logger, "migrations_skipped", reason="RUN_MIGRATIONS_ON_STARTUP=false")
+
+    stop = threading.Event()
+    worker = threading.Thread(
+        target=_cleanup_loop, args=(app, stop), name="arranger-cleanup", daemon=True
+    )
+    worker.start()
+    runner: JobRunner = app.state.job_runner
+    if settings.job_workers > 0:
+        if await run_in_threadpool(_schema_is_current, database):
+            # Jobs left `running` by a process that died are picked up again
+            # once their lease expires; start by recovering any that already have.
+            await run_in_threadpool(runner.housekeeping)
+            runner.start(settings.job_workers)
+            log_event(logger, "job_workers_started", workers=settings.job_workers)
+        else:
+            # Migrations are a release step here and have not run yet. Serving
+            # /ready (which says so) matters more than crashing on a missing table.
+            logger.error("job_workers_not_started: the database has pending migrations")
+    try:
+        yield
+    finally:
+        runner.stop()
+        stop.set()
+        worker.join(timeout=5)
+        database.close()
+
+
+async def _http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=public_error_body(exc.status_code, exc.detail),
+        headers=getattr(exc, "headers", None),
+    )
+
+
+async def _validation_exception_handler(request: Request, exc: RequestValidationError):
+    # FastAPI's default body echoes the rejected input, which for the auth
+    # endpoints means echoing passwords and tokens. Keep where and why only.
+    errors = [
+        {
+            "type": str(error.get("type", "value_error")),
+            "loc": [str(part) if not isinstance(part, int) else part for part in error.get("loc", ())],
+            "msg": str(error.get("msg", "Invalid value.")),
+        }
+        for error in exc.errors()[:50]
+    ]
+    return JSONResponse(status_code=422, content={"detail": errors})
+
+
+async def _database_unavailable_handler(request: Request, exc: DatabaseUnavailable):
+    logger.error("database_unavailable", exc_info=exc)
+    return JSONResponse(
+        status_code=503,
+        content=public_error_body(503, {"error": "database_unavailable"}),
+        headers={"Retry-After": "5"},
+    )
+
+
+async def _unhandled_exception_handler(request: Request, exc: Exception):
+    logger.error("unhandled_exception", exc_info=exc)
+    return JSONResponse(
+        status_code=500,
+        content=public_error_body(500, {"error": "internal_server_error"}),
+    )
+
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    """Build the application. Raises `ConfigurationError` on unsafe production config."""
+    settings = settings or load_settings()
+    validate_settings(settings)
+    configure_logging(settings.log_level)
+
+    metrics = AppMetrics()
+    database = Database.from_settings(settings)
+    rate_limits = RateLimits(
+        settings,
+        build_rate_limit_store(settings, database, metrics),
+        on_limited=lambda name: metrics.rate_limit_hits.inc(limiter=name),
+    )
+
+    docs = {} if not settings.is_production else {
+        "docs_url": None,
+        "redoc_url": None,
+        "openapi_url": None,
+    }
+    app = FastAPI(
+        title="Arranger API",
+        version=__version__,
+        description="HTTP interface for rendering and verifying playable piano arrangements.",
+        lifespan=lifespan,
+        dependencies=[Depends(enforce_rate_limit)],
+        **docs,
+    )
+    app.state.settings = settings
+    app.state.metrics = metrics
+    app.state.database = database
+    app.state.rate_limits = rate_limits
+    app.state.passwords = PasswordService.from_settings(settings)
+    app.state.email_sender = build_email_sender(settings)
+    app.state.email_health = EmailHealth()
+    # Files, engraving and background work. All three are replaceable on
+    # `app.state` so tests can run without LilyPond, a model or a second thread.
+    app.state.artifacts = build_artifact_store(settings, database)
+    app.state.engraver = LilyPondEngraver(timeout=float(settings.engrave_max_seconds))
+    app.state.job_services = JobServices(
+        settings=settings, database=database, artifacts=app.state.artifacts, metrics=metrics,
+        engraver=app.state.engraver,
+    )
+    app.state.job_runner = JobRunner(app.state.job_services)
+
+    log_event(logger, "email_config", **email_diagnostics(settings))
+    if settings.is_production and settings.trusted_proxy_count == 0:
+        logger.warning(
+            "TRUSTED_PROXY_COUNT=0: X-Forwarded-For is ignored. Behind a reverse proxy "
+            "every client shares the proxy's address and therefore one rate-limit bucket."
+        )
+
+    app.add_exception_handler(StarletteHTTPException, _http_exception_handler)
+    app.add_exception_handler(RequestValidationError, _validation_exception_handler)
+    app.add_exception_handler(DatabaseUnavailable, _database_unavailable_handler)
+    app.add_exception_handler(Exception, _unhandled_exception_handler)
+
+    # add_middleware prepends: the last one added is the outermost.
+    app.add_middleware(BodyLimitMiddleware, settings=settings, metrics=metrics)
+    app.add_middleware(
+        RequestGuardMiddleware, settings=settings, metrics=metrics, rate_limits=rate_limits
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[o for o in settings.cors_origins if o not in {"*", "null"}],
+        allow_credentials=True,
+        allow_methods=CORS_ALLOW_METHODS,
+        allow_headers=CORS_ALLOW_HEADERS,
+        expose_headers=CORS_EXPOSE_HEADERS,
+        max_age=600,
+    )
+    app.add_middleware(RequestContextMiddleware, settings=settings, metrics=metrics)
+
+    app.include_router(system_router)
+    app.include_router(auth_router)
+    app.include_router(router)
+
+    from arranger_api.routers import register_routers
+
+    register_routers(app)
+
+    # Last: the catch-all static mount must not shadow any API route.
+    if settings.frontend_dir.exists():
+        app.mount("/", StaticFiles(directory=settings.frontend_dir, html=True), name="frontend")
+    return app
+
+
+app = create_app()
+settings = app.state.settings
 
 
 def main() -> None:
