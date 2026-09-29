@@ -384,6 +384,62 @@ jobs:
           echo "::error title=Container log tail::$(docker logs arranger-smoke 2>&1 | tail -n 60 | tr '\n' ' ' | cut -c1-3500)"
           docker logs arranger-smoke || true
 
+  kubernetes:
+    name: Kubernetes deployment (kind)
+    runs-on: ubuntu-latest
+    needs:
+      - docker-build
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      # A real, single-node Kubernetes cluster on the runner.
+      - name: Create a kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: arranger
+
+      - name: Build the image
+        run: docker build -t arranger:local .
+
+      - name: Load the image into the cluster
+        run: kind load docker-image arranger:local --name arranger
+
+      - name: Deploy
+        run: |
+          kubectl apply -f k8s/
+          kubectl -n arranger rollout status statefulset/postgres --timeout=120s
+          kubectl -n arranger rollout status deployment/arranger --timeout=120s
+          kubectl -n arranger get pods -o wide
+
+      # The same smoke test the Docker job runs, through a port-forward to the Service.
+      - name: Smoke test through a port-forward
+        env:
+          SMOKE_CAPABILITIES: export_pdf,import_audio
+        run: |
+          kubectl -n arranger port-forward service/arranger 8000:80 > port-forward.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/health > /dev/null; then break; fi
+            sleep 2
+          done
+          bash scripts/smoke.sh http://127.0.0.1:8000 | tee smoke.log
+
+      - name: Describe the cluster on failure
+        if: failure()
+        run: |
+          kubectl -n arranger get pods -o wide || true
+          kubectl -n arranger describe pods || true
+          kubectl -n arranger logs deployment/arranger --all-containers --tail=200 || true
+          kubectl -n arranger logs statefulset/postgres --tail=100 || true
+          cat port-forward.log 2>/dev/null || true
+          echo "::error title=Kubernetes pods::$(kubectl -n arranger get pods 2>&1 | tr '\n' ' ' | cut -c1-1500)"
+          echo "::error title=Kubernetes events::$(kubectl -n arranger get events --sort-by=.lastTimestamp 2>&1 | tail -n 25 | tr '\n' ' ' | cut -c1-3500)"
+          echo "::error title=Kubernetes app log::$(kubectl -n arranger logs deployment/arranger --all-containers --tail=60 2>&1 | tr '\n' ' ' | cut -c1-3500)"
+          if [ -f smoke.log ]; then
+            echo "::error title=Kubernetes smoke test::$(grep -E '^(FAIL|[0-9]+ check)' smoke.log | tr '\n' ' ' | cut -c1-3000)"
+          fi
+
   production-smoke:
     name: Production smoke check
     runs-on: ubuntu-latest

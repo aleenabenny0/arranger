@@ -1,0 +1,36 @@
+# Non-secret configuration for the API pods. Every key is an environment
+# variable read by src/arranger_api/settings.py; .env.production.example
+# documents all of them.
+#
+# These values suit a local kind cluster and the CI smoke test, which talks to
+# the service over a plain-http port-forward. For a real deployment change:
+#   APP_ENV=production, COOKIE_SECURE=true, PUBLIC_BASE_URL and
+#   FRONTEND_ORIGINS to the https address of the site, EMAIL_PROVIDER=resend
+#   (with RESEND_API_KEY in the Secret) and TRUSTED_PROXY_COUNT to the number of
+#   proxies in front of the pods. Production refuses to start otherwise.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arranger-config
+  namespace: arranger
+data:
+  APP_ENV: "development"
+  LOG_LEVEL: "INFO"
+  HOST: "0.0.0.0"
+  PORT: "8000"
+  RELOAD: "false"
+  PUBLIC_BASE_URL: "http://127.0.0.1:8000"
+  FRONTEND_ORIGINS: "http://127.0.0.1:8000,http://localhost:8000"
+  COOKIE_SECURE: "false"
+  CSRF_PROTECTION: "true"
+  TRUSTED_PROXY_COUNT: "0"
+  EMAIL_PROVIDER: "console"
+  # Files as rows and rate-limit counters in Postgres: every replica sees the
+  # same state with no shared volume.
+  ARTIFACT_BACKEND: "database"
+  RATE_LIMIT_BACKEND: "database"
+  # Each replica runs the migrations under a Postgres advisory lock, so two
+  # pods starting together cannot race.
+  RUN_MIGRATIONS_ON_STARTUP: "true"
+  JOB_WORKERS: "1"
+  DB_POOL_SIZE: "5"
