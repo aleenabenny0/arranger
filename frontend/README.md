@@ -44,6 +44,22 @@ list the site's origin in the API's `FRONTEND_ORIGINS`.
   `prefers-reduced-motion` and `prefers-color-scheme` respected, usable at 320
   pixels wide.
 
+## Test ids
+
+The key controls carry `data-testid` attributes so the end-to-end tests in
+`e2e/` can find them without depending on wording or layout:
+
+| Where | Ids |
+|---|---|
+| Navigation | `nav-home`, `nav-login`, `nav-register`, `nav-library`, `nav-account`, `nav-sign-out`, `home-register` |
+| Sign in and register | `auth-email`, `auth-password`, `auth-submit`, `auth-error` |
+| Library | `upload-input`, `upload-error`, `project-list`, `project-link`, `library-summary` |
+| Piece | `project-title`, `tab-<id>` and `panel-<id>` for `source`, `hands`, `arrange`, `revisions`, `advanced` |
+| Hands | `profile-preset`, `profile-<field>` for every numeric field |
+| Arrangement | `arrange-button`, `job-status`, `stale-notice`, `arrangement-result`, `verdict` (with `data-status`), `fidelity-score`, `findings`, `findings-none`, `download-<midi|musicxml|pdf>` |
+| Revisions and Advanced | `revisions`, `plan-json`, `plan-evaluate`, `json-report`, `json-verdict`, `json-profile` |
+| Feedback | `toast-<success|error|info>`, `dialog` |
+
 ## Testing
 
 ```bash
