@@ -1,0 +1,8 @@
+# OWASP ZAP baseline rules for the CI scan of the freshly built image.
+#
+# One rule per line, tab-separated: <plugin id>	<IGNORE|WARN|FAIL>	<name>
+# Everything not listed keeps the baseline default, which reports the alert
+# and, with fail_action on, fails the job. Add an IGNORE only with a written
+# reason on the line above it, and prefer fixing the finding in the app.
+#
+# Reference: https://www.zaproxy.org/docs/docker/baseline-scan/#configuration-file

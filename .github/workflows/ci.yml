@@ -169,37 +169,58 @@ jobs:
             echo "Inline script in an HTML page."; exit 1
           fi
 
-  security-checks:
-    name: Security checks
+  security:
+    name: Security scanning
     runs-on: ubuntu-latest
+    env:
+      # Snyk runs only when the repository has a SNYK_TOKEN secret; a fork or a
+      # fresh clone without one still gets every other scanner.
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0
+          fetch-depth: 0   # Gitleaks scans the whole history, not just this commit
 
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
-      - name: Install audit tooling
+      - name: Install the application and the scanners
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[api,model]"
-          python -m pip install pip-audit
+          python -m pip install bandit pip-audit
 
-      - name: Audit Python dependencies
+      # Static analysis of the source at medium severity and above. False
+      # positives carry a `# nosec` with the reason on the same line.
+      - name: Bandit
+        run: bandit -r src -ll
+
+      - name: pip-audit on the installed environment
         run: pip-audit --skip-editable
 
-      - name: Audit the pinned production dependencies
+      - name: pip-audit on the pinned production dependencies
         run: pip-audit --requirement requirements.lock --no-deps --disable-pip
 
-      - name: Scan for committed secrets
+      - name: Gitleaks on the full history
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install the Snyk CLI
+        if: env.SNYK_TOKEN != ''
+        uses: snyk/actions/setup@master
+
+      - name: Snyk test of the pinned dependencies
+        if: env.SNYK_TOKEN != ''
+        run: snyk test --file=requirements.lock --package-manager=pip --severity-threshold=high
+
+      - name: Snyk skipped
+        if: env.SNYK_TOKEN == ''
+        run: echo "::notice title=Snyk::SNYK_TOKEN is not set for this repository, so the Snyk test did not run. Add the secret to enable it."
 
   postgres-integration:
     name: Postgres integration
@@ -280,7 +301,7 @@ jobs:
     needs:
       - python-tests
       - frontend-checks
-      - security-checks
+      - security
       - postgres-integration
       - shell-checks
 
@@ -320,6 +341,29 @@ jobs:
         run: |
           curl --fail --silent --output /dev/null "http://127.0.0.1:8000/vendor/verovio-toolkit-wasm.js"
           test "$(docker exec arranger-smoke id -u)" != "0"
+
+      # A passive OWASP ZAP baseline scan of the running image: it spiders the
+      # site and reports missing headers, cookie flags, information leaks and
+      # the like. Accepted findings are listed with their reasons in
+      # .zap/rules.tsv; anything else fails the job.
+      - name: OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: http://localhost:8000
+          rules_file_name: .zap/rules.tsv
+          fail_action: true
+          allow_issue_writing: false
+          artifact_name: zap-baseline-report
+
+      - name: Show the ZAP findings as annotations
+        if: always()
+        run: |
+          if [ -f report_md.md ]; then
+            summary="$(sed -n '/^## Alerts/,/^## Alert Detail/p' report_md.md | grep -E '^\| ' | grep -vE 'PASS|Risk Level|---' | tr '\n' ' ' | cut -c1-3500)"
+            echo "::warning title=ZAP alerts::${summary:-none}"
+          else
+            echo "::warning title=ZAP::no report_md.md was written"
+          fi
 
       # Annotations can be read from the run page and the API without the log.
       - name: Explain the failure

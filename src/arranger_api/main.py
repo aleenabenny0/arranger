@@ -992,4 +992,7 @@ def main() -> None:
         host=settings.host,
         port=settings.port,
         reload=settings.reload,
+        # No `Server: uvicorn` header: the software and version behind a site
+        # are nobody's business (ZAP reports it as an information leak).
+        server_header=False,
     )

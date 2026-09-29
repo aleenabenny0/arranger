@@ -112,6 +112,18 @@ These are real and should be read before a public launch.
 12. **The API hardening layer was reviewed by its test coverage**, test by test
     against the twelve audit findings, not line by line.
 
+## Automated scanning
+
+The `security` CI job runs on every push and pull request:
+
+| Scanner | What it checks | Where its findings are handled |
+|---|---|---|
+| Bandit (`bandit -r src -ll`) | The Python source, medium severity and above | Real findings are fixed; a false positive carries `# nosec <id>` with the reason on the same line |
+| pip-audit | The installed environment and `requirements.lock` against known vulnerabilities | Upgrade the pin in the lock file |
+| Gitleaks | The whole git history for committed secrets | Rotate the secret, then rewrite history if the repository is private enough for that to matter |
+| OWASP ZAP baseline | The freshly built image, passively, in the Docker job | Fix in the app; accepted findings are listed with reasons in `.zap/rules.tsv` |
+| Snyk | `requirements.lock`, high severity and above | Runs only when the repository has a `SNYK_TOKEN` secret |
+
 ## Pre-deploy checks
 
 ```powershell
