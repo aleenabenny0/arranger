@@ -242,8 +242,9 @@ def load_settings() -> Settings:
     app_env = os.environ.get("APP_ENV", "development").strip().lower() or "development"
     production = app_env == "production"
     source_root = Path(__file__).resolve().parents[2]
-    cwd_frontend = Path.cwd() / "frontend"
-    default_frontend = cwd_frontend if cwd_frontend.exists() else source_root / "frontend"
+    # The web app is built by Vite into frontend-react/dist (`npm run build`).
+    cwd_frontend = Path.cwd() / "frontend-react" / "dist"
+    default_frontend = cwd_frontend if cwd_frontend.exists() else source_root / "frontend-react" / "dist"
     port = env_int("PORT", 8000)
     public_base_url = (
         (

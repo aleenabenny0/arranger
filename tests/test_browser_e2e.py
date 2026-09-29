@@ -34,12 +34,14 @@ from arranger.timeline import Timeline  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 AXE = ROOT / ".cache" / "tools" / "axe.min.js"
-VEROVIO = ROOT / "frontend" / "vendor" / "verovio-toolkit-wasm.js"
+DIST = ROOT / "frontend-react" / "dist"
+VEROVIO = DIST / "vendor" / "verovio-toolkit-wasm.js"
 SHOTS = Path(os.environ["E2E_SCREENSHOT_DIR"]) if os.environ.get("E2E_SCREENSHOT_DIR") else None
 
 pytestmark = [
     pytest.mark.skipif(not AXE.is_file(), reason="axe-core is missing: run `python fetch_vendor.py --dev`"),
-    pytest.mark.skipif(not VEROVIO.is_file(), reason="Verovio is missing: run `python fetch_vendor.py`"),
+    pytest.mark.skipif(not (DIST / "index.html").is_file(), reason="the web app is not built: run `npm run build` in frontend-react"),
+    pytest.mark.skipif(not VEROVIO.is_file(), reason="Verovio is missing: run `python fetch_vendor.py` before `npm run build`"),
 ]
 
 
@@ -79,7 +81,7 @@ def server(tmp_path_factory):
     port = _free_port()
     origin = f"http://127.0.0.1:{port}"
     settings = build_settings(
-        sqlite_path=str(tmp / "app.db"), artifact_dir=str(tmp / "files"), frontend_dir=ROOT / "frontend",
+        sqlite_path=str(tmp / "app.db"), artifact_dir=str(tmp / "files"), frontend_dir=DIST,
         public_base_url=origin, cors_origins=[origin], cookie_secure=False, csrf_protection=True,
         require_verified_email=True, job_workers=1,
     )

@@ -6,6 +6,7 @@ near-miss beside it showing legitimate traffic still gets through.
 
 import json
 import logging
+import re
 from dataclasses import replace
 from pathlib import Path
 
@@ -435,18 +436,24 @@ def test_every_api_response_is_no_store():
         assert "Cookie" in response.headers["vary"]
 
 
+DIST = Path(__file__).resolve().parents[1] / "frontend-react" / "dist"
+
+
+@pytest.mark.skipif(not (DIST / "index.html").is_file(), reason="the web app is not built: run `npm run build` in frontend-react")
 def test_static_frontend_assets_stay_cacheable():
     api = make_client()
     page = api.get("/")
     assert page.status_code == 200
     assert page.headers["cache-control"] == "no-cache"  # revalidate HTML so deploys show up
-    # The app's own modules are not fingerprinted, so they are revalidated too: a
-    # deploy must never leave a browser running a new module against an old one.
-    module = api.get("/js/app.js")
+    # Vite fingerprints the app's modules: a new build has new names, so the
+    # old ones may be kept for good and the HTML decides which one is current.
+    module_path = re.search(r'src="(/assets/[^"]+\.js)"', page.text).group(1)
+    module = api.get(module_path)
     assert module.status_code == 200
-    assert module.headers["cache-control"] == "no-cache"
-    assert module.headers.get("etag") or module.headers.get("last-modified")
+    assert module.headers["cache-control"] == "public, max-age=31536000, immutable"
+    # Files that keep their names are revalidated every time.
     assert api.get("/styles.css").headers["cache-control"] == "no-cache"
+    assert api.get("/styles.css").headers.get("etag") or api.get("/styles.css").headers.get("last-modified")
     # A miss under the static mount is an error response, not an asset.
     assert api.get("/missing.js").headers["cache-control"] == "no-store"
 

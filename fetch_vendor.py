@@ -12,7 +12,7 @@ whatever came back.
 
 `--dev` also fetches axe-core (MPL-2.0, https://github.com/dequelabs/axe-core),
 which the browser tests inject into pages to check them. It goes to
-`.cache/tools/`, never into `frontend/`, so it is never served to users.
+`.cache/tools/`, never into the web app's public directory, so it is never served to users.
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-VENDOR = ROOT / "frontend" / "vendor"
+VENDOR = ROOT / "frontend-react" / "public" / "vendor"
 DEV_TOOLS = ROOT / ".cache" / "tools"
 
 PACKAGES = [
@@ -94,11 +94,18 @@ def fetch(package: dict, target: Path = VENDOR) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
+    target = VENDOR
+    if "--target" in args:
+        at = args.index("--target")
+        if at + 1 >= len(args):
+            raise SystemExit("--target needs a directory")
+        target = Path(args[at + 1])
+        args = args[:at] + args[at + 2:]
     unknown = [a for a in args if a != "--dev"]
     if unknown:
-        raise SystemExit(f"unknown argument: {unknown[0]} (the only option is --dev)")
+        raise SystemExit(f"unknown argument: {unknown[0]} (the options are --dev and --target DIR)")
     for package in PACKAGES:
-        fetch(package)
+        fetch(package, target)
     if "--dev" in args:
         for package in DEV_PACKAGES:
             fetch(package, DEV_TOOLS)
