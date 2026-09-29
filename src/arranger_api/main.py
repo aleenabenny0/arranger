@@ -55,6 +55,7 @@ from .jobs import JobRunner, JobServices
 from .metrics import AppMetrics
 from .middleware import BodyLimitMiddleware, RequestContextMiddleware, RequestGuardMiddleware
 from .observability import configure_logging, get_logger, log_event
+from .queue import build_job_queue
 from .schemas import (
     ArrangeRequest,
     ArrangeResponse,
@@ -195,11 +196,21 @@ def ready(
     # cannot reach it should be taken out of rotation, not fail request by request.
     if not _artifact_store_is_healthy(request.app):
         raise service_unavailable("artifact_store_unavailable")
+    queue = getattr(request.app.state, "job_queue", None)
+    if queue is not None:
+        try:
+            queue_ok = bool(queue.healthy())
+        except Exception as exc:  # an unreachable queue is not ready, whatever the error
+            logger.error("job_queue_check_failed", exc_info=exc)
+            queue_ok = False
+        if not queue_ok:
+            raise service_unavailable("job_queue_unavailable")
     return {
         "status": "ready",
         "service": "arranger-api",
         "database": "ok",
         "artifacts": "ok",
+        "queue": queue.name if queue is not None else "database",
         "migrations": {"current": migrations["current"], "pending": 0},
         "email": email_health.status(),
     }
@@ -931,9 +942,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # `app.state` so tests can run without LilyPond, a model or a second thread.
     app.state.artifacts = build_artifact_store(settings, database)
     app.state.engraver = LilyPondEngraver(timeout=float(settings.engrave_max_seconds))
+    # None with the default JOB_QUEUE_BACKEND=database: workers poll the table.
+    app.state.job_queue = build_job_queue(settings)
     app.state.job_services = JobServices(
         settings=settings, database=database, artifacts=app.state.artifacts, metrics=metrics,
-        engraver=app.state.engraver,
+        engraver=app.state.engraver, queue=app.state.job_queue,
     )
     app.state.job_runner = JobRunner(app.state.job_services)
 

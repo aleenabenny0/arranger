@@ -64,6 +64,22 @@ class JobServices:
     engraver: Any = None          # injectable for tests
     transcriber: Callable | None = None
     model_factory: Callable | None = None
+    queue: Any = None             # a JobQueue, or None when workers poll the table
+
+
+def dispatch(queue: Any, ws: Workspace, job: dict) -> dict:
+    """Send the message that tells a worker the job exists, when a queue is in use.
+
+    The row is committed before this runs, so a worker that receives the
+    message finds a queued job to claim. Called only for a job that was just
+    created: a repeated request with the same idempotency key must not send a
+    second message for a job that is already on its way.
+    """
+    if queue is None or job.get("status") != "queued":
+        return job
+    message_id = queue.send(job["id"])
+    ws.mark_dispatched(job["id"], message_id)
+    return job
 
 
 class JobContext:
@@ -356,7 +372,27 @@ class JobRunner:
         self._execute(job, worker_id)
         return job
 
-    def _execute(self, job: dict, worker_id: str) -> None:
+    def run_job(self, job_id: str, worker_id: str | None = None) -> str:
+        """Run the job a queue message names.
+
+        Returns the outcome: `succeeded`, `failed`, `cancelled`, `retry` (a
+        later attempt is wanted), or `skipped` when the job was not queued
+        any more, which is what a duplicate delivery of the same message, a
+        cancelled job or an already finished one all look like. Skipping is
+        what makes at-least-once delivery safe: a message may arrive twice,
+        the job runs once.
+        """
+        worker_id = worker_id or self.worker_id
+        database = self.services.database
+        with database.connection() as conn:
+            job = Workspace(Storage(conn, dialect=database.dialect)).claim_job_by_id(
+                job_id, worker_id, self.services.settings.job_lease_seconds
+            )
+        if job is None:
+            return "skipped"
+        return self._execute(job, worker_id)
+
+    def _execute(self, job: dict, worker_id: str) -> str:
         started = time.monotonic()
         ctx = JobContext(job, self.services, worker_id, started + self._limit_for(job["kind"]))
         status, fields = "succeeded", {}
@@ -368,7 +404,7 @@ class JobRunner:
         except JobFailed as exc:
             if exc.retryable and job["attempts"] < job["max_attempts"]:
                 self._retry(job, worker_id, str(exc))
-                return
+                return "retry"
             status = "failed"
             fields = {"error_code": exc.code, "error_public": exc.public, "stage": "Failed"}
         except ScoreImportError as exc:
@@ -381,7 +417,7 @@ class JobRunner:
             logger.error("job_failed", exc_info=exc, extra={"job_id": job["id"], "kind": job["kind"]})
             if job["attempts"] < job["max_attempts"]:
                 self._retry(job, worker_id, detail)
-                return
+                return "retry"
             status = "failed"
             fields = {"error_code": "internal_error", "error_public": "Something went wrong while processing this.",
                       "error_internal": detail, "stage": "Failed"}
@@ -396,6 +432,7 @@ class JobRunner:
         metrics = self.services.metrics
         if metrics is not None and hasattr(metrics, "jobs_finished"):
             metrics.jobs_finished.inc(kind=job["kind"], status=status)
+        return status
 
     def _retry(self, job: dict, worker_id: str, detail: str) -> None:
         delay = min(60, 2 ** job["attempts"])

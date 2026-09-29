@@ -307,8 +307,9 @@ export async function projectView(root, state, projectId, setTitle) {
     const cancel = h("button", { type: "button", class: "button", text: "Cancel" });
     replace(jobBox, h("h3", { text: label }), bar, stage, cancel); jobBox.hidden = false;
     try {
+      // The job resource: 202 with the job, then polled until it ends (watchJob).
       const started = body.jobId ? { job: { id: body.jobId } }
-        : await api.post(`/projects/${projectId}/arrangements`, body, { idempotencyKey: newIdempotencyKey(), signal: controller.signal });
+        : await api.post("/jobs/arrange", { project_id: projectId, ...body }, { idempotencyKey: newIdempotencyKey(), signal: controller.signal });
       activeJob = started.job.id;
       cancel.addEventListener("click", async () => { cancel.disabled = true; stage.textContent = "Cancelling…"; try { await api.post(`/jobs/${activeJob}/cancel`); } catch (error) { toast(error.message, "error"); } });
       const job = await watchJob(activeJob, { signal: controller.signal, onUpdate: (j) => { bar.value = j.progress; stage.textContent = `${j.stage} (${Math.round(j.progress * 100)}%)`; } });
