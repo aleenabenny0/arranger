@@ -1,49 +1,165 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
       - main
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
-  test:
-    name: Unit and API tests
+  python-tests:
+    name: Python tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+      # LilyPond makes the PDF tests real; libsndfile lets the audio tests decode files.
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends lilypond libsndfile1
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[api]"
+          python -m pip install -e ".[api,model,dev]"
+          python -m pip install numpy onnxruntime soundfile soxr
+          python -m pip install --no-deps basic-pitch
 
-      - name: Run backend and architecture checks
+      - name: Fetch the pinned notation engine
+        run: python fetch_vendor.py
+
+      - name: Fetch the public-domain evaluation corpus
+        run: python fetch_corpus.py
+
+      # The verifier must run with nothing but the standard library.
+      - name: Run the constraint tests standalone
+        run: python tests/test_constraints.py
+
+      - name: Run the whole test suite
+        run: python -m pytest -q --ignore=tests/test_browser_e2e.py -rs
+
+      - name: Run Ruff lint
+        run: ruff check .
+
+  browser-tests:
+    name: Browser journey and accessibility
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install system packages
         run: |
-          python tests/test_api.py
-          python tests/test_storage.py
-          python tests/test_settings.py
-          python tests/test_email.py
-          python tests/test_security.py
-          python tests/test_architecture.py
-          python tests/test_constraints.py
-          python tests/test_render.py
-          python tests/test_agent.py
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends lilypond
+
+      - name: Install Python dependencies and a browser
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[api,dev,e2e]"
+          python -m playwright install --with-deps chromium
+
+      - name: Fetch the notation engine and the accessibility checker
+        run: python fetch_vendor.py --dev
+
+      - name: Drive the product through a real browser
+        env:
+          E2E_SCREENSHOT_DIR: ${{ runner.temp }}/e2e-shots
+        run: python -m pytest -q tests/test_browser_e2e.py -rs
+
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-screenshots
+          path: ${{ runner.temp }}/e2e-shots
+          if-no-files-found: ignore
+          retention-days: 7
+
+  frontend-checks:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
 
       - name: Check frontend JavaScript syntax
-        run: node --check frontend/app.js
+        run: |
+          for file in frontend/js/*.js; do
+            node --check "$file"
+          done
+
+      # The content security policy forbids inline script and the app never uses innerHTML.
+      - name: Check for patterns the security policy forbids
+        run: |
+          if grep -nE "innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function" frontend/js/*.js               | grep -vE "^[^:]+:[0-9]+:[[:space:]]*//"; then
+            echo "A forbidden DOM or eval pattern is used in the frontend."; exit 1
+          fi
+          if grep -nE "<script>|onclick=|onload=|javascript:" frontend/*.html; then
+            echo "Inline script in an HTML page."; exit 1
+          fi
+
+  security-checks:
+    name: Security checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install audit tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[api,model]"
+          python -m pip install pip-audit
+
+      - name: Audit Python dependencies
+        run: pip-audit --skip-editable
+
+      - name: Audit the pinned production dependencies
+        run: pip-audit --requirement requirements.lock --no-deps --disable-pip
+
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   postgres-integration:
     name: Postgres integration
@@ -66,33 +182,80 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[api]"
+          python -m pip install -e ".[api,dev]"
 
-      - name: Run real Postgres storage flow
+      # Accounts, then the whole project journey (files as BYTEA, four workers racing
+      # for three jobs, account deletion) against a real Postgres server.
+      - name: Run real Postgres storage and project flow
         env:
-          POSTGRES_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/arranger_test
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/arranger_test
         run: python tests/test_postgres_integration.py
 
   docker-build:
-    name: Docker build
+    name: Docker build and smoke test
     runs-on: ubuntu-latest
     needs:
-      - test
+      - python-tests
+      - frontend-checks
+      - security-checks
       - postgres-integration
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Build deployment image
         run: docker build -t arranger-ci .
+
+      # Start the real image and ask it what it can do. This catches a missing
+      # dependency, a missing notation engine, or a LilyPond that did not install.
+      - name: Start the image and check its capabilities
+        run: |
+          docker run -d --name arranger-smoke -p 8000:8000 \
+            -e APP_ENV=development -e COOKIE_SECURE=false -e EMAIL_PROVIDER=console arranger-ci
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/health > /dev/null; then break; fi
+            sleep 2
+          done
+          curl --fail --show-error --silent http://127.0.0.1:8000/ready
+          curl --fail --show-error --silent http://127.0.0.1:8000/catalog > catalog.json
+          python3 - <<'PY'
+          import json
+          caps = json.load(open("catalog.json"))["capabilities"]
+          for name in ("export_pdf", "import_audio"):
+              assert caps[name]["available"], f"{name} is not available in the image: {caps[name]}"
+          print("capabilities ok:", {k: v["available"] for k, v in caps.items()})
+          PY
+          curl --fail --silent --output /dev/null "http://127.0.0.1:8000/vendor/verovio-toolkit-wasm.js"
+          test "$(docker exec arranger-smoke id -u)" != "0"
+
+      - name: Show the container log on failure
+        if: failure()
+        run: docker logs arranger-smoke || true
+
+  production-smoke:
+    name: Production smoke check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    needs:
+      - docker-build
+
+    steps:
+      - name: Check production endpoints
+        env:
+          APP_PUBLIC_URL: https://arranger-production-8928.up.railway.app
+        run: |
+          curl --fail --show-error --silent "$APP_PUBLIC_URL/health"
+          curl --fail --show-error --silent "$APP_PUBLIC_URL/ready"
+          curl --fail --show-error --silent "$APP_PUBLIC_URL/version"
+          curl --fail --show-error --silent "$APP_PUBLIC_URL/diagnostics/email"

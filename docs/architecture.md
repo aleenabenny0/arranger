@@ -12,7 +12,7 @@ interfaces
   CLI and FastAPI today; workers later
     |
 application
-  use cases: verify_score, render_plan, fidelity_for, arrange_score, baseline_for
+  use cases: verify_score, render_plan, fidelity_for, plan_score, arrange_score, baseline_for
     |
 adapters
   JSON score debug format, MIDI input today; MusicXML/audio/storage later
@@ -28,6 +28,7 @@ The domain core is the part to trust and protect:
 - `arranger.ir`: `Note` and `Score`, the internal representation.
 - `arranger.profile`: measurable player limits.
 - `arranger.plan`: the only schema a model may emit.
+- `arranger.planner`: deterministic first-pass arrangement planning.
 - `arranger.render`: deterministic plan-to-score rendering.
 - `arranger.verify`: dependency-free playability oracle.
 - `arranger.fidelity`: checks that the arrangement is still recognizably the
@@ -44,6 +45,7 @@ framework changed.
 - `verify_score(score, profile)`
 - `render_plan(plan, source)`
 - `fidelity_for(source, arranged)`
+- `plan_score(source, profile)`
 - `arrange_score(source, profile, model=...)`
 - `baseline_for(source, profile)`
 
@@ -52,30 +54,76 @@ of manually wiring renderer, verifier, agent, and scoring code together.
 
 ## Adapters
 
-Adapters translate external artifacts into domain objects:
+Adapters translate external artifacts into domain objects and back:
 
-- `arranger.adapters.score_json`: stable debug/test format.
-- `arranger.adapters.midi`: MIDI input, currently backed by `arranger.io`.
+| Adapter | Direction | Depends on |
+|---|---|---|
+| `arranger.io` (`read_midi_bytes`) and `adapters.midi` | MIDI in | stdlib |
+| `adapters.midi_writer` | MIDI out | stdlib |
+| `adapters.musicxml_reader` | MusicXML and compressed MusicXML in, with XML and zip defences | stdlib (expat, zipfile) |
+| `adapters.musicxml_writer` | MusicXML and compressed MusicXML out | stdlib |
+| `adapters.lilypond` | LilyPond source out; PDF through a sandboxed LilyPond subprocess | stdlib, plus the LilyPond program |
+| `adapters.audio` | Recording in, through the Basic Pitch ONNX model | `numpy`, `onnxruntime`, `soundfile`, `soxr` |
+| `adapters.score_json` | Stable debug and storage format, strict and bounded | stdlib |
 
-Future adapters should live beside these:
+`arranger.notation` sits between the domain and the two notation writers. It
+turns seconds into bars, voices, ties, tuplets and spelled pitches once, so
+MusicXML and the PDF cannot disagree.
 
-- `musicxml.py`: MusicXML input/output.
-- `pdf.py`: engraving through MuseScore or LilyPond.
-- `audio.py`: transcription pipeline using source separation and pitch
-  detection.
+Adapters may depend on third-party libraries. The domain core should not. Every
+reader raises the typed errors in `arranger.limits` (`UnsupportedFormat`,
+`MalformedFile`, `LimitExceeded`, `EmptyScore`, `UnsafeContent`), which the API
+maps to status codes without string matching.
 
-Adapters may depend on third-party libraries. The domain core should not.
+## Use cases
+
+`arranger.application.workflows` is what every entry point calls:
+
+- `import_bytes` sniffs the format from content and reads it.
+- `inspect_source` reports tracks, key, meter, tempo, the likely melody part,
+  difficulty, and how the source itself sits under an average hand.
+- `arrange_source` applies the user's corrections (`arranger.selection`), runs
+  the deterministic engine and, only if a model is passed, the bounded repair
+  loop. It returns one `ArrangementBundle`: plan, score, verdict, fidelity,
+  report, difficulty, provenance.
+- `revise_arrangement` evaluates a user-edited plan the same way.
+- `export_midi`, `export_musicxml`, `export_pdf`, `playback_events`.
+
+The API layer adds nothing musical. `arranger_api.jobs` wraps these calls with
+progress, cancellation, deadlines and retries; `arranger_api.routers` adds
+ownership, quotas and persistence.
 
 ## Storage
 
 `arranger_api.storage` is the persistence layer for the HTTP API. It uses
 Postgres when `DATABASE_URL` or `ARRANGER_DATABASE_URL` is configured. Local
-development falls back to SQLite. The repository stores evolving domain
-payloads as JSON plus query-friendly metadata such as title, note count, bar
-count, status, and verdict counts.
+development falls back to SQLite. Schema changes are ordered migrations applied
+under a lock (`storage/migrations.py`).
 
-Local runs use `data/arranger.db`. Tests use in-memory SQLite connections.
-Cloud runs should use managed Postgres.
+Two repositories share one connection and one transaction:
+
+- `Storage` (`repositories.py`): users, sessions, tokens, and the original
+  score/plan/arrangement records behind the JSON endpoints.
+- `Workspace` (`workspace.py`): projects, source revisions, arrangement
+  revisions, artifacts and jobs. Every query takes the user id, so ownership is
+  enforced in one place and a wrong id is indistinguishable from a missing one.
+
+Revisions are append-only. Correcting a source or re-arranging makes a new
+revision; each arrangement records the source revision, hand profile, plan,
+engine version and model it was made from.
+
+Files live behind the `ArtifactStore` protocol (`artifacts.py`): a local
+directory, a database table, or an S3-compatible bucket. Rows in `artifacts`
+hold the metadata and the storage key; downloads are authorised against that row
+and streamed by the API. See `docs/artifact-storage.md`.
+
+Jobs are rows in `jobs`, claimed with a lease by `JobRunner` (`jobs.py`), which
+runs inside the web process, in `python -m arranger_api.worker`, or both. A job
+is idempotent by key, cancellable, bounded in time, retried after a crash, and
+recovered when its worker dies.
+
+Local runs use `data/arranger.db` and `data/artifacts/`. Tests use throwaway
+SQLite files. Cloud runs should use managed Postgres.
 
 ## Auth And Permissions
 
@@ -122,13 +170,21 @@ Avoid these:
 
 ## Next Architectural Milestones
 
-1. Move MusicXML/PDF work into adapters, not the domain core.
-2. Replace greedy hand assignment behind the existing `assign_hands` boundary.
-3. Move rate limiting to Redis or the hosting edge before multi-replica scale.
-4. Add object storage for generated MIDI/MusicXML/PDF artifacts once export exists.
-5. Move rate limiting and session invalidation metadata to Redis before
-   multi-replica scale.
-6. Convert the repair loop to LangGraph only after the use cases and artifacts
-   are stable.
+1. Per-note fingering inside `arranger.verify.solver`, still dependency-free.
+2. Score planner candidates on their own region instead of re-rendering the
+   whole piece (`arranger.planner`).
+3. Read arpeggio and grace marks from MusicXML into the IR, to remove the last
+   false HARD findings on human-written scores.
+4. Verify the S3 artifact store against a real bucket; consider signed,
+   short-lived download URLs once it is.
+5. Source separation and beat tracking in front of `adapters.audio`.
+6. Convert the repair loop to LangGraph only if it grows branches a plain loop
+   cannot express. It has not needed to.
 
-See `docs/artifact-storage.md` for the current artifact storage decision.
+Done since this list was first written: MusicXML and PDF as adapters, the global
+hand solver, the artifact store, and database-backed rate limiting (which
+replaced the planned Redis).
+
+See `docs/artifact-storage.md` for the artifact storage decision,
+`docs/algorithm.md` for how the musical decisions are made, and
+`docs/deployment.md` for how it runs.

@@ -1,6 +1,10 @@
 __pycache__/
 *.pyc
 .venv/
+.cache/
+.env
+.env.*
+!.env.production.example
 dist/
 build/
 evals/corpus/*.wav
@@ -13,3 +17,9 @@ data/
 *.db
 *.sqlite
 *.sqlite3
+
+# Third-party browser code, fetched and checksum-verified by fetch_vendor.py
+frontend/vendor/*.js
+
+# Left behind by interrupted pytest runs
+pytest-cache-files-*/

@@ -51,3 +51,19 @@ created_at
 The API should authorize access through Postgres, then issue signed URLs or
 stream files through the backend. Do not put raw object storage URLs directly in
 public records.
+
+## What was built
+
+The decision above is implemented in `src/arranger_api/artifacts.py` behind an
+`ArtifactStore` protocol with three backends, chosen by `ARTIFACT_BACKEND`:
+
+| Backend | Status |
+|---|---|
+| `local` | Directory on a volume. Atomic writes. Used in development and tests. |
+| `database` | A `BYTEA`/`BLOB` table. The production default, so a single Postgres is a complete deployment. |
+| `s3` | Signature Version 4 over `httpx`, path-style, for S3, R2 or MinIO. Signing is tested against the worked example in the AWS documentation and the store against a fake bucket. **It has not been run against a real bucket.** `python -m arranger_api.artifacts --check` does that. |
+
+The `artifacts` table carries more than the sketch above: `project_id`,
+`source_id`, `sha256`, `filename` and `expires_at` for retention. The API
+streams files after authorising against that row; signed URLs were not built,
+so a storage key or bucket URL never reaches a browser.
