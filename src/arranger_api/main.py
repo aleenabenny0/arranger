@@ -9,6 +9,7 @@ from `request.app.state` through the dependencies in `arranger_api.deps`.
 from __future__ import annotations
 
 import hmac
+import json
 import threading
 import time
 from contextlib import asynccontextmanager
@@ -17,7 +18,7 @@ from dataclasses import asdict
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -543,6 +544,43 @@ def list_arrangements_endpoint(
     user: CurrentUser = Depends(get_current_user),
 ) -> dict:
     return {"records": storage.list_arrangements(user.id, limit, offset)}
+
+
+EXPORT_BATCH_SIZE = 100
+
+
+@router.get("/arrangements/export")
+def export_arrangements_endpoint(
+    request: Request,
+    user: CurrentUser = Depends(get_current_user),
+) -> StreamingResponse:
+    """Every saved arrangement of the signed-in user, streamed as NDJSON.
+
+    One JSON object per line, oldest first, in the shape `GET /arrangements`
+    returns. The rows are read `EXPORT_BATCH_SIZE` at a time: on Postgres from
+    a server-side cursor, on SQLite by iterating the statement. The stream
+    holds its own connection for as long as it runs, so the request-scoped
+    one is not tied up and nothing is buffered in memory.
+    """
+    database: Database = request.app.state.database
+
+    def stream():
+        conn = database.acquire()
+        try:
+            storage = Storage(conn, dialect=database.dialect)
+            for record in storage.iter_arrangements(user.id, batch_size=EXPORT_BATCH_SIZE):
+                yield json.dumps(record, default=str) + "\n"
+        finally:
+            database.release(conn)
+
+    return StreamingResponse(
+        stream(),
+        media_type="application/x-ndjson",
+        headers={
+            "Content-Disposition": 'attachment; filename="arrangements.ndjson"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.get("/arrangements/{arrangement_id}", response_model=RecordResponse)
