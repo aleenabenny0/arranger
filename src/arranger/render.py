@@ -5,221 +5,276 @@ model involved, no randomness, no cleverness. If the arrangement is bad, that
 is a bad *plan*, and the plan is a small readable file you can inspect.
 
 The pipeline:
-    source Score -> melody line + chord per bar -> left hand from pattern
+    source Score -> melody line + chord segments -> left hand from pattern
                  -> combined Score -> verifier
 
-Everything here is intentionally simple. The renderer is not trying to be a
-good arranger; it is trying to be a *predictable* one, so that when something
-sounds wrong you can point at the decision that caused it.
+The renderer is not trying to be a good arranger; it is trying to be a
+*predictable* one, so that when something sounds wrong you can point at the
+decision that caused it. What it does guarantee:
+
+- the melody is never dropped or thinned, only moved by whole octaves;
+- left-hand figures follow the meter (three pulses in 3/4, six in 6/8) when
+  the source has one, and fall back to four equal steps when it does not;
+- the left hand only plays while the source is sounding, so a silent bar
+  stays silent and a final short chord is not padded to the barline;
+- every output note has a stable id and, where it derives from a source note,
+  a `source_id` saying which.
 """
 
 from __future__ import annotations
 
-from collections import Counter
+from dataclasses import dataclass, replace
 
-from .ir import Note, Score
-from .plan import ArrangementPlan, LHPattern, Section
+from .analysis import (
+    TEMPLATES,
+    ChordSegment,
+    bar_spans,
+    detect_chord_segments,
+    detect_chords,
+    extract_melody,
+    last_bar,
+)
+from .ir import Note, PedalSpan, Score
+from .plan import ArrangementPlan, BassMode, HarmonicRhythm, LHPattern, Section, Voicing
+from .timeline import TempoChange, Timeline
 
-# Chord templates as semitone offsets from the root. Deliberately few: the
-# point is a usable left hand, not a jazz harmony engine.
-TEMPLATES: dict[str, tuple[int, ...]] = {
-    "maj": (0, 4, 7),
-    "min": (0, 3, 7),
-    "dom7": (0, 4, 7, 10),
-    "min7": (0, 3, 7, 10),
-    "maj7": (0, 4, 7, 11),
-    "dim": (0, 3, 6),
-    "sus4": (0, 5, 7),
-}
+__all__ = [
+    "TEMPLATES", "RenderError", "detect_chords", "extract_melody", "last_bar", "render",
+]
+
+ROLL_STAGGER_SECONDS = 0.03
+_LH_VELOCITY_RATIO = 0.8
 
 
 class RenderError(ValueError):
     pass
 
 
-# --- analysis ------------------------------------------------------------
+# --- pulses: where in the bar the left hand may strike --------------------
 
 
-def extract_melody(source: Score, floor_drop: int = 9) -> list[Note]:
-    """The top line: at each onset, the highest sounding note.
+@dataclass(frozen=True)
+class _Pulse:
+    onset: float                # seconds
+    duration: float
+    beat: float | None          # quarter-note beats, when the source has a timeline
+    beats: float | None
+    strong: bool
 
-    Crude, and right most of the time. The melody is almost always on top in
-    the music this tool targets. Where it isn't — an inner-voice tune, a bass
-    melody — this will pick the wrong line, and that is a known limitation
-    rather than a bug to be surprised by later.
 
-    Two corrections make it usable on real files:
+def _pulses(source: Score, bar: int, start: float, end: float) -> list[_Pulse]:
+    """The rhythmic grid a left-hand figure is laid on, for one bar.
 
-    **A floor.** Taking the top note at every onset sounds right until the
-    melody rests. Then the highest sounding note is an accompaniment note two
-    octaves down, and the "melody" dives into the bass and back — producing a
-    right hand that spans fifteen semitones and leaps constantly. Notes more
-    than `floor_drop` semitones below the median top note are treated as
-    accompaniment, not melody. A rest in the melody is a rest, not an excuse
-    to grab whatever is lowest.
-
-    **Overlap merging.** A note sustained across several onsets must stay one
-    note. Comparing against the previous note's *end* is wrong: a note lasting
-    400ms that re-triggers 5ms later is an overlapping duplicate, not a
-    repeat, and comparing to the end misses it entirely.
+    Simple meters pulse on the beat, except two-beat bars, which pulse on the
+    half-beat so a four-note figure still fits. Compound meters pulse on the
+    eighth, grouped in threes. With no timeline the bar is cut in four.
     """
-    tops: list[tuple[float, Note]] = []
-    for t in source.onsets:
-        sounding = source.sounding_at(t)
-        if sounding:
-            tops.append((t, max(sounding, key=lambda n: n.pitch)))
-    if not tops:
-        return []
+    timeline = source.timeline
+    if timeline is None:
+        step = max(end - start, 0.05) / 4
+        return [_Pulse(start + i * step, step, None, None, i % 2 == 0) for i in range(4)]
 
-    pitches = sorted(n.pitch for _, n in tops)
-    floor = pitches[len(pitches) // 2] - floor_drop
+    num, den = timeline.meter_at_bar(bar)
+    bar_start = timeline.bar_start(bar)
+    length = timeline.bar_beats(bar)
+    unit = 4.0 / den
+    compound = den >= 8 and num % 3 == 0 and num > 3
+    if compound:
+        step, group = unit, 3               # 6/8: strong on 1 and 4
+    elif num == 2:
+        step, group = unit / 2, 2           # 2/4 pulses in eighths: strong on each beat
+    elif num % 2 == 0:
+        step, group = unit, num // 2        # 4/4: strong on 1 and 3
+    else:
+        step, group = unit, num             # 3/4, 5/4: strong on the downbeat only
 
-    melody: list[Note] = []
-    for t, top in tops:
-        if top.pitch < floor:
-            continue  # accompaniment showing through a gap in the melody
-        if melody:
-            prev = melody[-1]
-            if prev.pitch == top.pitch and t < prev.offset:
-                melody[-1] = Note(
-                    pitch=prev.pitch, onset=prev.onset,
-                    duration=max(prev.duration, top.offset - prev.onset),
-                    staff=1, bar=prev.bar,
-                )
-                continue
-        melody.append(
-            Note(pitch=top.pitch, onset=t, duration=top.duration, staff=1, bar=top.bar)
-        )
-
-    # A melodic line is monophonic by definition. Source durations are
-    # sustained — often by pedal — so consecutive melody notes overlap, and an
-    # overlapping "line" reads to the verifier as a right hand holding six
-    # notes across two octaves. Clip each note where the next one starts.
-    for i in range(len(melody) - 1):
-        gap = melody[i + 1].onset - melody[i].onset
-        if melody[i].duration > gap:
-            melody[i] = Note(
-                pitch=melody[i].pitch, onset=melody[i].onset,
-                duration=max(gap, 0.02), staff=1, bar=melody[i].bar,
-            )
-    return melody
+    out: list[_Pulse] = []
+    # A pickup bar is the *end* of a bar: count its pulses from the far side
+    # so the strong beats line up with the full bars that follow.
+    full = num * unit
+    offset = (full - length) if length < full - 1e-9 else 0.0
+    index = round(offset / step)
+    position = 0.0
+    while position < length - 1e-9:
+        size = min(step, length - position)
+        on = timeline.seconds_at(bar_start + position)
+        off = timeline.seconds_at(bar_start + position + size)
+        out.append(_Pulse(on, off - on, bar_start + position, size, index % group == 0))
+        position += size
+        index += 1
+    return out
 
 
-def detect_chords(source: Score, melody: list[Note]) -> dict[int, tuple[int, str]]:
-    """One chord per bar: (root pitch class, quality).
-
-    Scores every root/quality template against the pitch classes present in
-    the bar. Notes below the melody are weighted double, since accompaniment
-    defines the harmony more reliably than a passing melodic tone does.
-    """
-    melody_pitches = {(round(n.onset, 3), n.pitch) for n in melody}
-
-    by_bar: dict[int, Counter] = {}
-    bass_of_bar: dict[int, int] = {}
-    for n in source.notes:
-        if n.bar is None:
-            continue
-        weight = 1 if (round(n.onset, 3), n.pitch) in melody_pitches else 2
-        by_bar.setdefault(n.bar, Counter())[n.pitch % 12] += weight
-        if n.bar not in bass_of_bar or n.pitch < bass_of_bar[n.bar]:
-            bass_of_bar[n.bar] = n.pitch
-
-    chords: dict[int, tuple[int, str]] = {}
-    for bar, classes in by_bar.items():
-        bass_pc = bass_of_bar[bar] % 12
-        best, best_score = (0, "maj"), -1e9
-        for root in range(12):
-            for quality, offsets in TEMPLATES.items():
-                wanted = {(root + o) % 12 for o in offsets}
-                # Reward pitch classes that fit; penalise those that don't.
-                # Without the penalty, larger templates always win.
-                score = sum(
-                    count if pc in wanted else -0.5 * count
-                    for pc, count in classes.items()
-                )
-                score += 0.5 * classes.get(root, 0)  # slight bias to a real root
-                score -= 0.1 * len(offsets)          # prefer simpler chords
-                # The bass note is the single strongest evidence of the root.
-                # Without this, G-B-D under an E melody reads as E minor 7 —
-                # the same pitches, but with a root the bass flatly contradicts.
-                # Chord symbols exist to tell the left hand where to sit, so
-                # getting the root wrong is the one error that matters here.
-                if root == bass_pc:
-                    score += 3.0
-                if score > best_score:
-                    best, best_score = (root, quality), score
-        chords[bar] = best
-    return chords
-
-
-# --- left hand realisation ----------------------------------------------
+# --- voicing ---------------------------------------------------------------
 
 
 def _voice(root_pc: int, quality: str, octave: int, voices: int) -> list[int]:
-    """Chord tones as MIDI pitches, low to high."""
+    """Chord tones as MIDI pitches, low to high, root position."""
     base = 12 * (octave + 1) + root_pc
     offsets = TEMPLATES[quality][:max(1, voices)]
     return [base + o for o in offsets]
 
 
-def _left_hand_for_bar(
-    section: Section, chord: tuple[int, str], start: float, end: float
-) -> list[Note]:
-    """Realise one bar of left hand according to the section's pattern."""
-    root_pc, quality = chord
-    pitches = _voice(root_pc, quality, section.lh_octave, section.lh_voices)
+def _nearest(pc: int, target: float) -> int:
+    """The pitch with pitch class `pc` closest to `target`."""
+    base = int(round(target))
+    candidates = [base + d for d in range(-6, 7) if (base + d) % 12 == pc % 12]
+    return min(candidates, key=lambda p: (abs(p - target), p))
+
+
+def _voicing(
+    section: Section, segment: ChordSegment, previous: list[int] | None
+) -> list[int]:
+    """The pitches available to the pattern for this chord, low to high.
+
+    Root voicing stacks the chord upward from the root. With `bass: source`
+    the bottom note is whatever the source really has in the bass, which keeps
+    first inversions and pedal points. Smooth voicing places each tone as near
+    the previous chord as it can, so the hand barely moves; the first chord of
+    a section is always root position, so the harmony is stated plainly before
+    it starts to glide.
+    """
+    root_position = _voice(segment.root, segment.quality, section.lh_octave, section.lh_voices)
+    bass_pc = segment.bass_pc if section.bass == BassMode.SOURCE else segment.root
+
+    if section.voicing == Voicing.SMOOTH and previous and len(root_position) > 1:
+        centre = sum(previous) / len(previous)
+        pcs = [p % 12 for p in root_position]
+        if bass_pc not in pcs:
+            pcs[0] = bass_pc
+        placed = sorted({_nearest(pc, centre) for pc in pcs})
+        floor = 12 * (section.lh_octave + 1) - 7
+        while placed[0] < floor:
+            placed = sorted(p + 12 if p == placed[0] else p for p in placed)
+        return placed
+
+    if bass_pc == segment.root:
+        return root_position
+    bass = 12 * (section.lh_octave + 1) + bass_pc
+    if bass > root_position[0] + 6:
+        bass -= 12   # keep the bass under the chord, not in the middle of it
+    upper = [p if p > bass else p + 12 for p in root_position if p % 12 != bass_pc]
+    return sorted([bass, *upper])[: max(1, section.lh_voices)]
+
+
+# --- left hand realisation ------------------------------------------------
+
+
+def _figure(pattern: LHPattern, pitches: list[int], count: int, next_root: int | None) -> list[list[int]]:
+    """Which pitches sound on each of `count` pulses. One inner list per pulse."""
     root = pitches[0]
-    span = max(end - start, 0.05)
+    third = pitches[min(1, len(pitches) - 1)]
+    fifth = pitches[min(2, len(pitches) - 1)]
+
+    if pattern == LHPattern.BROKEN_OCTAVE:
+        cycle = [[root], [root + 12]]
+    elif pattern == LHPattern.ARPEGGIO:
+        cycle = [[root], [fifth], [root + 12], [third]] if count != 3 else [[root], [fifth], [root + 12]]
+    elif pattern == LHPattern.ALBERTI:
+        cycle = [[root], [fifth], [third], [fifth]] if count != 3 else [[root], [fifth], [third]]
+    elif pattern == LHPattern.BROKEN_TENTH:
+        tenth = root + 12 + (third - root)
+        cycle = [[root], [root + 7], [tenth], [root + 7]] if count != 3 else [[root], [root + 7], [tenth]]
+    elif pattern == LHPattern.WALKING:
+        line = [[p] for p in (pitches[:4] or [root])]
+        if next_root is not None and count >= 4 and next_root % 12 != root % 12:
+            # Approach the next root by step from whichever side is nearer.
+            target = _nearest(next_root % 12, line[-1][0])
+            line = (line * 2)[: count - 1] + [[target - 1 if target > line[-1][0] else target + 1]]
+        cycle = line
+    else:
+        raise RenderError(f"unhandled pattern {pattern}")
+    return [cycle[i % len(cycle)] for i in range(count)]
+
+
+def _left_hand_for_segment(
+    section: Section,
+    segment: ChordSegment,
+    pulses: list[_Pulse],
+    pitches: list[int],
+    next_root: int | None,
+    active: tuple[float, float],
+) -> list[Note]:
+    """Realise one chord segment according to the section's pattern."""
+    start = max(segment.start, active[0])
+    end = min(segment.end, active[1])
+    if end - start < 0.02:
+        return []
     out: list[Note] = []
 
-    def add(pitch: int, onset: float, duration: float) -> None:
-        out.append(Note(pitch=pitch, onset=onset, duration=max(duration, 0.05), staff=2))
+    def add(pitch: int, onset: float, duration: float, *, beat=None, beats=None,
+            rolled: bool = False, bass: bool = False) -> None:
+        out.append(
+            Note(pitch=pitch, onset=onset, duration=max(duration, 0.05), staff=2,
+                 beat=beat, beats=beats, rolled=rolled,
+                 role="bass" if bass else "accompaniment")
+        )
 
-    if section.lh_pattern == LHPattern.PEDAL_TONE:
-        add(root, start, span)
+    pattern = section.lh_pattern
+    beat = beats = None
+    if segment.start_beat is not None and segment.end_beat is not None and start == segment.start:
+        beat, beats = segment.start_beat, segment.end_beat - segment.start_beat
+        if end < segment.end:
+            beats = None   # cut short by silence: let the exporter measure it
 
-    elif section.lh_pattern == LHPattern.BLOCK:
-        if section.roll_wide_chords and len(pitches) > 1:
+    if pattern == LHPattern.PEDAL_TONE:
+        add(pitches[0], start, end - start, beat=beat, beats=beats, bass=True)
+        return out
+
+    if pattern == LHPattern.BLOCK:
+        roll = section.roll_wide_chords and len(pitches) > 1
+        for i, p in enumerate(pitches):
             # Stagger by 30ms. This is not cosmetic: rolled notes are not
             # simultaneous, so the hand-span rule stops applying to them.
             # It is the cheapest legal fix for a wide chord.
-            for i, p in enumerate(pitches):
-                add(p, start + i * 0.03, span - i * 0.03)
-        else:
-            for p in pitches:
-                add(p, start, span)
+            shift = i * ROLL_STAGGER_SECONDS if roll else 0.0
+            add(p, start + shift, end - start - shift, beat=beat, beats=beats,
+                rolled=roll, bass=i == 0)
+        return out
 
-    elif section.lh_pattern == LHPattern.BROKEN_OCTAVE:
-        step = span / 4
-        for i in range(4):
-            add(root if i % 2 == 0 else root + 12, start + i * step, step)
+    mine = [p for p in pulses if segment.start - 1e-9 <= p.onset < segment.end - 1e-9
+            and active[0] - 1e-9 <= p.onset < active[1] - 1e-9]
+    if not mine:
+        return out
 
-    elif section.lh_pattern == LHPattern.ARPEGGIO:
-        shape = [pitches[0], pitches[min(2, len(pitches) - 1)],
-                 pitches[0] + 12, pitches[min(1, len(pitches) - 1)]]
-        step = span / 4
-        for i, p in enumerate(shape):
-            add(p, start + i * step, step)
+    if pattern == LHPattern.STRIDE:
+        chord = [p + 12 for p in pitches[1:]] or [pitches[0] + 12]
+        roll = section.roll_wide_chords and len(chord) > 1
+        for i, pulse in enumerate(mine):
+            if pulse.strong or i == 0:
+                add(pitches[0], pulse.onset, pulse.duration, beat=pulse.beat, beats=pulse.beats, bass=True)
+            else:
+                for j, p in enumerate(chord):
+                    shift = j * ROLL_STAGGER_SECONDS if roll else 0.0
+                    add(p, pulse.onset + shift, pulse.duration - shift, beat=pulse.beat,
+                        beats=pulse.beats, rolled=roll)
+        return out
 
-    elif section.lh_pattern == LHPattern.ALBERTI:
-        fifth = pitches[min(2, len(pitches) - 1)]
-        third = pitches[min(1, len(pitches) - 1)]
-        step = span / 4
-        for i, p in enumerate([root, fifth, third, fifth]):
-            add(p, start + i * step, step)
-
-    elif section.lh_pattern == LHPattern.WALKING:
-        step = span / 4
-        for i, p in enumerate(pitches[:4] or [root]):
-            add(p, start + i * step, step)
-
-    else:
-        raise RenderError(f"unhandled pattern {section.lh_pattern}")
-
+    for i, (pulse, sounding) in enumerate(zip(mine, _figure(pattern, pitches, len(mine), next_root), strict=True)):
+        for p in sounding:
+            add(p, pulse.onset, pulse.duration, beat=pulse.beat, beats=pulse.beats, bass=i == 0)
     return out
 
 
 # --- the public entry point ---------------------------------------------
+
+
+def _active_window(source: Score, start: float, end: float) -> tuple[float, float] | None:
+    """The part of [start, end) during which the source is making sound."""
+    first: float | None = None
+    last: float | None = None
+    for n in source.sounding_at(start):
+        first = start
+        last = max(last or start, min(n.offset, end))
+    for n in source.notes:
+        if n.onset >= end:
+            break
+        if n.onset >= start:
+            first = n.onset if first is None else min(first, n.onset)
+            last = max(last or n.onset, min(n.offset, end))
+    if first is None or last is None:
+        return None
+    return first, last
 
 
 def render(plan: ArrangementPlan, source: Score) -> Score:
@@ -235,29 +290,14 @@ def render(plan: ArrangementPlan, source: Score) -> Score:
         raise RenderError("source score is empty")
 
     melody = extract_melody(source)
-    chords = detect_chords(source, melody)
-
-    bar_span: dict[int, tuple[float, float]] = {}
-    for n in source.notes:
-        if n.bar is None:
-            continue
-        start, end = bar_span.get(n.bar, (n.onset, n.offset))
-        bar_span[n.bar] = (min(start, n.onset), max(end, n.offset))
-
-    # A bar's span is derived from its notes' durations, and under sustain
-    # those run well past the barline. Left unclipped, every left-hand chord
-    # overlaps the next one and the accompaniment stacks on itself. Clip each
-    # bar to where the following bar begins.
-    ordered = sorted(bar_span)
-    for i, bar in enumerate(ordered[:-1]):
-        start, end = bar_span[bar]
-        next_start = bar_span[ordered[i + 1]][0]
-        bar_span[bar] = (start, min(end, next_start))
+    segments = detect_chord_segments(source, melody)
+    spans = bar_spans(source)
+    timeline = source.timeline
 
     out: list[Note] = []
 
     # Right hand: the melody, shifted and optionally folded. The melody is
-    # never dropped or thinned — see CLAUDE.md. Folding moves notes by whole
+    # never dropped or thinned - see CLAUDE.md. Folding moves notes by whole
     # octaves, so every pitch class survives; the tune is recognisable even
     # where its contour is compressed.
     fold_centres: dict[int, float] = {}
@@ -268,15 +308,19 @@ def render(plan: ArrangementPlan, source: Score) -> Score:
                 if n.bar and section.start_bar <= n.bar <= section.end_bar
             ]
             if in_section:
-                fold_centres[i] = sorted(in_section)[len(in_section) // 2]
+                # The window is centred on where the melody ends up, not where
+                # it started. Centred on the unshifted line, a section moved
+                # down an octave to fit the keyboard was folded straight back up.
+                fold_centres[i] = sorted(in_section)[len(in_section) // 2] + section.melody_shift
 
-    for n in melody:
+    section_index = {id(s): i for i, s in enumerate(plan.sections)}
+    melody_velocity: dict[int, list[int]] = {}
+    for k, n in enumerate(melody):
         section = plan.section_for_bar(n.bar) if n.bar else None
         pitch = n.pitch + (section.melody_shift if section else 0)
 
         if section is not None and section.melody_fold_window:
-            idx = plan.sections.index(section)
-            centre = fold_centres.get(idx)
+            centre = fold_centres.get(section_index[id(section)])
             if centre is not None:
                 half = section.melody_fold_window / 2
                 # Octaves only. Any other interval would change the note.
@@ -285,27 +329,100 @@ def render(plan: ArrangementPlan, source: Score) -> Score:
                 while centre - pitch > half:
                     pitch += 12
 
+        moved = pitch - n.pitch
+        beat, beats = n.beat, n.beats
+        if timeline is not None:
+            beat = timeline.beat_at(n.onset) if beat is None else beat
+            if beats is None:
+                beats = max(timeline.beat_at(n.onset + n.duration) - beat, 1e-3)
         out.append(
-            Note(pitch=pitch, onset=n.onset, duration=n.duration,
-                 staff=1, bar=n.bar)
+            replace(
+                n, pitch=pitch, staff=1, id=f"m{k}", beat=beat, beats=beats,
+                # A spelling survives an octave move; any other shift needs respelling.
+                spelling=n.spelling if moved % 12 == 0 else None,
+                track=None,
+            )
         )
+        if n.bar is not None and n.velocity:
+            melody_velocity.setdefault(n.bar, []).append(n.velocity)
 
-    # Left hand: one realisation per bar, from the section's pattern.
-    for bar, (start, end) in sorted(bar_span.items()):
+    # Left hand: one realisation per chord segment, from the section's pattern.
+    right_hand = Score(notes=list(out))   # indexed, for "what is the melody holding right now"
+    ordered_bars = sorted(spans)
+    previous_voicing: list[int] | None = None
+    previous_section: Section | None = None
+    counter = 0
+    for position, bar in enumerate(ordered_bars):
+        start, end = spans[bar]
         section = plan.section_for_bar(bar)
         if section is None or section.lh_voices == 0:
+            previous_voicing = None
             continue  # bar not covered, or deliberately melody-only
-        chord = chords.get(bar)
-        if chord is None:
+        bar_segments = segments.get(bar)
+        if not bar_segments:
             continue
-        for note in _left_hand_for_bar(section, chord, start, end):
-            out.append(
-                Note(pitch=note.pitch, onset=note.onset, duration=note.duration,
-                     staff=2, bar=bar)
+        active = _active_window(source, start, end) if timeline is not None else (start, end)
+        if active is None:
+            continue  # the source is silent here; so is the left hand
+        if section.harmonic_rhythm == HarmonicRhythm.BAR and len(bar_segments) > 1:
+            longest = max(bar_segments, key=lambda s: s.end - s.start)
+            first = bar_segments[0]
+            bar_segments = [
+                replace(first, end=bar_segments[-1].end, end_beat=bar_segments[-1].end_beat,
+                        root=longest.root, quality=longest.quality)
+            ]
+        if section is not previous_section:
+            previous_voicing = None   # a new section states its harmony in root position
+        previous_section = section
+
+        pulses = _pulses(source, bar, start, end)
+        velocities = melody_velocity.get(bar)
+        lh_velocity = (
+            max(30, min(110, round(_LH_VELOCITY_RATIO * sum(velocities) / len(velocities))))
+            if velocities else None
+        )
+        for index, segment in enumerate(bar_segments):
+            pitches = _voicing(section, segment, previous_voicing)
+            previous_voicing = pitches
+            next_root: int | None = None
+            if index + 1 < len(bar_segments):
+                next_root = bar_segments[index + 1].root
+            elif position + 1 < len(ordered_bars):
+                following = segments.get(ordered_bars[position + 1])
+                next_root = following[0].root if following else None
+            for note in _left_hand_for_segment(section, segment, pulses, pitches, next_root, active):
+                # The left hand stays under the tune. A figure that climbs onto
+                # the very key the melody is holding is a collision on a real
+                # keyboard and a doubling in any case, and doublings go first:
+                # move it down by octaves until it is clear.
+                ceiling = min((m.pitch for m in right_hand.sounding_at(note.onset)), default=None)
+                pitch = note.pitch
+                while ceiling is not None and pitch >= ceiling and pitch - 12 >= 0:
+                    pitch -= 12
+                out.append(replace(note, pitch=pitch, bar=bar, id=f"l{counter}", velocity=lh_velocity))
+                counter += 1
+
+    pedals: list[PedalSpan] = []
+    for bar in sorted(set(plan.pedal_bars)):
+        if bar in spans:
+            start, end = spans[bar]
+            if end > start:
+                pedals.append(PedalSpan(start, end))
+
+    tempo_bpm = source.tempo_bpm
+    scale = float(plan.tempo_scale)
+    if scale != 1.0:
+        # Slower, uniformly: beats are untouched, every second stretches.
+        out = [replace(n, onset=n.onset / scale, duration=n.duration / scale) for n in out]
+        pedals = [PedalSpan(p.start / scale, p.end / scale) for p in pedals]
+        tempo_bpm = source.tempo_bpm * scale
+        if timeline is not None:
+            timeline = Timeline(
+                [TempoChange(t.beat, t.bpm * scale) for t in timeline.tempos],
+                timeline.meters, timeline.keys, timeline.pickup_beats,
             )
 
-    return Score(notes=out, tempo_bpm=source.tempo_bpm, title=plan.title)
-
-
-def last_bar(source: Score) -> int:
-    return max((n.bar for n in source.notes if n.bar is not None), default=1)
+    return Score(
+        notes=out, tempo_bpm=tempo_bpm, title=plan.title, timeline=timeline,
+        pedals=pedals, composer=source.composer, source_format=source.source_format,
+    )

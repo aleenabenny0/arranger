@@ -9,6 +9,8 @@ from .services import (
     arrange_score,
     baseline_for,
     fidelity_for,
+    plan_analysis,
+    plan_score,
     render_plan,
     verify_score,
 )
@@ -17,6 +19,8 @@ __all__ = [
     "arrange_score",
     "baseline_for",
     "fidelity_for",
+    "plan_analysis",
+    "plan_score",
     "render_plan",
     "verify_score",
 ]
