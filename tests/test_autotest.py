@@ -203,6 +203,18 @@ def test_a_run_matches_its_own_baseline():
     assert compare_with_baseline(results, {"cases": {}}) == [], "an unknown case is not a regression"
 
 
+def test_an_unchanged_result_is_never_a_regression_whatever_its_decimals():
+    # The first CI run flagged half the corpus: the comparison rounded the
+    # recorded fidelity to three places and the fresh one to four, so 0.9226
+    # against its own record (0.923) read as a fall. Same number, same answer.
+    results = run_fixture()
+    held = results[0].contests[0]
+    for value in (0.9226, 0.9224, 0.925, 0.9999, 0.88):
+        held.engine.fidelity = value
+        baseline = baseline_from_results(results)
+        assert compare_with_baseline(results, baseline) == [], value
+
+
 def test_regressions_are_named():
     results = run_fixture()
     baseline = baseline_from_results(results)

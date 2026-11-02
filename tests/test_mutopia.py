@@ -92,8 +92,14 @@ def test_feed_carries_ids_and_titles_newest_first():
     assert len(items) == 25
     assert items[0].piece_id == 2247 and items[0].title == "AbtF: Vocalise № 1"
     assert "Voice, Piano" in items[0].description and items[0].published.startswith("Wed, 24 Jul 2019")
+    # An item without a piece link is skipped; a page with no items is not a feed.
+    assert parse_feed("<rss><channel><item><title>x</title></item></channel>") == []
     with pytest.raises(CatalogueError):
-        parse_feed("<rss><channel><item><title>x</title></item></channel>")
+        parse_feed("<html><body>Not Found</body></html>")
+    # Entities are text, never expanded into anything else.
+    hostile = ('<rss><channel><item><title>&lt;b&gt;Bold&lt;/b&gt; &amp; co</title>'
+               '<link>http://www.mutopiaproject.org/cgibin/piece-info.cgi?id=7</link></item></channel></rss>')
+    assert parse_feed(hostile)[0].title == "<b>Bold</b> & co"
 
 
 def test_only_public_domain_and_permissive_creative_commons_are_permitted():
@@ -237,3 +243,6 @@ def test_default_fetch_caps_what_it_reads(monkeypatch):
     seen["size"] = 101
     with pytest.raises(CatalogueError):
         mutopia._default_fetch(f"{BASE_URL}/x", max_bytes=100, timeout=7)
+    for url in ("file:///etc/passwd", "http://www.mutopiaproject.org/x", "https://example.com/x"):
+        with pytest.raises(CatalogueError):
+            mutopia._default_fetch(url, max_bytes=100, timeout=7)

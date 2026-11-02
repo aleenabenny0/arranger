@@ -77,6 +77,22 @@ would have to prove itself on.
   invariant accepts a loss only up to the declared count; an undeclared
   loss, or a note from nowhere, still fails.
 
+### Found by the first CI run, and fixed
+
+- **The baseline comparison flagged unchanged results as regressions.** It
+  rounded the recorded fidelity to three places and the fresh one to four,
+  so a piece at 0.9226 read as having fallen from 0.923. No local run had
+  exercised the comparison on real data because the local runs were all
+  `--update-baseline`, which skips it. Both sides now round to the quality
+  ordering's resolution, and a test feeds the same number through with
+  several decimal tails.
+- **Bandit refused two things in the catalogue adapter:** the RSS feed was
+  parsed with `xml.etree`, which expands entities on untrusted input, and
+  `urlopen` took a URL whose scheme was checked one level up. The feed is
+  now read with regular expressions (four flat fields; a hostile entity
+  stays text), and the fetch function refuses anything that is not https on
+  the site's own host before the request is built.
+
 ### Changed expectations in existing tests (call out at handoff)
 
 - `test_agent.py::test_loop_stops_as_soon_as_it_succeeds` now stubs the

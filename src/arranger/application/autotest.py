@@ -58,6 +58,7 @@ from ..evaluate import Contestant, outcome
 from ..io import read_midi_bytes
 from ..ir import PedalSpan, Score
 from ..limits import DEFAULT_LIMITS, ImportLimits, ScoreImportError
+from ..planner import FIDELITY_RESOLUTION
 from ..profile import PRESETS, PlayerProfile
 from ..render import last_bar
 from ..timeline import MeterChange, TempoChange, Timeline
@@ -521,8 +522,10 @@ def compare_with_baseline(results: list[CaseResult], baseline: dict) -> list[str
                     f"{case.spec.id} ({c.profile}): engine cost {c.engine.cost:.2f} was {past['engine_cost']:.2f}"
                 )
             elif c.engine.cost == past["engine_cost"]:
-                now = (-c.engine.tempo_scale, c.engine.strain, -c.engine.fidelity)
-                then = (-past["engine_tempo"], past["engine_strain"], -round(past["engine_fidelity"], 3))
+                # The same resolution on both sides, and the one the quality
+                # ordering uses: a fidelity difference below it is not a change.
+                now = (-c.engine.tempo_scale, c.engine.strain, -round(c.engine.fidelity, FIDELITY_RESOLUTION))
+                then = (-past["engine_tempo"], past["engine_strain"], -round(past["engine_fidelity"], FIDELITY_RESOLUTION))
                 if now > then:
                     regressions.append(
                         f"{case.spec.id} ({c.profile}): engine quality fell: tempo {c.engine.tempo_scale:.0%}, "

@@ -8,7 +8,9 @@ every file this module hands back names its licence, and a licence that is
 not public domain or a permissive Creative Commons one is refused before a
 single byte of music is downloaded.
 
-Three pages are read, all with the standard library:
+Three pages are read, all with the standard library and none with an XML
+parser (the pages are untrusted input; `html.parser` and regular expressions
+expand no entities):
 
 - the search table (`cgibin/make-table.cgi`), ten pieces a page, each with
   title, composer, instruments, style, licence, piece id and download links;
@@ -34,7 +36,6 @@ from dataclasses import asdict, dataclass
 from html import unescape
 from html.parser import HTMLParser
 from typing import Callable
-from xml.etree import ElementTree
 
 from ..limits import DEFAULT_LIMITS
 
@@ -266,33 +267,54 @@ def parse_piece_page(html_text: str, *, piece_id: int | None = None) -> Catalogu
     return piece
 
 
+_ITEM = re.compile(r"<item\b[^>]*>(.*?)</item>", re.S | re.I)
+_FIELD = {
+    name: re.compile(rf"<{name}\b[^>]*>(.*?)</{name}>", re.S | re.I)
+    for name in ("title", "link", "guid", "description", "pubDate")
+}
+
+
 def parse_feed(xml_text: str | bytes) -> list[FeedItem]:
-    """Latest additions, newest first. Titles and ids only; see `piece()` for the rest."""
-    try:
-        root = ElementTree.fromstring(xml_text)
-    except ElementTree.ParseError as exc:
-        raise CatalogueError(f"feed is not XML: {exc}") from exc
+    """Latest additions, newest first. Titles and ids only; see `piece()` for the rest.
+
+    The feed is read with regular expressions, not an XML parser: it comes
+    from the network, and the standard library's XML parsers expand entities.
+    Four flat text fields per item are all that is needed.
+    """
+    text = xml_text.decode("utf-8", errors="replace") if isinstance(xml_text, bytes) else xml_text
+    blocks = _ITEM.findall(text)
+    if not blocks:
+        raise CatalogueError("feed has no items; not an RSS feed?")
     items = []
-    for item in root.iter("item"):
-        link = (item.findtext("link") or item.findtext("guid") or "").strip()
+    for block in blocks:
+        link = _feed_field(block, "link") or _feed_field(block, "guid")
         m = _PIECE_ID.search(link)
         if not m:
             continue
         items.append(FeedItem(
             piece_id=int(m.group(1)),
-            title=_clean(item.findtext("title") or ""),
-            description=_clean(item.findtext("description") or ""),
-            published=_clean(item.findtext("pubDate") or ""),
+            title=_feed_field(block, "title"),
+            description=_feed_field(block, "description"),
+            published=_feed_field(block, "pubDate"),
         ))
     return items
+
+
+def _feed_field(block: str, name: str) -> str:
+    m = _FIELD[name].search(block)
+    return _clean(m.group(1)) if m else ""
 
 
 # --- the client -------------------------------------------------------------
 
 
 def _default_fetch(url: str, *, max_bytes: int, timeout: float) -> bytes:
+    # Only https, only this host: a file: or custom scheme can never reach
+    # urlopen, whatever a parsed page put in a link.
+    if not url.startswith(BASE_URL + "/"):
+        raise CatalogueError(f"refusing to fetch {url}: not on {BASE_URL}")
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - https only, fixed host
+    with urllib.request.urlopen(request, timeout=timeout) as response:  # nosec B310 - https and host checked above
         data = response.read(max_bytes + 1)
     if len(data) > max_bytes:
         raise CatalogueError(f"{url} is larger than {max_bytes} bytes")
