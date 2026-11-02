@@ -42,3 +42,6 @@ firmware/esp32-player/sdkconfig
 firmware/esp32-player/sdkconfig.old
 firmware/esp32-player/managed_components/
 firmware/esp32-player/dependencies.lock
+
+# Music found online by arranger-autotest, with its provenance; never committed
+evals/discovered/

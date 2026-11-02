@@ -34,3 +34,23 @@
 - Fixed: `argon2-cffi` missing from the `api` extra; a startup race when several
   processes first open a new SQLite file; hour-long caching of unfingerprinted
   frontend modules; a skip link that navigated instead of moving focus.
+- One ordering for every comparison (`engine.quality_key`: cost, then tempo,
+  then strain, then fidelity above the floor). The deterministic engine now
+  tries every whole-piece figure itself before refining and eases strain in
+  a plan that already plays, so it cannot lose to the brute-force baseline;
+  the planner and the model loop rank candidates the same way, and the model
+  is told the ordering, every plan lever, and exactly what a better plan
+  must do. Engine version `2026.11.1`.
+- `python -m arranger.evaluate` measures the engine and, when a model is
+  named, the model loop against brute force on cost (the pre-registered
+  protocol) and on quality; the scorecard carries a PASS / FAIL /
+  INSUFFICIENT DATA verdict.
+- `arranger-autotest`: the arranger tests itself on licensed music it finds
+  on the Mutopia Project (public domain and permissive Creative Commons
+  only), whole and in snippets, checking the readers, the round trips, the
+  verifier, the melody rule and the engine against brute force for three
+  players, against a committed baseline. A CI job runs it on the corpus and
+  a weekly workflow on one catalogue page.
+- Fixed: notation silently merged a repeated note that quantisation had put
+  on its neighbour's position (two of Für Elise's 32nd-note E's); it now
+  declares the merge in the export warnings. Found by the self-tester.

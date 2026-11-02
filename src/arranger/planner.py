@@ -29,6 +29,11 @@ from .verify import verify
 FIDELITY_FLOOR = 0.88
 FIDELITY_WEIGHT = 60.0
 MAX_SECTIONS = 10
+# Fidelity above the floor is compared to this many decimal places. Less than
+# a hundredth of the weighted score is one note's worth on a short piece:
+# renderer placement, not a musical preference, so two plans that close are
+# equal and the one with the better figure for each passage is kept.
+FIDELITY_RESOLUTION = 2
 
 
 @dataclass(frozen=True)
@@ -718,7 +723,7 @@ def _score_region_candidate(
     choices: list[SectionCandidate],
     index: int,
     candidate: SectionCandidate,
-) -> float:
+) -> PlanQuality:
     trial_choices = [*choices]
     trial_choices[index] = candidate
     sections = _sections_from_choices(regions, trial_choices, profile, source.tempo_bpm)
@@ -728,7 +733,7 @@ def _score_region_candidate(
         sections,
         "Per-section candidate scored by renderer, verifier, and fidelity.",
     )
-    return _plan_cost(source, profile, plan)
+    return _plan_quality(source, profile, plan)
 
 
 def _choose_region_candidates(
@@ -750,20 +755,27 @@ def _choose_region_candidates(
 
     for index, region in enumerate(regions):
         best = choices[index]
-        best_key: tuple[float, float] | None = None
+        best_key: tuple[float, float, float] | None = None
         for candidate in _region_candidates(region, profile, source.tempo_bpm):
             if stop is not None and stop():
                 choices[index] = best
                 return choices
             try:
-                cost = _score_region_candidate(
+                cost, strain, neg_fidelity = _score_region_candidate(
                     source, profile, regions, choices, index, candidate
                 )
             except RenderError:
                 continue
+            # Cost first. Then the musical prior for the figure, charged for
+            # every strain finding it causes: an expressive figure is worth a
+            # little discomfort, not a lot. Fidelity above the floor breaks the
+            # remaining ties, so at equal cost the plan that keeps more of the
+            # music is the one chosen, never the one that was tried first.
             key = (
                 cost,
-                _candidate_penalty(candidate, region, profile, source.tempo_bpm),
+                _candidate_penalty(candidate, region, profile, source.tempo_bpm)
+                + STRAIN_PENALTY * strain,
+                neg_fidelity,
             )
             if best_key is None or key < best_key:
                 best = candidate
@@ -791,7 +803,7 @@ def candidate_ranking_rows(
             try:
                 verifier_cost = _score_region_candidate(
                     source, profile, regions, choices, index, candidate
-                )
+                )[0]
             except RenderError:
                 continue
             penalty = _candidate_penalty(candidate, region, profile, source.tempo_bpm)
@@ -865,12 +877,31 @@ def _reductions_for_sections(sections: list[Section]) -> list[Reduction]:
     return reductions
 
 
-def _plan_cost(source: Score, profile: PlayerProfile, plan: ArrangementPlan) -> float:
+# (cost, strain count, -fidelity): the planner's view of `engine.quality_key`.
+# Tempo is not in it because the planner never changes tempo.
+PlanQuality = tuple[float, int, float]
+
+# How much of a figure's musical prior one strain finding cancels. The priors
+# in `_candidate_penalty` run from about -0.35 (walking bass) to +0.12 (a
+# bare pedal tone), so at this rate an expressive figure survives two or
+# three tiring moments and no more.
+STRAIN_PENALTY = 0.12
+
+
+def _plan_quality(source: Score, profile: PlayerProfile, plan: ArrangementPlan) -> PlanQuality:
     arranged = render(plan, source)
     verdict = verify(arranged, profile)
     fidelity = measure(source, arranged)
     shortfall = max(0.0, FIDELITY_FLOOR - fidelity.score())
-    return len(verdict.hard) + FIDELITY_WEIGHT * shortfall
+    return (
+        len(verdict.hard) + FIDELITY_WEIGHT * shortfall,
+        len(verdict.strain),
+        -round(fidelity.score(), FIDELITY_RESOLUTION),
+    )
+
+
+def _plan_cost(source: Score, profile: PlayerProfile, plan: ArrangementPlan) -> float:
+    return _plan_quality(source, profile, plan)[0]
 
 
 def _candidate_plans(
@@ -940,18 +971,20 @@ def create_initial_plan(
     """
     options = options or PlannerOptions()
     best_plan: ArrangementPlan | None = None
-    best_cost: float | None = None
+    best_quality: PlanQuality | None = None
 
     for position, plan in enumerate(_candidate_plans(source, profile, options, stop)):
         if position and best_plan is not None and stop is not None and stop():
             break
         try:
-            cost = _plan_cost(source, profile, plan)
+            quality = _plan_quality(source, profile, plan)
         except RenderError:
             continue
-        if best_cost is None or cost < best_cost:
+        # Strictly better on (cost, strain, fidelity). At a tie the per-region
+        # draft, which comes first, is kept over a whole-piece fallback.
+        if best_quality is None or quality < best_quality:
             best_plan = plan
-            best_cost = cost
+            best_quality = quality
 
     if best_plan is None:
         end = last_bar(source)

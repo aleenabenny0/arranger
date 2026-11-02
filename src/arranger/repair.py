@@ -42,8 +42,15 @@ _MOVING_PATTERNS = {
 }
 
 
-def suggest_repairs(verdict: Verdict, plan: ArrangementPlan) -> list[RepairSuggestion]:
-    """Turn verifier failures into concrete plan edits, cheapest first."""
+def suggest_repairs(
+    verdict: Verdict, plan: ArrangementPlan, *, include_strain: bool = False,
+) -> list[RepairSuggestion]:
+    """Turn verifier failures into concrete plan edits, cheapest first.
+
+    With `include_strain`, STRAIN findings are offered the same edits as HARD
+    ones. The engine uses that to ease a plan that already plays; the rules
+    themselves do not change, only which findings they are asked about.
+    """
     suggestions: list[RepairSuggestion] = []
     seen: set[tuple[int | None, str, int | str | bool]] = set()
 
@@ -53,7 +60,11 @@ def suggest_repairs(verdict: Verdict, plan: ArrangementPlan) -> list[RepairSugge
             suggestions.append(RepairSuggestion(section_index, field, value, reason, priority))
             seen.add(key)
 
-    for violation in verdict.hard:
+    findings = list(verdict.hard)
+    if include_strain:
+        findings += list(verdict.strain)
+
+    for violation in findings:
         index = _section_index_for_bar(plan, violation.bar)
         section = plan.sections[index] if index is not None else None
 
@@ -105,7 +116,7 @@ def suggest_repairs(verdict: Verdict, plan: ArrangementPlan) -> list[RepairSugge
     # Every slower step is offered, mildest first. One step often clears
     # nothing (a leap that needs half tempo is not helped by 85%), and a
     # search that only accepts improvements would stop there.
-    if any(v.rule == Rule.LEAP_INFEASIBLE for v in verdict.hard):
+    if any(v.rule == Rule.LEAP_INFEASIBLE for v in findings):
         for rank, slower in enumerate((0.85, 0.7, 0.6, 0.5, 0.4)):
             if slower < plan.tempo_scale - 1e-9:
                 add(None, "tempo_scale", slower,

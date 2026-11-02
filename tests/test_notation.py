@@ -275,6 +275,28 @@ def test_score_without_a_timeline_gets_four_four_and_a_warning():
     assert any("4/4 was assumed" in w for w in notated.warnings)
 
 
+def test_a_repeated_note_quantised_onto_its_neighbour_is_merged_and_declared():
+    # A flick of the same pitch 1/20 of a beat before the beat: no grid holds
+    # it, so it lands on the next note's position. The writer may merge the
+    # two, but it must say so (CLAUDE.md: every lossy step adds a warning).
+    merged = score_of([(48, 0.0, 2.0, 2), (76, 0.95, 0.05, 1), (76, 1.0, 0.25, 1)])
+    notated = notate(merged)
+    assert_well_formed(notated)
+    assert any("1 repeated note(s) fell on the same position" in w for w in notated.warnings), notated.warnings
+    xml, warnings = write_musicxml(merged)
+    assert sum(1 for p in parse(xml).iter("pitch")) == 2
+    assert any("repeated note(s)" in w for w in warnings)
+    # Near misses: a different pitch at the same spot becomes a chord, and the
+    # same pitch against a longer neighbour becomes a second voice. Nothing is
+    # lost in either, so neither is declared as a merge.
+    for rows in ([(48, 0.0, 2.0, 2), (74, 0.95, 0.05, 1), (76, 1.0, 0.25, 1)],
+                 [(48, 0.0, 2.0, 2), (76, 0.95, 0.05, 1), (76, 1.0, 1.0, 1)]):
+        notated = notate(score_of(rows))
+        assert not any("repeated note(s)" in w for w in notated.warnings)
+        xml, _warnings = write_musicxml(score_of(rows))
+        assert sum(1 for p in parse(xml).iter("pitch")) == 3
+
+
 def test_tempo_marks_only_where_the_tempo_really_changes():
     timeline = Timeline([TempoChange(0, 100), TempoChange(4, 101), TempoChange(8, 60)], [MeterChange(1, 4, 4)])
     notes = [Note(60, timeline.seconds_at(b), 0.5, staff=1, beat=float(b), beats=1.0) for b in range(12)]

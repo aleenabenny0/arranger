@@ -261,28 +261,35 @@ and time it. Change these and the same piece becomes playable or doesn't.
 `docs/progress.md` is the running log. `docs/build-log/limitations.md` says what
 is knowingly wrong.
 
-## Open question: does the agent beat brute force?
+## Does the arranger beat brute force?
 
-`arranger.agent.arrange` is supposed to earn its cost against
-`brute_force_baseline` — an exhaustive search over 54 fixed plans with no
-model involved (see `arranger.agent`'s own docstring). Testing that claim
-turned into real work of its own, tracked in `SCORECARD.md` rather than
-here. Short version:
+The baseline is an exhaustive search over every whole-piece figure, voice
+count and fold window (`arranger.agent.brute_force_candidate`): no judgement,
+one setting for every bar. Two contestants are measured against it on one
+ordering, `arranger.engine.quality_key`: cost (hard findings plus any
+fidelity shortfall), then tempo, then strain, then fidelity above the floor.
 
-- **Established:** the 20-piece public-domain corpus (`evals/corpus/`)
-  can't test this at all — brute force already reaches cost 0.00 on every
-  piece in it. What actually resists brute force turned out not to be
-  "orchestral" or "multi-instrument" (both tested and falsified against
-  real orchestral and chamber scores) but specifically *virtuosic Romantic
-  concerto solo writing* — confirmed on 2 composers so far. Full writeup:
-  `evals/corpus/README.md`, "Sourcing criteria" section.
-- **Open:** a 3-piece verdict-eligible pool now exists and meets the
-  pre-registered minimum (`docs/build-log/eval-protocol.md`), but no real
-  agent run has happened against it yet — every number so far comes from
-  the deterministic baseline search, not from Claude. `SCORECARD.md` has
-  the current pool, what's missing before the eval can run
-  reproducibly, and the historical (pre-protocol, non-reproducible) numbers
-  from `samples/Queen - Bohemian Rhapsody.mid` for context.
+- **The deterministic engine** tries every whole-piece figure itself before
+  it refines, so it cannot lose to the baseline on that ordering; a loss is
+  a bug and fails `tests/test_engine_quality.py` and the CI `autotest` job.
+  It wins where treating passages differently keeps more of the piece or
+  tires the player less. `python -m arranger.evaluate` writes the numbers to
+  `SCORECARD.md`; nothing leaves the machine.
+- **The model loop** starts from the engine's draft and keeps a plan only if
+  it beats it on the same ordering. The pre-registered, cost-only protocol in
+  `docs/build-log/eval-protocol.md` still decides its PASS/FAIL verdict, and
+  the scorecard says `INSUFFICIENT DATA` until a real run is made:
+  `python -m arranger.evaluate --model claude-sonnet-5` costs money and has
+  not been run.
+
+The arranger also tests itself on music it finds online. `arranger-autotest
+--discover mutopia` reads the Mutopia Project listing, downloads only pieces
+whose licence is Public Domain or permissive Creative Commons, and runs every
+layer on them, whole and in snippets: the bounded readers, the MIDI, JSON and
+MusicXML round trips, the verifier's determinism, the melody-kept rule, and
+the engine against brute force for three players, compared with the committed
+baseline in `evals/autotest/baseline.json`. The weekly `Autotest` workflow
+does one catalogue page a week and keeps the report.
 
 ## Roadmap
 

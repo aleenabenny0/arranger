@@ -65,6 +65,7 @@ Adapters translate external artifacts into domain objects and back:
 | `adapters.lilypond` | LilyPond source out; PDF through a sandboxed LilyPond subprocess | stdlib, plus the LilyPond program |
 | `adapters.audio` | Recording in, through the Basic Pitch ONNX model | `numpy`, `onnxruntime`, `soundfile`, `soxr` |
 | `adapters.score_json` | Stable debug and storage format, strict and bounded | stdlib |
+| `adapters.mutopia` | The Mutopia Project catalogue in: search and piece pages, the feed, and a download that refuses any licence outside the corpus rule | stdlib (`html.parser`, `urllib`) |
 
 `arranger.notation` sits between the domain and the two notation writers. It
 turns seconds into bars, voices, ties, tuplets and spelled pitches once, so
@@ -92,6 +93,18 @@ maps to status codes without string matching.
 The API layer adds nothing musical. `arranger_api.jobs` wraps these calls with
 progress, cancellation, deadlines and retries; `arranger_api.routers` adds
 ownership, quotas and persistence.
+
+Two use cases exist for measuring the system rather than serving a user, and
+both judge candidates on `engine.quality_key` (cost, tempo, strain, fidelity):
+
+- `arranger.evaluate` runs brute force, the deterministic engine and, when a
+  model is named, the model loop on a set of pieces and writes the scorecard.
+- `arranger.application.autotest` finds licensed music through
+  `adapters.mutopia`, cuts snippets with `snippet`, checks the invariants
+  (round trips, plan validity, verifier determinism, melody kept, engine
+  reproducibility), holds the contest for each player profile, and compares
+  with a committed baseline. `arranger-autotest` is its CLI; the `autotest`
+  CI job and the weekly `Autotest` workflow run it.
 
 ## Storage
 

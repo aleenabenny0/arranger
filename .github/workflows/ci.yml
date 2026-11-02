@@ -481,6 +481,70 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  autotest:
+    name: Engine vs brute force on the corpus
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install the package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Fetch the public-domain evaluation corpus
+        run: python fetch_corpus.py
+
+      # The pieces short enough to run in minutes, whole and in snippets, for
+      # three players, against the committed baseline. The engine losing to a
+      # single whole-piece figure, a failed round trip, or a result worse than
+      # the baseline fails the job. The weekly Autotest workflow runs the
+      # whole corpus and pieces it finds online.
+      - name: Test the engine against brute force and the baseline
+        run: |
+          mkdir -p reports
+          arranger-autotest --files \
+            evals/corpus/andre-sonatine-op34-1.mid \
+            evals/corpus/bach-invention-04-bwv775.mid \
+            evals/corpus/brahms-waltz-op39-15.mid \
+            evals/corpus/burgmuller-op100-01-la-candeur.mid \
+            evals/corpus/burgmuller-op100-02-arabesque.mid \
+            evals/corpus/burgmuller-op100-05-innocence.mid \
+            evals/corpus/burgmuller-op100-08-la-gracieuse.mid \
+            evals/corpus/burgmuller-op100-10-tendre-fleur.mid \
+            evals/corpus/burgmuller-op100-12-ladieu.mid \
+            evals/corpus/burgmuller-op100-15-ballade.mid \
+            evals/corpus/chopin-prelude-op28-20.mid \
+            evals/corpus/satie-gymnopedie-2.mid \
+            evals/corpus/schumann-op15-07-traumerei.mid \
+            evals/corpus/tchaikovsky-op39-01-morning-prayer.mid \
+            evals/corpus/tchaikovsky-op39-16-old-french-song.mid \
+            --profiles profiles/me.json,preset:beginner,preset:advanced \
+            --deadline 600 \
+            --report reports/autotest.md --json reports/autotest.json
+
+      - name: Write the report to the job summary
+        if: always()
+        run: |
+          if [ -f reports/autotest.md ]; then cat reports/autotest.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: autotest-corpus
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 14
+
   c-midi:
     name: C MIDI parser (CMake, Unity, ASan/UBSan)
     runs-on: ubuntu-latest

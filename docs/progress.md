@@ -3,6 +3,113 @@
 Newest entries first. Records what was done, why, what was tested, and what is
 left. Backlog item ids refer to `docs/backlog.md`.
 
+## 2026-11-02 - Item 10: the engine beats brute force, and the arranger tests itself
+
+**Test state.** `python -m pytest --ignore=tests/test_browser_e2e.py`:
+942 passed, 22 skipped (Postgres and LocalStack, run in CI); with `--cov=src`,
+91% line coverage against the 90 gate. `ruff check .`: clean. `python
+tests/test_constraints.py`: 19/19. New test files: `test_engine_quality.py`
+(12), `test_evaluate.py` (11), `test_mutopia.py` (12), `test_autotest.py`
+(21); `test_agent.py` gained two and changed one (below), `test_notation.py`
+gained one. Nothing in the suite touches the network: the catalogue tests
+run against recorded pages in `tests/fixtures/mutopia/`.
+
+### Why
+
+The pre-registered evaluation (`docs/build-log/eval-protocol.md`) compares
+the model with brute force on cost alone, and brute force reaches cost 0 on
+nearly every piece, so the question "does the arranger beat exhaustive
+search" could not be asked on most music, and nothing stopped the
+deterministic engine from losing to it quietly. The owner asked for the
+software and the model to win, and for the arranger to find music online
+and test itself.
+
+### Done
+
+| Item | What exists | Evidence |
+|---|---|---|
+| F1 | `engine.quality_key`: one ordering for every comparison. Cost (hard findings plus the fidelity shortfall), then tempo, then strain, then fidelity above the floor to two decimal places (`planner.FIDELITY_RESOLUTION`; closer is a tie, so a per-region plan is not flattened by a uniform one that places one more note). `Candidate.better_than` uses it; so do the planner's draft choice, local repair, the model loop's best-so-far and the harness | `tests/test_engine_quality.py` |
+| F1 | The engine tries every skill-legal whole-piece figure itself (`engine.seed_uniform`, easiest first, bounded) before the musical refinements, and a new `polish` pass feeds STRAIN findings through the repair rules for a plan that already plays, never trading tempo, cost or the floor for comfort. The engine therefore cannot lose to brute force on the ordering; the test asserts it on every fixture and preset | same |
+| F1 | Planner: a strain-aware per-region key (`STRAIN_PENALTY` charges a figure's musical prior per strain finding) with fidelity as the last tie-break | `tests/test_planner.py` unchanged |
+| F1 | Repair: `suggest_repairs(..., include_strain=True)` offers the same edits for STRAIN findings; the default is unchanged | `test_strain_findings_only_produce_suggestions_when_asked` |
+| F1 | Model loop: the prompt now lists every pattern (stride and broken tenth were missing), every plan lever (`roll_wide_chords`, `voicing`, `bass`, `harmonic_rhythm`, `pedal_bars`, `tempo_scale`) and the ranking order; the first message and every piece of feedback say exactly what a better plan must do (`_what_would_win`); a plan that is accepted but no better than the draft no longer ends the run as a success; `RunResult.best_strain` is recorded | `tests/test_agent.py` |
+| F1 | `agent.brute_force_candidate`: the fully scored exhaustive search, skill-legal by default with the protocol's unfiltered search available, ties among equally cheap uniform plans broken on the same ordering so a contestant cannot "win" by picking a better tie-break among plans brute force already tried. `brute_force_baseline` keeps its tuple shape | `test_brute_force_candidate_is_the_best_uniform_plan_on_quality` |
+| F1 | `arranger.evaluate` rewritten: brute force, the deterministic engine and (with `--model`) the model loop on every piece; wins "on cost" (the protocol, strict) and "on quality"; the protocol's PASS / FAIL / INSUFFICIENT DATA verdict computed only from qualifying pieces with model runs; `--json`; the corpus as the default input | `tests/test_evaluate.py`, `SCORECARD.md` |
+| F2 | `adapters.mutopia`: search table, piece page and RSS feed parsed with `html.parser` and `ElementTree`; a client that identifies itself, waits a second between requests, caps page and file sizes, retries only on 429 and 5xx, never leaves the site, and refuses to download anything whose licence is not Public Domain or permissive Creative Commons | `tests/test_mutopia.py` against recorded pages |
+| F2 | `application.autotest` and the `arranger-autotest` CLI: pieces from the corpus, files or discovery; 16-bar snippets cut exactly on the timeline; invariants on real music (MIDI, score JSON and MusicXML round trips, plan validity, verifier determinism, melody kept, engine reproducibility on snippets); the contest per profile; a committed baseline (`evals/autotest/baseline.json`) that fails the run on a regression; a Markdown report that credits licence and source page; a refused file is a result, a crash is a failure | `tests/test_autotest.py` |
+| F2 | CI job `autotest`: the 15 short corpus pieces, three profiles, whole and in snippets, against the baseline, report in the job summary. `.github/workflows/autotest.yml`: weekly and on demand, the whole corpus plus one page of Mutopia's piano listing (the run number picks the page), with inputs for page, limit, instrument and an optional model | both YAML files parse; neither has run on GitHub yet |
+| - | Docs: README, CLAUDE.md table, `docs/architecture.md`, `docs/algorithm.md`, `docs/backlog.md` (section F), `docs/build-log/limitations.md`, `docs/build-log/eval-protocol.md` amendment, `evals/corpus/README.md`, changelog | - |
+
+### Measured
+
+`python -m arranger.evaluate` on the 23 corpus pieces, profile `me`, engine
+only (no network): **on cost 2 wins, 21 ties, 0 losses; on quality 9 wins,
+14 ties, 0 losses.** The two cost wins are the concerto movements: Beethoven
+op. 37 from 1.00 to 0.00 (at 40% tempo, which the ordering charges before
+strain), Tchaikovsky op. 35 from 4.00 to 2.00. The quality wins at equal
+cost are fidelity gains of 0.01 to 0.04 at equal strain. Engine time is 1.5
+to 4 times brute force (see limitations).
+
+`arranger-autotest --discover mutopia --page 3 --limit 3`, live: three Bach
+inventions found (two Public Domain, one CC BY-SA 3.0), 6 contests, 6 wins
+on quality, 0 failures, all 6 or 7 invariants holding on each; the downloads
+and their provenance landed in the git-ignored `evals/discovered/`.
+
+`arranger-autotest --corpus` with profiles `me`, `beginner` and `advanced`,
+whole pieces and three 16-bar snippets each, is what `evals/autotest/baseline.json`
+records: 71 cases, 213 contests, **106 wins, 107 ties, 0 losses on quality**.
+The beginner profile is where judgement shows: brute force leaves cost 4 to
+555 on 25 pieces and snippets, the engine clears all but two of them to 0.
+That list is the report's "Resists brute force" section, the pool a model
+would have to prove itself on.
+
+### Found by the self-tester on its first corpus run, and fixed
+
+- **The MusicXML export of the Für Elise arrangement came back two notes
+  short.** Two of the famous repeated E's are 32nd-note flicks before the
+  beat; the quantiser moved them onto the next E's position, where the
+  notation step de-duplicates a pitch struck twice in one chord. The
+  merge is a real limit of the grid (there are no grace notes) but it was
+  silent, against the rule that every lossy step warns. `notation.notate`
+  now counts the merges and says so, with a test for the merge and two
+  near-misses (a different pitch at the same spot becomes a chord; the same
+  pitch against a longer neighbour becomes a second voice). The round-trip
+  invariant accepts a loss only up to the declared count; an undeclared
+  loss, or a note from nowhere, still fails.
+
+### Changed expectations in existing tests (call out at handoff)
+
+- `test_agent.py::test_loop_stops_as_soon_as_it_succeeds` now stubs the
+  engine with an unacceptable draft, because on its fixture the engine's own
+  draft is always accepted and a single-section model plan can never beat it.
+  The old assertion was guarded by `if result.playable` and passed vacuously.
+- `test_engine_quality.py::test_planner_keeps_its_per_region_judgement_over_a_uniform_near_tie`
+  records the decision that a fidelity difference under a hundredth is a tie.
+
+### Decided
+
+- Fidelity resolution is two decimal places. At three, a uniform fallback won
+  the planner's mixed-texture fixture by 0.005 and flattened the plan; the
+  renderer's note placement is not a musical preference at that scale.
+- Brute force is held to the same skill ceiling as every other plan; the
+  unfiltered number is still computed and listed where it differs, so the
+  protocol's historical figures stay comparable.
+- The model cannot end a run by merely matching the draft. "Accepted" was a
+  property of the plan; "better than the free candidate" is the property that
+  justifies paying for it.
+
+### Not done
+
+- No paid model run has been made. The scorecard's verdict line reads
+  INSUFFICIENT DATA and will until `python -m arranger.evaluate --model
+  claude-sonnet-5` is run with a key.
+- The `autotest` CI job and the weekly workflow have not run on GitHub.
+- Only Mutopia is read. IMSLP and Musopen have no adapter; both would need
+  their own licence parsing.
+- The quality wins at equal cost and strain are fidelity gains, and fidelity
+  saturates (limitations); a listening test is the honest next check.
+- The engine is slower on very long pieces; bounded by the job deadline.
+
 ## 2026-09-29 - Item 09: a C MIDI parser and an ESP32 player
 
 **Test state.** `ctest --test-dir c/midi/build`: 3 tests (31 Unity cases)

@@ -1,0 +1,98 @@
+# The arranger tests itself on music it finds online.
+#
+# Every week (and on demand) this job fetches the corpus, walks one more page
+# of the Mutopia Project's piano listing, downloads the pieces whose licence
+# the corpus rule allows, and runs `arranger-autotest` over all of it: the
+# bounded readers, the round trips, the verifier, the deterministic engine
+# against an exhaustive search over whole-piece figures, on whole pieces and
+# on snippets. Corpus pieces are compared with the committed baseline
+# (`evals/autotest/baseline.json`); a regression fails the run. Discovered
+# pieces have no baseline, so for them only a crash, a failed invariant, or
+# the engine losing to brute force fails the run. The Markdown report lands
+# in the job summary and the artifacts.
+#
+# Nothing is committed: downloaded music stays in the job's workspace and the
+# report credits each piece's licence and source page.
+
+name: Autotest
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      page:
+        description: "Catalogue page to start from (default: the run number)"
+        required: false
+        default: ""
+      limit:
+        description: "How many discovered pieces to test"
+        required: false
+        default: "10"
+      instrument:
+        description: "Mutopia instrument filter (empty for every instrument)"
+        required: false
+        default: "Piano"
+      model:
+        description: "Also run the model loop with this model (needs ANTHROPIC_API_KEY; costs money)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  autotest:
+    name: Find music online and test the arranger
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      # The self-tester needs the package and nothing else; the model extra is
+      # installed so a dispatch that names a model can run it.
+      - name: Install the package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[model]"
+
+      - name: Fetch the public-domain evaluation corpus
+        run: python fetch_corpus.py
+
+      - name: Test the corpus and this week's discovered pieces
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -o pipefail
+          args=(--corpus --discover mutopia --limit "${{ github.event.inputs.limit || '10' }}"
+                --instrument "${{ github.event.inputs.instrument || 'Piano' }}"
+                --profiles profiles/me.json,preset:beginner,preset:advanced
+                --deadline 600
+                --report reports/autotest.md --json reports/autotest.json)
+          if [ -n "${{ github.event.inputs.page }}" ]; then args+=(--page "${{ github.event.inputs.page }}"); fi
+          if [ -n "${{ github.event.inputs.model }}" ]; then args+=(--model "${{ github.event.inputs.model }}"); fi
+          mkdir -p reports
+          arranger-autotest "${args[@]}" 2>&1 | tee reports/autotest.log
+
+      - name: Write the report to the job summary
+        if: always()
+        run: |
+          if [ -f reports/autotest.md ]; then cat reports/autotest.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Keep the report, the numbers and the provenance of every downloaded piece
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: autotest-${{ github.run_number }}
+          path: |
+            reports/
+            evals/discovered/index.json
+          if-no-files-found: warn
+          retention-days: 90

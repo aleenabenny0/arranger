@@ -23,7 +23,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from arranger.agent import (  # noqa: E402
-    FIDELITY_FLOOR, ScriptedModel, TruncatedResponse, arrange,
+    FIDELITY_FLOOR, SYSTEM_PROMPT, ScriptedModel, TruncatedResponse, arrange,
     brute_force_baseline, cost, describe_score, describe_verdict, _parse_plan,
 )
 from arranger.fidelity import Fidelity, measure  # noqa: E402
@@ -211,11 +211,68 @@ def test_feedback_on_a_clean_run_says_so():
 
 # --- the loop ------------------------------------------------------------
 
+def _with_a_poor_draft(fn):
+    """Run `fn()` while the deterministic engine hands back an unacceptable draft.
+
+    The engine now searches every whole-piece figure itself, so on this
+    fixture its draft is always accepted and a single-section model plan can
+    never do better. The loop's behaviour when the draft is *not* accepted is
+    still a contract, and this is the only way to reach it deterministically.
+    """
+    import arranger.agent as agent_module
+
+    original = agent_module.engine.arrange_deterministic
+    # No left hand at all: playable, but far below the fidelity floor, so not
+    # acceptable (docs/build-log/m6-metric-gaming.md is why that is a rule).
+    poor = ArrangementPlan(sections=[Section(1, END, LHPattern.BLOCK, lh_voices=0)])
+
+    def poor_draft(source, profile, **_kwargs):
+        from arranger.engine import evaluate_plan
+
+        return evaluate_plan(poor, source, profile, origin="deterministic")
+
+    agent_module.engine.arrange_deterministic = poor_draft
+    try:
+        return fn()
+    finally:
+        agent_module.engine.arrange_deterministic = original
+
+
 def test_loop_stops_as_soon_as_it_succeeds():
     model = ScriptedModel([plan_dict(LHPattern.PEDAL_TONE, 1)])
-    result = arrange(SOURCE, PRESETS["advanced"], model, verbose=False)
-    if result.playable:
-        assert len(result.attempts) == 1, "kept going after succeeding"
+    result = _with_a_poor_draft(lambda: arrange(SOURCE, PRESETS["beginner"], model, verbose=False))
+    assert result.draft.cost > 0, "fixture: the draft must not be acceptable"
+    assert result.accepted and result.best_origin == "model"
+    assert len(result.attempts) == 1, "kept going after succeeding"
+    assert result.stop_reason == "accepted"
+
+
+def test_an_accepted_plan_no_better_than_the_draft_does_not_end_the_run():
+    # The draft already plays and keeps the music. A model plan that is merely
+    # as good is not a success; the loop keeps asking until patience runs out,
+    # and the draft is what comes back.
+    model = ScriptedModel([plan_dict(LHPattern.PEDAL_TONE, 1)])
+    result = arrange(SOURCE, PRESETS["advanced"], model, verbose=False,
+                     budget=RepairBudget(max_attempts=4, patience=2, max_repeated_plans=99))
+    assert result.draft is not None and result.draft.hard == 0
+    assert result.attempts and all(a.hard == 0 for a in result.attempts)
+    assert result.best_origin != "model"
+    assert result.stop_reason == "no_improvement" and len(result.attempts) == 2
+
+
+def test_the_model_is_told_what_would_win_and_every_lever_it_has():
+    model = Recording([plan_dict(LHPattern.PEDAL_TONE, 1)])
+    arrange(SOURCE, PRESETS["advanced"], model, max_attempts=2, verbose=False)
+    first = model.seen[0][0]["content"]
+    assert "TO BEAT IT" in first and "fidelity above" in first
+    # Feedback on an accepted-but-not-better plan says so, and says what counts.
+    assert len(model.seen) >= 2
+    feedback = model.seen[1][-1]["content"]
+    assert "not better than the best plan so far" in feedback and "TO BEAT IT" in feedback
+    for pattern in LHPattern:
+        assert f'"{pattern.value}"' in SYSTEM_PROMPT, pattern
+    for lever in ("roll_wide_chords", "voicing", "bass", "harmonic_rhythm", "pedal_bars", "tempo_scale"):
+        assert lever in SYSTEM_PROMPT, lever
 
 
 def test_loop_respects_its_budget():

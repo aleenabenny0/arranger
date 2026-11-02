@@ -55,3 +55,10 @@ Ordered by dependency. Each item lists its acceptance criterion. Status lives in
 | E2 | Audio transcription job (Basic Pitch ONNX) with confidence and correction | Synthesised-audio test recovers known notes, or exact missing prerequisite documented |
 | E3 | Privacy, terms, cookies, support, upload-rights pages driven by launch config | No invented business facts |
 | E4 | CI, lockfile, Docker runtime check, metrics, health, runbooks | Documented commands work from a clean checkout |
+
+## F. Evaluation
+
+| # | Item | Depends on | Accepted when |
+|---|---|---|---|
+| F1 | One ordering for every comparison (`engine.quality_key`: cost, tempo, strain, fidelity); the engine seeded with every whole-piece figure; the model told the ordering and every plan lever | B5 C1 C4 | The engine never loses to brute force on quality on the corpus or on any test fixture; a model plan that merely ties the draft is discarded |
+| F2 | Self-tester: licence-gated discovery on Mutopia, snippets, invariants on real music, contests per profile, committed baseline, weekly workflow | F1 A3 A4 A7 | `arranger-autotest` runs offline on the corpus with no failures; every network path is tested against recorded pages; a regression against the baseline fails CI |
