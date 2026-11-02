@@ -54,3 +54,5 @@
 - Fixed: notation silently merged a repeated note that quantisation had put
   on its neighbour's position (two of Für Elise's 32nd-note E's); it now
   declares the merge in the export warnings. Found by the self-tester.
+- Security: `certifi` pinned to 2026.10.19 in the lock file (PYSEC-2026-4320,
+  a revoked root in the bundled CA store).

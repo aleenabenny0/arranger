@@ -92,6 +92,10 @@ would have to prove itself on.
   now read with regular expressions (four flat fields; a hostile entity
   stays text), and the fetch function refuses anything that is not https on
   the site's own host before the request is built.
+- **pip-audit on the lock file:** `certifi` 2026.7.22 carries a revoked
+  root (PYSEC-2026-4320), published after the last green run on 2026-09-29.
+  Pinned to 2026.10.19 in `requirements.lock`; nothing in this branch
+  touched the lock otherwise.
 
 ### Changed expectations in existing tests (call out at handoff)
 
