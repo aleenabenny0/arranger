@@ -211,3 +211,38 @@ Bohemian Rhapsody's row appears in the same table, clearly marked
 surrounding prose. A negative result is not a reason to hold the report,
 rerun with different settings, or quietly narrow which pieces get cited in
 the summary.
+
+## Amendment, 2026-11-02: a second comparison, and the engine as a contestant
+
+The cost-only verdict above is unchanged. Two things were added around it,
+and the reasons are worth keeping with the protocol.
+
+**Cost is now the first key of an ordering, not the whole score.** The
+corpus-wide finding that brute force reaches cost 0 almost everywhere meant
+"beats brute force" could not even be asked on most music. `engine.quality_key`
+ranks cost, then tempo (a plan at the written tempo beats one that slowed the
+piece), then strain findings, then fidelity above the floor to two decimal
+places. Every search in the system uses that ordering: the planner's choice
+of draft, local repair, the model loop's best-so-far, and the harness. On it,
+two plans at cost 0 are not equal, and a plan that treats passages differently
+can be measurably better than any single figure. `arranger.evaluate` reports
+both comparisons: "on cost" (this protocol, strict) and "on quality".
+
+**The deterministic engine is measured too, and may not lose.** It now tries
+every whole-piece figure itself (`engine.seed_uniform`) before refining, so
+whatever the exhaustive search can reach, the engine has seen. A loss on
+quality is therefore an engine bug, and `tests/test_engine_quality.py`,
+`arranger-evaluate` and `arranger-autotest` all treat it as one. The model is
+measured against the same baseline; it starts from the engine's draft and
+earns its cost only by beating it on the ordering.
+
+**Two baselines are reported.** `brute_force_baseline` originally searched
+every pattern, including ones above the player's skill ceiling, which the
+plan validation rejects for every other plan. The harness now searches the
+legal patterns by default and still computes the unfiltered number, listing
+the pieces where the two differ, so the numbers in this document stay
+comparable (`--all-patterns` restores the original search outright).
+
+**Still open:** no model run has been made. The verdict line in `SCORECARD.md`
+reads `INSUFFICIENT DATA` until one is, and the harness refuses to say
+otherwise.

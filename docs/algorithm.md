@@ -144,5 +144,8 @@ The next useful improvements are:
 1. Save explicit user accept/reject edits for each candidate row.
 2. Add a real embedding/vector store once a licensed arranging corpus exists.
 3. Train a lightweight ranking model against accepted user edits.
-4. Corpus-level evaluation that compares deterministic planner, brute force,
-   and model repair on the same pieces.
+4. ~~Corpus-level evaluation that compares deterministic planner, brute force,
+   and model repair on the same pieces.~~ Built: `python -m arranger.evaluate`
+   compares all three on one ordering (`engine.quality_key`) and
+   `arranger-autotest` repeats it weekly on music found online. What remains
+   is the paid model run the protocol needs for a verdict.

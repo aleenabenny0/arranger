@@ -36,13 +36,13 @@ from typing import Callable
 
 from . import engine
 from .engine import ALGORITHM_VERSION, Cancelled, Candidate, evaluate_plan
-from .fidelity import Fidelity, measure
+from .fidelity import Fidelity
 from .ir import Score, pitch_name
 from .musicianship import guidance_for_context, summarize_importance
-from .plan import ArrangementPlan, LHPattern, Section, simple_plan
+from .plan import ArrangementPlan, LHPattern, simple_plan
 from .profile import PlayerProfile
 from .repair import repair_prompt
-from .render import RenderError, detect_chords, extract_melody, last_bar, render
+from .render import RenderError, detect_chords, extract_melody, last_bar
 from .verify import Verdict, verify
 
 DEFAULT_MODEL = "claude-sonnet-5"
@@ -176,6 +176,21 @@ def describe_verdict(verdict: Verdict, plan: ArrangementPlan, limit: int = 6) ->
     return "\n".join(lines)
 
 
+def _what_would_win(best: Candidate) -> str:
+    """Tell the model, in ranking order, what a better plan would have to do."""
+    steps: list[str] = []
+    if best.hard:
+        steps.append(f"remove hard violations (it has {best.hard})")
+    if best.fidelity.score() < FIDELITY_FLOOR:
+        steps.append(f"raise fidelity to at least {FIDELITY_FLOOR:.2f} (it is {best.fidelity.score():.2f})")
+    if best.plan.tempo_scale < 1.0:
+        steps.append(f"play closer to the written tempo (it is at {best.plan.tempo_scale:.0%})")
+    if best.strain:
+        steps.append(f"reduce strain findings below {best.strain}")
+    steps.append(f"keep more of the piece: fidelity above {best.fidelity.score():.3f}")
+    return "TO BEAT IT, in order of what counts most: " + "; or, with those equal, ".join(steps) + "."
+
+
 # --- prompts -------------------------------------------------------------
 
 SYSTEM_PROMPT = """\
@@ -194,11 +209,15 @@ SCHEMA:
   "sections": [
     {
       "start_bar": int, "end_bar": int,
-      "lh_pattern": "block"|"pedal_tone"|"broken_octave"|"arpeggio"|"alberti"|"walking",
+      "lh_pattern": __PATTERNS__,
       "melody_shift": int (semitones, usually 0 or -12 or +12),
       "lh_octave": int (2=low, 3=standard, 4=high),
       "lh_voices": int (0-5; 0 means melody only, 1 is a single bass note),
       "melody_fold_window": int (0 = off, else 7-24),
+      "roll_wide_chords": bool (roll chords wider than the hand instead of striking them),
+      "voicing": "root"|"smooth" (smooth picks the inversion nearest the previous chord),
+      "bass": "root"|"source" (source keeps the bass note the piece really has),
+      "harmonic_rhythm": "bar"|"detected" (detected changes chord inside the bar where the piece does),
       "label": str
     }
   ],
@@ -206,6 +225,8 @@ SCHEMA:
     {"kind": "doubling"|"inner_voice"|"bass_movement"|"harmonic_colour"|"countermelody",
      "start_bar": int, "end_bar": int, "rationale": str}
   ],
+  "pedal_bars": [int] (bars where the sustain pedal is held, so the hand may leave a bass note),
+  "tempo_scale": float (0.4-1.0; 1.0 is the written tempo; the last resort, costed before strain),
   "notes": str
 }
 
@@ -213,10 +234,12 @@ RULES:
 - Sections must not overlap and should cover every bar.
 - The melody is never dropped or thinned.
 - Left-hand pattern by difficulty: pedal_tone and block are easiest; walking \
-and arpeggio are moderate; alberti needs evenness; broken_octave is hardest \
-because the hand must cross an octave repeatedly at tempo.
+and arpeggio are moderate; alberti needs evenness; broken_octave is hard \
+because the hand must cross an octave repeatedly at tempo; broken_tenth and \
+stride are for advanced players only.
 - Fewer lh_voices is easier and thinner. lh_voices=1 is a single bass note.
-- Do not exceed the player's skill level by more than one.
+- Do not exceed the player's skill level by more than one; a pattern above \
+that ceiling is rejected before it is rendered.
 - melody_fold_window folds melody notes straying outside a window that many \
 semitones wide back in by octaves. It is the only lever that fixes leaps and \
 spans WITHIN a section; melody_shift moves a whole section uniformly and \
@@ -224,12 +247,23 @@ cannot. Use it wherever a region's melody is wider than the player's reach. \
 Around 12-16 usually works; below 9 flattens the tune.
 - Use at most 10 sections. Long plans get truncated and waste the attempt.
 
+HOW PLANS ARE RANKED, in this order, and nothing lower ever outweighs \
+anything higher:
+1. cost: hard violations, plus a penalty for fidelity below the floor;
+2. tempo: a plan at the written tempo beats one that slows the piece;
+3. strain: fewer tiring passages (wide comfortable-span stretches, fast \
+repetition, hand crossing, legato breaks);
+4. fidelity above the floor: more of the piece kept.
+A plan that only ties the deterministic draft is discarded. Beat it by \
+treating each passage on its own terms: the figure that is easiest for a \
+dense passage is not the one that keeps the most music in a sparse one.
+
 Respond with JSON only. No prose, no markdown fences, no explanation outside \
 the "notes" field.
 
 Keep it compact. Every "rationale" and the "notes" field must be one short \
 sentence. Long plans get truncated mid-JSON and the attempt is wasted.
-"""
+""".replace("__PATTERNS__", "|".join(f'"{p.value}"' for p in LHPattern))
 
 REPAIR_GUIDANCE = """\
 FIXES BY VIOLATION TYPE:
@@ -243,6 +277,13 @@ fix a leap inside it.
 (pedal_tone, block). broken_octave and arpeggio cause leaps by design.
 - total_polyphony: reduce lh_voices.
 - range: adjust melody_shift or lh_octave for the affected section only.
+- hand_span in the LEFT hand on a block or stride figure: set \
+roll_wide_chords, or add the bar to pedal_bars so the hand may leave the bass.
+- strain from leaps between chords: set voicing to "smooth" on that section.
+- strain in a passage that is otherwise fine: change only that section; a \
+whole-piece change usually costs fidelity somewhere else.
+- tempo_scale is the last resort and is ranked before strain: use it only \
+when a hand cannot travel fast enough at any figure.
 
 If the same violation survives two attempts, change strategy entirely rather \
 than adjusting the same number again. Trying a fourth variation of an \
@@ -465,6 +506,9 @@ class RunResult:
     playable: bool
     best_fidelity: dict | None = None
     best_cost: float | None = None
+    # Strain findings in the returned plan. With cost, tempo and fidelity this
+    # is everything `engine.quality_key` needs to rank the result.
+    best_strain: int | None = None
     accepted: bool = False
     attempts: list[Attempt] = field(default_factory=list)
     escalated: bool = False
@@ -584,6 +628,7 @@ def arrange(
         result.best_plan = json.loads(best.plan.to_json())
         result.best_fidelity = asdict(best.fidelity)
         result.best_cost = round(best.cost, 2)
+        result.best_strain = best.strain
         result.best_origin = best.origin
         result.playable = best.verdict.playable
         result.accepted = best.accepted
@@ -619,11 +664,12 @@ def arrange(
                 f"ARRANGING GUIDANCE RETRIEVED FOR THIS SCORE:\n{guidance_text}\n\n"
                 f"The unarranged source has {len(baseline.hard)} hard violations.\n\n"
                 "Start from this deterministic draft, then revise it only where "
-                "the music or playability constraints require it. It currently has "
-                f"{best.hard} hard violations and fidelity {best.fidelity.score():.2f}; "
-                "a plan that does no better will be discarded in its favour:\n"
+                "the music or playability constraints require it. It currently "
+                f"scores {best.describe()}; a plan that does no better on the "
+                "ranking order will be discarded in its favour:\n"
                 f"{best.plan.to_json()}\n\n"
-                "Write an ArrangementPlan covering every bar."
+                + _what_would_win(best)
+                + "\n\nWrite an ArrangementPlan covering every bar."
             ),
         }
     ]
@@ -691,7 +737,7 @@ def arrange(
             attempt.seconds = time.monotonic() - attempt_started
             result.attempts.append(attempt)
 
-            if candidate.accepted:
+            if candidate.accepted and improved:
                 return finish("accepted")
             if repeated and repeats > budget.max_repeated_plans:
                 return finish("repeated_plan")
@@ -703,7 +749,15 @@ def arrange(
                 return finish("no_improvement")
 
             feedback = describe_verdict(candidate.verdict, plan)
-            if candidate.verdict.playable:
+            if candidate.accepted:
+                # Playable and faithful, but it did not beat the best plan on
+                # the ranking order. Say exactly where it fell short.
+                feedback = (
+                    f"Playable and above the fidelity floor ({candidate.describe()}), "
+                    f"but not better than the best plan so far ({best.describe()}).\n"
+                    + _what_would_win(best)
+                )
+            elif candidate.verdict.playable:
                 name, value = candidate.fidelity.weakest()
                 feedback = (
                     f"Playable, but too much of the piece is gone: "
@@ -795,30 +849,55 @@ def _accepts_call_options(model) -> bool:
     )
 
 
+def brute_force_candidate(
+    source: Score,
+    profile: PlayerProfile,
+    *,
+    legal_only: bool = False,
+    deadline: float | None = None,
+) -> Candidate:
+    """The best whole-piece plan, found by exhaustive search, fully scored.
+
+    Every pattern, at one to three voices and three fold windows, applied to
+    the whole piece. `legal_only` keeps to the patterns this player's skill
+    allows, which is the rule every other plan is held to; the default
+    searches all of them, which is what the pre-registered evaluation
+    protocol fixed.
+
+    The winner is the best uniform plan on `engine.quality_key`, the same
+    ordering the engine and the model are judged on. Its cost is the minimum
+    over the search either way, so the protocol's number is unchanged; what
+    the ordering adds is that a contestant cannot "beat" brute force merely by
+    choosing a better tie-break among the very plans brute force tried. A win
+    on quality has to come from doing something no single figure can.
+    Remaining ties go to the first plan found, in the order
+    `engine.uniform_plans` yields them, so the winner is stable across runs.
+    """
+    best: Candidate | None = None
+    for plan in engine.uniform_plans(source, profile, legal_only=legal_only):
+        if deadline is not None and best is not None and time.monotonic() > deadline:
+            break
+        plan.title = "brute-force"
+        try:
+            trial = evaluate_plan(plan, source, profile, origin="brute_force")
+        except RenderError:
+            continue
+        if trial.better_than(best):
+            best = trial
+    assert best is not None
+    return best
+
+
 def brute_force_baseline(source: Score, profile: PlayerProfile) -> tuple[float, int, str, int, int]:
     """The score to beat: best single-section plan, found by exhaustive search.
 
     An agent that cannot beat this is not earning its cost. Reported alongside
     every run so improvement is measured against a real alternative rather
-    than against doing nothing.
+    than against doing nothing. Returns (cost, hard, pattern, voices, fold).
     """
-    end = last_bar(source)
-    best = None
-    for pattern in LHPattern:
-        for voices in (1, 2, 3):
-            for fold in (0, 12, 16):
-                plan = ArrangementPlan(
-                    title="brute-force",
-                    sections=[Section(1, end, pattern, lh_voices=voices,
-                                      melody_fold_window=fold)],
-                )
-                arranged = render(plan, source)
-                hard = len(verify(arranged, profile).hard)
-                c = cost(hard, measure(source, arranged))
-                if best is None or c < best[0]:
-                    best = (c, hard, str(pattern), voices, fold)
-    assert best is not None
-    return best
+    best = brute_force_candidate(source, profile)
+    section = best.plan.sections[0]
+    return (best.cost, best.hard, str(section.lh_pattern), section.lh_voices, section.melody_fold_window)
 
 
 def main(argv: list[str] | None = None) -> int:

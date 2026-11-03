@@ -1,0 +1,2752 @@
+{
+ "algorithm_version": "2026.11.1",
+ "cases": {
+  "02e8ae8d7e1f6073f12f62a61a63cf07b260a1cf49f4a9008ee4e3f8e1934d30": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9922,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9571,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9922,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "satie-gymnopedie-2",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Gymnop\u00e9die No. 2"
+  },
+  "112c3b61dab55f58bc44d9f3522ef21b3479ffa1953097783ff8c4f10e40175d": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9572,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9869,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "tchaikovsky-op39-16-old-french-song",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Old French Song"
+  },
+  "1c12c21c7bbf4cf163896732672648a69d497636059837abd153c71abe50215a": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9951,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 6.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9186,
+     "engine_strain": 5,
+     "engine_tempo": 0.4,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9951,
+     "engine_strain": 2,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "beethoven-fur-elise-woo59",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "beethoven-fur-elise-woo59"
+  },
+  "21ef2b529c4cb2bf095cdeda1deed7642f31dfb08b853d6022b0269346367f67": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.984,
+     "engine_strain": 4,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.934,
+     "engine_strain": 67,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.984,
+     "engine_strain": 4,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "joplin-solace",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Solace: A Mexican Serenade"
+  },
+  "22c6c11ccade18d8121e6487cde20d18a84be3c8ca3cab4bb2c7c4123421ca8d": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 1.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9362,
+     "engine_strain": 0,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 139.0,
+     "engine_cost": 2.0,
+     "engine_fidelity": 0.9375,
+     "engine_strain": 110,
+     "engine_tempo": 0.4,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 4.0,
+     "engine_cost": 2.0,
+     "engine_fidelity": 0.9375,
+     "engine_strain": 78,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "tchaikovsky-op35-2",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Violin Concerto in D major, Op. 35 -- movement 2 (per archive file numbering)"
+  },
+  "23d3f9f1b477bdbc9e2714361e5785b45f634305a4a798f4a69edde5e88b2eee": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.986,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 1.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9134,
+     "engine_strain": 2,
+     "engine_tempo": 0.85,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.986,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "field-nocturne-5-h37",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Nocturne No. 5 in B-flat major"
+  },
+  "24f853db9d13d5db864f59a5876ae7bdf02ef2c5a6e17907d0844bf5c8b8d006": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9885,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9464,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9885,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "andre-sonatine-op34-1",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Sonatine"
+  },
+  "39768b50abb623d24986b0e3993518ca92a6f1340d6154fc092f218cb6b97fee": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9953,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 4.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9557,
+     "engine_strain": 12,
+     "engine_tempo": 0.7,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9953,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "burgmuller-op100-05-innocence",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Innocence"
+  },
+  "3ae00ab41634cd65c495a0aec41798ff191bd2690f48ec93daa53dd0266edaa2": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9634,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9321,
+     "engine_strain": 1,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9634,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "schubert-impromptu-d899-3",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Impromptu in G-flat major"
+  },
+  "4df722747c392323660dc4f9940acbb38af8b9952759d4c5cc7a02cf2e7f5cf8": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9694,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 9.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9394,
+     "engine_strain": 9,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9694,
+     "engine_strain": 8,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "burgmuller-op100-12-ladieu",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "L'Adieu"
+  },
+  "54e510ba1e5865aeedc4e96bf70b83c93ecddf5b66660033ef98a5a8204ab02d": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.987,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 29.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.912,
+     "engine_strain": 51,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.987,
+     "engine_strain": 4,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "mozart-k545-1-allegro",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Sonata No. 16 in C major ('Sonata facile'), I. Allegro"
+  },
+  "58dd9eec57bfcb7fb8a924530e8f6c1e1599a02fc10cc4f79ae6d1ef6e2a0c85": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9453,
+     "engine_strain": 25,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "burgmuller-op100-10-tendre-fleur",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Tendre Fleur"
+  },
+  "5ecc06eb04d56ea40bd4db64bfd49ac9bff523e46d134912fa5bd07aea1db1c7": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9896,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 5.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9211,
+     "engine_strain": 15,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9896,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "bach-invention-04-bwv775",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Invention No. 4 in D minor"
+  },
+  "69fd077ebe5536528f1a6b92c51492b5b740f39bfbe77afe6389410bcb6401b1": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9621,
+     "engine_strain": 2,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 529.0,
+     "engine_cost": 1.0,
+     "engine_fidelity": 0.8992,
+     "engine_strain": 162,
+     "engine_tempo": 0.4,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9621,
+     "engine_strain": 2,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "beethoven-violin-concerto-1",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Violin Concerto in D major, I. (movement)"
+  },
+  "6e0045d5783ff28dedcf05813074fe407ca3846e5e2a7246f2793ac5614e4851": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9075,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.55,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9271,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9075,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "schumann-op15-07-traumerei",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Tr\u00e4umerei (Kinderszenen)"
+  },
+  "7ec37d25e8ea12d0b2053a5916140f7d03b4cdf1357c01171fd8a3c1d8c6e50f": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.99,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9558,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.99,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "tchaikovsky-op39-01-morning-prayer",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Morning Prayer"
+  },
+  "98c38dde40c1e95f12634277a8261306eae686abdd66d38f552c553cf90315df": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 1.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.8971,
+     "engine_strain": 1,
+     "engine_tempo": 0.6,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 555.0,
+     "engine_cost": 5.0,
+     "engine_fidelity": 0.9331,
+     "engine_strain": 71,
+     "engine_tempo": 0.4,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 1.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9429,
+     "engine_strain": 0,
+     "engine_tempo": 0.4,
+     "on_quality": "win"
+    }
+   },
+   "id": "beethoven-piano-concerto3-1",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Piano Concerto No. 3 in C minor, I. Allegro con brio"
+  },
+  "9b689a9b3f178e7bb2b5899d0559e223e9d8de7081d83fc087760ac2b4d378e1": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.99,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 4.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9536,
+     "engine_strain": 4,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.99,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-02-arabesque",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "L'Arabesque"
+  },
+  "9cc6c417d4bb261644f6bd3d00033025e675a25694fd172be2f98e93efc1fcfe": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9708,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9385,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9708,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "chopin-prelude-op28-20",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Prelude ('Funeral March')"
+  },
+  "ad185dbf3cb7e3e187cbe6e38c5ead706cf375b9d441f7191429027436b2a8e4": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9918,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9744,
+     "engine_strain": 4,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9918,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-01-la-candeur",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "La Candeur"
+  },
+  "andre-sonatine-op34-1#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9925,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9444,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9812,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "andre-sonatine-op34-1#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Sonatine, bars 1-16"
+  },
+  "andre-sonatine-op34-1#bars-23-38": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.95,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.99,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "andre-sonatine-op34-1#bars-23-38",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Sonatine, bars 23-38"
+  },
+  "andre-sonatine-op34-1#bars-44-59": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9875,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9444,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "andre-sonatine-op34-1#bars-44-59",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Sonatine, bars 44-59"
+  },
+  "bach-invention-04-bwv775#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 1.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9259,
+     "engine_strain": 2,
+     "engine_tempo": 0.7,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "bach-invention-04-bwv775#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Invention No. 4 in D minor, bars 1-16"
+  },
+  "bach-invention-04-bwv775#bars-19-34": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.988,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9647,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.988,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "bach-invention-04-bwv775#bars-19-34",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Invention No. 4 in D minor, bars 19-34"
+  },
+  "bach-invention-04-bwv775#bars-37-52": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9475,
+     "engine_strain": 5,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.99,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "bach-invention-04-bwv775#bars-37-52",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Invention No. 4 in D minor, bars 37-52"
+  },
+  "beethoven-fur-elise-woo59#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9585,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9977,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "beethoven-fur-elise-woo59#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "beethoven-fur-elise-woo59, bars 1-16"
+  },
+  "beethoven-fur-elise-woo59#bars-45-60": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9586,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9979,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "beethoven-fur-elise-woo59#bars-45-60",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "beethoven-fur-elise-woo59, bars 45-60"
+  },
+  "beethoven-fur-elise-woo59#bars-90-105": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9555,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9929,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "beethoven-fur-elise-woo59#bars-90-105",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "beethoven-fur-elise-woo59, bars 90-105"
+  },
+  "beethoven-piano-concerto3-1#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9894,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 12.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9286,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9894,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "beethoven-piano-concerto3-1#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Piano Concerto No. 3 in C minor, I. Allegro con brio, bars 1-16"
+  },
+  "beethoven-piano-concerto3-1#bars-215-230": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9875,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 33.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9022,
+     "engine_strain": 1,
+     "engine_tempo": 0.6,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9875,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "beethoven-piano-concerto3-1#bars-215-230",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Piano Concerto No. 3 in C minor, I. Allegro con brio, bars 215-230"
+  },
+  "beethoven-piano-concerto3-1#bars-428-443": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 22.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9465,
+     "engine_strain": 5,
+     "engine_tempo": 0.6,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 3,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "beethoven-piano-concerto3-1#bars-428-443",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Piano Concerto No. 3 in C minor, I. Allegro con brio, bars 428-443"
+  },
+  "beethoven-violin-concerto-1#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9625,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9213,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9625,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "beethoven-violin-concerto-1#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Violin Concerto in D major, I. (movement), bars 1-16"
+  },
+  "beethoven-violin-concerto-1#bars-261-276": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9869,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 11.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9423,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9869,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "beethoven-violin-concerto-1#bars-261-276",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Violin Concerto in D major, I. (movement), bars 261-276"
+  },
+  "beethoven-violin-concerto-1#bars-520-535": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.97,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 30.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9426,
+     "engine_strain": 12,
+     "engine_tempo": 0.85,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.97,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "beethoven-violin-concerto-1#bars-520-535",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Violin Concerto in D major, I. (movement), bars 520-535"
+  },
+  "brahms-waltz-op39-15#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9925,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9525,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9925,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "brahms-waltz-op39-15#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Waltz No. 15 in A-flat major, bars 1-16"
+  },
+  "brahms-waltz-op39-15#bars-29-44": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9962,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 5.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.917,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9962,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "brahms-waltz-op39-15#bars-29-44",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Waltz No. 15 in A-flat major, bars 29-44"
+  },
+  "burgmuller-op100-01-la-candeur#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9759,
+     "engine_strain": 4,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.992,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-01-la-candeur#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "La Candeur, bars 1-16"
+  },
+  "burgmuller-op100-02-arabesque#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9912,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 1.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9519,
+     "engine_strain": 1,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9906,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-02-arabesque#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "L'Arabesque, bars 1-16"
+  },
+  "burgmuller-op100-02-arabesque#bars-18-33": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9925,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 3.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9546,
+     "engine_strain": 3,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9925,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-02-arabesque#bars-18-33",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "L'Arabesque, bars 18-33"
+  },
+  "burgmuller-op100-05-innocence#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 4.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9551,
+     "engine_strain": 12,
+     "engine_tempo": 0.7,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-05-innocence#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Innocence, bars 1-16"
+  },
+  "burgmuller-op100-10-tendre-fleur#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.975,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 2.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9644,
+     "engine_strain": 14,
+     "engine_tempo": 0.85,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.975,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-10-tendre-fleur#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Tendre Fleur, bars 1-16"
+  },
+  "burgmuller-op100-12-ladieu#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.98,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 5.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9463,
+     "engine_strain": 5,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.98,
+     "engine_strain": 4,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "burgmuller-op100-12-ladieu#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "L'Adieu, bars 1-16"
+  },
+  "burgmuller-op100-12-ladieu#bars-26-41": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9688,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 4.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9124,
+     "engine_strain": 6,
+     "engine_tempo": 0.7,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9688,
+     "engine_strain": 3,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "burgmuller-op100-12-ladieu#bars-26-41",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "L'Adieu, bars 26-41"
+  },
+  "burgmuller-op100-15-ballade#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9375,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9775,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-15-ballade#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Ballade, bars 1-16"
+  },
+  "burgmuller-op100-15-ballade#bars-41-56": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9786,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9957,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-15-ballade#bars-41-56",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Ballade, bars 41-56"
+  },
+  "burgmuller-op100-15-ballade#bars-80-95": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9871,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9561,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9871,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-15-ballade#bars-80-95",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Ballade, bars 80-95"
+  },
+  "cfba2544b8049f72bfda038620ff0543e9e1845b6e4d7431e4798f50ce06f716": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9815,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9446,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9815,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-15-ballade",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Ballade"
+  },
+  "e081ef3fe7023cdf4656e1528df50534b2e3df863cd0a194a04a82206f783ace": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9952,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9502,
+     "engine_strain": 3,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9952,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "brahms-waltz-op39-15",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Waltz No. 15 in A-flat major"
+  },
+  "f103bc6cb67cdbbad517170d6a7c51428e9a8481c74eec10258ea34a58b832fd": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 4.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9481,
+     "engine_strain": 4,
+     "engine_tempo": 0.4,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "burgmuller-op100-08-la-gracieuse",
+   "invariants": {
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "La Gracieuse"
+  },
+  "field-nocturne-5-h37#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9925,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 1.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9595,
+     "engine_strain": 0,
+     "engine_tempo": 0.85,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9925,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "field-nocturne-5-h37#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Nocturne No. 5 in B-flat major, bars 1-16"
+  },
+  "field-nocturne-5-h37#bars-28-43": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9725,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9342,
+     "engine_strain": 8,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9725,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "field-nocturne-5-h37#bars-28-43",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Nocturne No. 5 in B-flat major, bars 28-43"
+  },
+  "joplin-solace#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9776,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9413,
+     "engine_strain": 1,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9875,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "joplin-solace#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Solace: A Mexican Serenade, bars 1-16"
+  },
+  "joplin-solace#bars-133-148": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9875,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9356,
+     "engine_strain": 1,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9756,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "joplin-solace#bars-133-148",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Solace: A Mexican Serenade, bars 133-148"
+  },
+  "joplin-solace#bars-67-82": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.985,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9365,
+     "engine_strain": 10,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.985,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "joplin-solace#bars-67-82",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Solace: A Mexican Serenade, bars 67-82"
+  },
+  "mozart-k545-1-allegro#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9807,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 2.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9406,
+     "engine_strain": 17,
+     "engine_tempo": 0.6,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9744,
+     "engine_strain": 1,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "mozart-k545-1-allegro#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Sonata No. 16 in C major ('Sonata facile'), I. Allegro, bars 1-16"
+  },
+  "mozart-k545-1-allegro#bars-29-44": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9844,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 10.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.936,
+     "engine_strain": 11,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9844,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "mozart-k545-1-allegro#bars-29-44",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Sonata No. 16 in C major ('Sonata facile'), I. Allegro, bars 29-44"
+  },
+  "mozart-k545-1-allegro#bars-58-73": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9738,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 3.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9386,
+     "engine_strain": 8,
+     "engine_tempo": 0.6,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9738,
+     "engine_strain": 2,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "mozart-k545-1-allegro#bars-58-73",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Sonata No. 16 in C major ('Sonata facile'), I. Allegro, bars 58-73"
+  },
+  "satie-gymnopedie-2#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9554,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "satie-gymnopedie-2#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Gymnop\u00e9die No. 2, bars 1-16"
+  },
+  "satie-gymnopedie-2#bars-25-40": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9644,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9944,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "satie-gymnopedie-2#bars-25-40",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Gymnop\u00e9die No. 2, bars 25-40"
+  },
+  "satie-gymnopedie-2#bars-50-65": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9606,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9906,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "satie-gymnopedie-2#bars-50-65",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Gymnop\u00e9die No. 2, bars 50-65"
+  },
+  "schubert-impromptu-d899-3#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9867,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9613,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9867,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "schubert-impromptu-d899-3#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Impromptu in G-flat major, bars 1-16"
+  },
+  "schubert-impromptu-d899-3#bars-37-52": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9613,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.905,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9613,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "schubert-impromptu-d899-3#bars-37-52",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Impromptu in G-flat major, bars 37-52"
+  },
+  "schubert-impromptu-d899-3#bars-72-87": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9875,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.947,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9875,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "schubert-impromptu-d899-3#bars-72-87",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Impromptu in G-flat major, bars 72-87"
+  },
+  "schumann-op15-07-traumerei#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9537,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.9,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9231,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9537,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "schumann-op15-07-traumerei#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Tr\u00e4umerei (Kinderszenen), bars 1-16"
+  },
+  "tchaikovsky-op35-2#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9838,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9411,
+     "engine_strain": 5,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9838,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "tchaikovsky-op35-2#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Violin Concerto in D major, Op. 35 -- movement 2 (per archive file numbering), bars 1-16"
+  },
+  "tchaikovsky-op35-2#bars-313-328": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9888,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 20.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9421,
+     "engine_strain": 19,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9888,
+     "engine_strain": 14,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "tchaikovsky-op35-2#bars-313-328",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Violin Concerto in D major, Op. 35 -- movement 2 (per archive file numbering), bars 313-328"
+  },
+  "tchaikovsky-op35-2#bars-624-639": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 1,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 48.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9482,
+     "engine_strain": 5,
+     "engine_tempo": 0.5,
+     "on_quality": "win"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.995,
+     "engine_strain": 1,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "tchaikovsky-op35-2#bars-624-639",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Violin Concerto in D major, Op. 35 -- movement 2 (per archive file numbering), bars 624-639"
+  },
+  "tchaikovsky-op39-01-morning-prayer#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.985,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9506,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.985,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "tchaikovsky-op39-01-morning-prayer#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Morning Prayer, bars 1-16"
+  },
+  "tchaikovsky-op39-16-old-french-song#bars-1-16": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9531,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.99,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    }
+   },
+   "id": "tchaikovsky-op39-16-old-french-song#bars-1-16",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Old French Song, bars 1-16"
+  },
+  "tchaikovsky-op39-16-old-french-song#bars-17-32": {
+   "contests": {
+    "advanced": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 1.0,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "win"
+    },
+    "beginner": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.96,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    },
+    "me": {
+     "baseline_cost": 0.0,
+     "engine_cost": 0.0,
+     "engine_fidelity": 0.9888,
+     "engine_strain": 0,
+     "engine_tempo": 1.0,
+     "on_quality": "tie"
+    }
+   },
+   "id": "tchaikovsky-op39-16-old-french-song#bars-17-32",
+   "invariants": {
+    "engine_reproducible": true,
+    "melody_kept": true,
+    "midi_round_trip": true,
+    "musicxml_round_trip": true,
+    "plan_valid_for_source": true,
+    "score_json_round_trip": true,
+    "verify_deterministic": true
+   },
+   "title": "Old French Song, bars 17-32"
+  }
+ },
+ "recorded": "2026-11-02"
+}

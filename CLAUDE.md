@@ -56,6 +56,8 @@ candidate zero and needs no network. The model is an optional improver on top
 | `arranger.repair`, `arranger.engine` | Violations → suggestions; deterministic local repair and refinement | stdlib only |
 | `arranger.agent` | Bounded repair loop, calls the Claude API directly | `anthropic` (only when a model is passed) |
 | `arranger.selection`, `arranger.explain` | User corrections to a source; the plain-language report and difficulty estimate | stdlib only |
+| `arranger.evaluate`, `arranger.application.autotest` | The engine and the model measured against an exhaustive whole-piece search on one ordering (`engine.quality_key`); the self-tester that finds licensed music online and checks every layer on it, whole and in snippets, against a committed baseline | stdlib only; `anthropic` only when a model is named |
+| `arranger.adapters.mutopia` | The Mutopia Project catalogue: search pages, piece pages, the feed, and a licence-gated download | stdlib only |
 | `arranger.application` | Use-case layer for CLI/API/worker entry points (`workflows.py`) | stdlib only |
 | `arranger.adapters` | External file-format adapters | adapter-specific |
 | `arranger.ports` | Protocols for infrastructure boundaries | stdlib only |

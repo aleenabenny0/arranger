@@ -40,6 +40,7 @@ e2e = ["playwright>=1.45"]
 arranger-verify = "arranger.verify.cli:main"
 arranger-agent = "arranger.agent:main"
 arranger-evaluate = "arranger.evaluate:main"
+arranger-autotest = "arranger.application.autotest:main"
 arranger-api = "arranger_api.main:main"
 arranger-worker = "arranger_api.worker:main"
 

@@ -1,6 +1,6 @@
 # Eval corpus
 
-20 pieces, Public Domain or Creative Commons, all from the [Mutopia
+23 pieces, Public Domain or Creative Commons, all from the [Mutopia
 Project](https://www.mutopiaproject.org/). See `manifest.json` for the full
 list: composer, catalog number, license, source URL, sha256, and a measured
 baseline (hard/strain violations of the *unarranged* MIDI against
@@ -30,8 +30,9 @@ script deciding on its own which bytes are "close enough."
 
 CLAUDE.md's corpus licensing rule names three approved sources: IMSLP,
 Musopen, ccMixter. All three host audio; none of them are what `arranger`
-consumes today. The pipeline is MIDI-in (see README, Roadmap — the audio
-front end doesn't exist yet), and of the three, none reliably publish MIDI
+consumes for evaluation. The evaluations run on MIDI (the audio adapter
+transcribes one instrument and has only been measured on synthesised audio,
+see `docs/audio-transcription.md`), and of the three, none reliably publish MIDI
 with an explicit, per-piece, machine-readable license field the way Mutopia
 does. Mutopia isn't in the original three-source list, but it satisfies the
 same rule the list exists to enforce: public-domain or CC-licensed,
@@ -103,6 +104,15 @@ corpus *is* still good for: regression checks, difficulty calibration via
 extraction, hand assignment) on real, varied, properly-licensed material.
 For the "beats brute force" question specifically, see the next section —
 it turned out "multi-instrument" alone isn't the fix either.
+
+**Since 2026-11-02 there is a second comparison.** Cost is the first key of
+`arranger.engine.quality_key`; tempo, strain and fidelity above the floor
+follow it. On that ordering two plans at cost 0 are not equal: the one that
+tires the player less, or keeps more of the piece, is better. `python -m
+arranger.evaluate` reports both comparisons for the deterministic engine and,
+with `--model`, for the model loop; `SCORECARD.md` is its output. The
+cost-only protocol below is unchanged and still decides the model's
+PASS/FAIL verdict.
 
 ### Sourcing criteria: what actually resists brute force (measured, not guessed)
 
@@ -218,6 +228,17 @@ re-fetch) works identically.
 This is what made it possible to source and baseline the orchestral
 candidates above, several of which (Beethoven's piano and violin concerto
 movements) only exist as zip members on Mutopia.
+
+## Finding pieces automatically
+
+`arranger-autotest --discover mutopia --page N --limit 10` reads Mutopia's
+listing through `arranger.adapters.mutopia`, downloads only pieces whose
+licence is Public Domain or a permissive Creative Commons one, keeps them in
+the git-ignored `evals/discovered/` with their provenance in `index.json`,
+and tests the arranger on them. The weekly `Autotest` workflow does this for
+one page a week. Its report lists the pieces brute force cannot fully solve,
+with licence and source page: those are the candidates for the verdict pool,
+and the manifest entry below is still how one joins the corpus.
 
 ## Extending the corpus
 

@@ -59,15 +59,37 @@ bass. Jazz harmony is reduced to its nearest seventh chord.
 
 ### The planner scores by re-rendering the whole piece
 Every candidate costs one render and one verify of the full score, with at most
-10 regions. A 10,000-note piece takes about 19 seconds. The planner has a stop
-signal and gets half of the job's time budget; past that it keeps its safest
-figures. **Fix:** score a candidate on its own region plus a bar either side.
+10 regions. The planner has a stop signal and gets half of the job's time
+budget; past that it keeps its safest figures. Since the engine also tries
+every whole-piece figure and then eases strain (2026-11-02), an unbounded run
+on the two concerto-sized corpus pieces (9,000 to 13,500 notes) takes 100 to
+260 seconds against 60 to 150 for brute force alone; the short pieces take 5
+to 50 seconds. Under a deadline the stages run in order of value (draft,
+repair, uniform figures, refinements, polish), so a cut-short run keeps what
+it had. **Fix:** score a candidate on its own region plus a bar either side,
+and give the verifier's solver a smaller budget per uniform trial.
 
 ### Fidelity saturates
 `accompaniment` measures whether the left hand is present and how busy it is,
 not how many notes survived. A waltz reduced from 80 notes to 36 can score
 100%. The interface says so next to the figure, and the report lists what was
 left out. `melodic_recall` is the one number that is a strict count.
+
+### Quality is an ordering, and a win on it is only as meaningful as its last key
+Every search in the system ranks candidates with `engine.quality_key`: cost
+(hard findings plus the fidelity shortfall), then tempo, then strain, then
+fidelity above the floor to two decimal places. The deterministic engine
+tries every whole-piece figure itself before refining, so it cannot lose to
+the exhaustive search on this ordering; `arranger-evaluate` and
+`arranger-autotest` fail if it ever does. Two things follow. A "win" at equal
+cost and strain is a fidelity gain of at least a hundredth, and fidelity
+saturates (above), so some of those wins are an accompaniment that is merely
+busier, not an arrangement a pianist would prefer. And the model is judged on
+the same ordering, so it earns its cost only by finding less strain or more
+of the piece than the engine already did; on music a uniform figure already
+solves it has little room, and the pre-registered cost-only protocol in
+`eval-protocol.md` still says so. **Fix:** a listening test, or a metric
+calibrated against human-made arrangements, for the fidelity tail.
 
 ### Difficulty is a heuristic
 The 1-to-10 figure combines density, reach, leaps and hand independence. It has
@@ -86,6 +108,9 @@ tempo changes, pickup bars, pedal marks and rolled-chord marks. It does not
 have grace notes, ornaments, slurs, dynamics, repeats, voltas, lyrics, chord
 symbols, cross-staff beaming, or tuplets other than triplets. Rhythms that do
 not fit the grid are moved to the nearest position and a warning says how many.
+A repeated note shorter than the grid (a 32nd-note flick before its beat)
+lands on its neighbour's position and is merged into it, and a second warning
+says how many; without grace notes there is nowhere else to print it.
 Every lossy step adds a line to the import or export warnings.
 
 ## Audio

@@ -570,6 +570,7 @@ def notate(score: Score, *, split_pitch: int = 60, max_measures: int = 4000) -> 
     bar_starts = [F(timeline.bar_start(b)).limit_denominator(960) for b in range(1, n_bars + 2)]
     total_forced = 0
     clipped = 0
+    merged = 0
     continuation: Counter[str] = Counter()  # per-note tie segment counter
 
     for staff in (1, 2):
@@ -610,10 +611,16 @@ def notate(score: Score, *, split_pitch: int = 60, max_measures: int = 4000) -> 
                                     tie_start=not is_last, tie_stop=not is_first,
                                 )
                             )
-                        # De-duplicate a pitch struck twice in one chord.
+                        # De-duplicate a pitch struck twice in one chord. After
+                        # quantisation that is usually a repeated note (an
+                        # ornament, a 32nd before its beat) landing on its
+                        # neighbour's position: the grid has no place for it,
+                        # so it is counted and declared, never dropped silently.
                         unique: dict[int, NPitch] = {}
                         for p in pitches:
                             unique.setdefault(p.midi, p)
+                        if is_first:
+                            merged += len(pitches) - len(unique)
                         per_bar.setdefault(bar, []).append(
                             NEvent(
                                 s, e - s, list(unique.values()), note_type=name, dots=dots, tuplet=tuplet,
@@ -651,6 +658,12 @@ def notate(score: Score, *, split_pitch: int = 60, max_measures: int = 4000) -> 
         )
     if clipped:
         warnings.append(f"{clipped} note(s) beyond the last notated bar were left out.")
+    if merged:
+        warnings.append(
+            f"{merged} repeated note(s) fell on the same position as a neighbour of the same "
+            "pitch after quantisation and were merged into it; the printed rhythm has no place "
+            "for a note that short."
+        )
 
     for pedal in score.pedals:
         for t, bucket in ((pedal.start, "pedal_starts"), (pedal.end, "pedal_stops")):
