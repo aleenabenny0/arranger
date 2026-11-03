@@ -33,3 +33,12 @@ htmlcov/
 
 # Real Kubernetes secrets live outside git; see docs/kubernetes.md
 k8s/secret.yaml
+
+# Native builds (item 09): the C MIDI parser and the ESP32 firmware
+c/midi/build/
+firmware/esp32-player/build/
+firmware/esp32-player/host/build/
+firmware/esp32-player/sdkconfig
+firmware/esp32-player/sdkconfig.old
+firmware/esp32-player/managed_components/
+firmware/esp32-player/dependencies.lock

@@ -155,6 +155,8 @@ Every layer has its own tests, and CI runs all of them on every push:
 |---|---|---|
 | Unit | The verifier, solver, planner, renderer, fidelity scorer, notation and file adapters, each against small scores built in the test | `tests/test_constraints.py` (also run on bare stdlib), `test_solver.py`, `test_engine.py`, `test_planner.py`, `test_render.py`, `test_fidelity.py`, `test_notation.py`, `test_midi_io.py`, `test_musicxml_reader.py`, `test_audio_transcription.py` |
 | Web app | Every React component and view, and the typed API client's error paths, under jsdom against a `fetch` stand-in; the TypeScript build itself, typed from the API's OpenAPI document | `frontend-react/src/**/*.test.tsx` (Vitest + Testing Library, 81 tests), `npm run typecheck` |
+| Native | The C MIDI parser under Unity with `-Wall -Wextra -Werror`, AddressSanitizer and UndefinedBehaviorSanitizer, including every prefix and every single-byte corruption of a file; then the same files through the C parser and the Python reader, diffed field by field (the corpus, 300 generated pieces, 1000 corrupted variants) | `c/midi/tests/test_midi.c` (31 cases), `scripts/midi_diff.py` |
+| Firmware | The ESP32 player's frame protocol and note logic compiled on the host and tested with Unity; the host script's frames pinned to the firmware's parser by golden bytes; the firmware itself built with ESP-IDF 5.2 in CI | `firmware/esp32-player/host/` (15 cases), `tests/test_esp32_sender.py`, the `esp32-build` job |
 | API | Every route over HTTP with the real app: auth, CSRF, rate limits, ownership, quotas, jobs, exports | `tests/test_api*.py`, `test_workflows.py`, `test_artifacts.py` |
 | Database | Repositories on SQLite and, in CI, on real Postgres; failure injection proves every multi-write path is atomic | `tests/test_storage.py`, `test_transactions.py`, `test_postgres_integration.py` |
 | End to end | A real browser drives the product. The Node suite: auth, upload, profile, plan authoring, verify, export, view switching, axe scans, API checks. The Python suite: the deeper journey with email verification, playback, PDF and keyboard-only use at phone width | `e2e/` (`@playwright/test`, 15 tests), `tests/test_browser_e2e.py` |
@@ -194,6 +196,21 @@ $csrf = ($session.Cookies.GetCookies($base) | Where-Object Name -eq "arranger_cs
 Invoke-RestMethod "$base/profiles" -WebSession $session
 Invoke-RestMethod "$base/auth/logout" -Method Post -Headers @{ Origin = $base; "X-CSRF-Token" = $csrf } -WebSession $session
 ```
+
+## Native code
+
+Two parts of the project are C, each with its own README:
+
+- [`c/midi/`](c/midi/README.md): a bounded Standard MIDI File parser that
+  reads exactly what the Python reader reads and refuses exactly what it
+  refuses. `scripts/midi_diff.py` runs both over the same files and diffs the
+  results; CI does that over the corpus and a thousand corrupted variants.
+- [`firmware/esp32-player/`](firmware/esp32-player/README.md): an ESP32 that
+  plays an arrangement on a piezo while `scripts/send_to_esp32.py` streams the
+  notes over UART in a framed, CRC-checked protocol. The protocol and note
+  logic are plain C tested on the host; the firmware is compiled in CI with
+  ESP-IDF. Flashing a board is documented there and has not been done on this
+  project's development machine.
 
 ## Try the verifier alone
 

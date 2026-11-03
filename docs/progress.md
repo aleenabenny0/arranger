@@ -3,6 +3,35 @@
 Newest entries first. Records what was done, why, what was tested, and what is
 left. Backlog item ids refer to `docs/backlog.md`.
 
+## 2026-09-29 - Item 09: a C MIDI parser and an ESP32 player
+
+**Test state.** `ctest --test-dir c/midi/build`: 3 tests (31 Unity cases)
+passed, built with `-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Werror`
+under MinGW-w64 GCC 16.2; CI repeats it under ASan and UBSan.
+`scripts/midi_diff.py --generated 100 --mutations 300 evals/corpus/*.mid`:
+423 files, 285 parsed identically, 138 refused identically, 0 differ.
+`ctest --test-dir firmware/esp32-player/host/build`: 2 tests (15 Unity cases)
+passed. `python -m pytest tests/test_esp32_sender.py tests/test_midi_raw.py`:
+11 passed. The full Python suite still passes (see the CI run for the branch).
+
+### Done
+
+| Item | What exists | Evidence |
+|---|---|---|
+| 09 | `c/midi/`: a bounded Standard MIDI File parser in C11 (formats 0, 1 and 2, variable-length quantities, running status, tempo and signature meta events, notes closed oldest first, held notes closed at the end of the track, every read bounds-checked, limits from `ImportLimits`), a JSON dumper, and Unity tests including every prefix and every single-byte corruption of a file | `c/midi/tests/test_midi.c`, the `c-midi` job |
+| 09 | `arranger.io.read_midi_raw` exposes the Python reader's raw view through the same chunk walk `read_midi_bytes` uses; `scripts/midi_diff.py` parses files with both and diffs them, and generates pieces and corrupted variants from a fixed seed | `tests/test_midi_raw.py`, the diff run above |
+| 09 | `firmware/esp32-player/`: an ESP-IDF application (UART receive task, LEDC PWM on a piezo, activity LED, ACK for every frame, release of held notes when the host goes quiet) over two plain-C components: the framed CRC-8 protocol with a resyncing parser, and the held-note set for a one-voice sounder with an equal-temperament frequency table | `firmware/esp32-player/host/` under CTest; the `firmware-host` and `esp32-build` jobs |
+| 09 | `scripts/send_to_esp32.py`: reads MIDI, MusicXML or score JSON with the project's readers and streams timed frames over pyserial (`--melody-only`, `--speed`, `--tone` wiring check, `--dry-run`); its encoder and parser are the C protocol's twins, pinned by the same golden bytes | `tests/test_esp32_sender.py` |
+| 09 | CI: `c-midi` (CMake, CTest, sanitizers, the diff over the corpus with 300 generated and 1000 corrupted files), `firmware-host` (host tests with sanitizers, the host script's tests), `esp32-build` (`idf.py build` in Espressif's ESP-IDF 5.2 image, the `.bin` files kept as an artifact) | `.github/workflows/ci.yml` |
+
+### Not done
+
+- Nothing has been flashed: there is no board and no ESP-IDF on the
+  development machine. The build in CI proves the firmware compiles and links;
+  `firmware/esp32-player/README.md` has the wiring and the flashing steps.
+- The player has one voice and no device-side clock; the host keeps time.
+- Sanitized builds run only in CI: MinGW-w64 on Windows has no ASan.
+
 ## 2026-09-29 - Item 08: the web app rewritten in React and TypeScript
 
 **Test state.** `python -m pytest --ignore=tests/test_browser_e2e.py`: 872

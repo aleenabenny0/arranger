@@ -61,6 +61,8 @@ candidate zero and needs no network. The model is an optional improver on top
 | `arranger.ports` | Protocols for infrastructure boundaries | stdlib only |
 | `arranger_api` | FastAPI service: accounts, projects, revisions, jobs, artifacts; serves the built web app | `fastapi`, `argon2-cffi`, `psycopg`, `httpx`, `resend` |
 | `frontend-react` | The web app: React, TypeScript, Vite; typed from the API's OpenAPI document; a browser-side preview verifier in `src/lib/verify.ts` that never overrules the server | `react`, `openapi-fetch`; build-time `vite`, `vitest`, `openapi-typescript` |
+| `c/midi` | A bounded MIDI parser in C11 that mirrors `arranger.io` event for event; `scripts/midi_diff.py` diffs the two over the corpus and corrupted files | none; CMake, Unity (vendored) for tests |
+| `firmware/esp32-player` | An ESP32 piezo player driven over UART by `scripts/send_to_esp32.py`; the frame protocol and note logic are plain C tested on the host | ESP-IDF 5.x to build; `pyserial` for the host script |
 
 **Not built yet.** Nothing in `src/` implements these:
 - **Source separation.** Audio transcription assumes one instrument. `demucs`
@@ -81,8 +83,9 @@ candidate zero and needs no network. The model is an optional improver on top
 **Built but not verified against the real thing:** the S3 artifact store (no
 live bucket), the Dockerfile (no Docker on the development machine; CI builds
 it), the Postgres project workflow (runs in CI only), audio accuracy (measured
-on synthesised audio only), and the model path (tested with fakes; no paid call
-has been made). `docs/build-log/limitations.md` has the detail.
+on synthesised audio only), the model path (tested with fakes; no paid call
+has been made), and the ESP32 firmware (compiled in CI with ESP-IDF, its
+protocol tested on the host; never flashed to a board). `docs/build-log/limitations.md` has the detail.
 
 **`arranger.verify` has zero third-party dependencies and must stay that way.**
 It is the component every other component's correctness is measured against.

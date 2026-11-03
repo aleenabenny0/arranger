@@ -1,0 +1,33 @@
+menu "Arranger player"
+
+    config PLAYER_UART_NUM
+        int "UART port for the host link"
+        default 0
+        range 0 2
+        help
+            UART0 is the USB serial bridge on most development boards, so no
+            extra wiring is needed. Boot messages share it; the host script
+            skips anything that is not a frame.
+
+    config PLAYER_UART_BAUD
+        int "Baud rate of the host link"
+        default 115200
+
+    config PLAYER_PIEZO_GPIO
+        int "GPIO driving the piezo sounder"
+        default 25
+        help
+            Through a series resistor (220 ohms to 1 kOhm) to a passive
+            piezo or small speaker; the other lead to GND.
+
+    config PLAYER_LED_GPIO
+        int "GPIO of the activity LED"
+        default 2
+        help
+            Lit while a note sounds. GPIO 2 is the onboard LED on many boards.
+
+    config PLAYER_IDLE_SILENCE_MS
+        int "Release held notes after this many milliseconds without a frame"
+        default 5000
+
+endmenu
