@@ -56,3 +56,8 @@
   declares the merge in the export warnings. Found by the self-tester.
 - Security: `certifi` pinned to 2026.10.19 in the lock file (PYSEC-2026-4320,
   a revoked root in the bundled CA store).
+- The code is licensed under the MIT License (`LICENSE`). The corpus, the recorded
+  Mutopia pages under `tests/fixtures/mutopia/` and the vendored Unity keep their
+  own terms.
+- Removed the unused `agent` extra (`langgraph`, `pydantic`); corrected the
+  `verify/hands.py` docstring; `agent.MODEL_PRICES` knows the current models.

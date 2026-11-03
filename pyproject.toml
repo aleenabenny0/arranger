@@ -13,7 +13,6 @@ io = ["music21>=9.1", "pretty_midi>=0.2.10"]
 # file (saved_models/icassp_2022/nmp.onnx) is used; the package itself is never imported.
 # So: install the other four normally, then basic-pitch with --no-deps. See docs/audio-transcription.md.
 audio = ["numpy>=2.0", "onnxruntime>=1.20", "soundfile>=0.13", "soxr>=0.5", "basic-pitch>=0.4"]
-agent = ["langgraph>=0.2", "pydantic>=2.7"]
 api = ["fastapi>=0.111", "uvicorn[standard]>=0.30", "pydantic>=2.7", "psycopg[binary]>=3.2", "httpx>=0.28", "resend>=2.13", "argon2-cffi>=23.1"]
 # Optional model-assisted repair. Without it, and without ANTHROPIC_API_KEY, arranging is deterministic.
 model = ["anthropic>=1.0"]
