@@ -1,0 +1,79 @@
+# The API, two replicas behind one Service. Each pod also runs one background
+# job worker (JOB_WORKERS in the ConfigMap); the job queue lives in Postgres,
+# so any pod may claim any job.
+#
+# The image name is what `kind load docker-image arranger:local` produces; a
+# real cluster replaces it with a registry image and drops IfNotPresent.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arranger
+  namespace: arranger
+  labels:
+    app.kubernetes.io/name: arranger
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: arranger
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: arranger
+    spec:
+      securityContext:
+        # The image creates this unprivileged user; the numeric id is required
+        # for runAsNonRoot to be verifiable.
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+      initContainers:
+        # The API applies migrations at startup and would crash-loop until the
+        # database answers; waiting here keeps the events readable.
+        - name: wait-for-postgres
+          image: postgres:16
+          command:
+            - sh
+            - -c
+            - until pg_isready -h postgres -p 5432 -U "$POSTGRES_USER"; do echo "waiting for postgres"; sleep 2; done
+          envFrom:
+            - secretRef:
+                name: arranger-secrets
+          securityContext:
+            runAsUser: 999
+            runAsGroup: 999
+      containers:
+        - name: api
+          image: arranger:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: arranger-config
+            - secretRef:
+                name: arranger-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3

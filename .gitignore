@@ -30,3 +30,6 @@ reports/
 .coverage.*
 coverage.xml
 htmlcov/
+
+# Real Kubernetes secrets live outside git; see docs/kubernetes.md
+k8s/secret.yaml
