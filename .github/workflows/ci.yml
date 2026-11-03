@@ -235,12 +235,13 @@ jobs:
           python -m pip install -e ".[api,dev]"
 
       # Accounts, then the whole project journey (files as BYTEA, four workers racing
-      # for three jobs, account deletion) against a real Postgres server.
-      - name: Run real Postgres storage and project flow
+      # for three jobs, account deletion) against a real Postgres server, and the
+      # failure-injection proof that every multi-write operation is atomic.
+      - name: Run real Postgres storage, project flow and transaction tests
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/arranger_test
         run: >-
-          python -m pytest tests/test_postgres_integration.py
+          python -m pytest tests/test_postgres_integration.py tests/test_transactions.py
           --junitxml=reports/junit-postgres.xml --durations=10 --reruns 2 -rRs
 
       - name: Write the quality summary

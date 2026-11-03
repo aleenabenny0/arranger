@@ -112,6 +112,48 @@ Revisions are append-only. Correcting a source or re-arranging makes a new
 revision; each arrangement records the source revision, hand profile, plan,
 engine version and model it was made from.
 
+### Transactions
+
+`Storage.transaction()` is the one way to make several writes atomic: the
+block commits once when it exits normally and rolls back on any exception;
+nested blocks join the outermost one; and every repository write method
+commits on its own only when no block is open. On SQLite a block starts with
+`BEGIN IMMEDIATE`, so concurrent writers queue on `busy_timeout` instead of
+failing with `SQLITE_BUSY`; on Postgres the driver's implicit transaction is
+committed or rolled back when the block ends.
+
+Every operation with more than one write runs inside one block.
+`tests/test_transactions.py` forces a later write in each of them to fail and
+checks, from a fresh connection, that nothing the earlier writes did was kept.
+Those tests run on SQLite always and on Postgres in the CI Postgres job.
+
+| Operation | Writes | Block |
+|---|---|---|
+| Register | revoke the presented session, insert the user, create the session | `auth_routes.register_endpoint` |
+| Log in | upgrade the password hash, revoke the presented session, create the session | `auth_routes.login_endpoint` |
+| Password reset | spend the token, set the password, spend sibling tokens, revoke sessions | `Storage.consume_password_reset_token` |
+| Email verification | spend the token, mark the address verified, spend sibling tokens | `Storage.consume_email_verification_token` |
+| Change password | set the password, revoke sessions | `Storage.change_password` |
+| New session | revoke expired sessions, trim to the limit, insert | `Storage.create_session` |
+| Dry run | insert the run, insert every candidate ranking | `main.create_dry_run_endpoint`, `Storage.create_candidate_rankings` |
+| Housekeeping | delete dead sessions and spent tokens | `Storage.cleanup_expired` |
+| Create project | insert the project, the upload artifact and the first source | `Workspace.create_project` |
+| Correct a source | insert the revision, point the project at it | `Workspace.add_source_revision` |
+| Save an arrangement | insert the revision, update the project, insert the MIDI and MusicXML file rows | `Workspace.add_arrangement`, `jobs.run_arrange` |
+| Finish a transcription | insert the project and source, link the upload to it | `jobs.run_transcribe` |
+| Queue, cancel, retry a job | read the row, then write it | `Workspace.create_job`, `request_cancel`, `retry_job` |
+| Recover lost jobs | fail the exhausted ones, requeue the rest | `Workspace.recover_expired_jobs` |
+| Delete a project | jobs, artifacts, arrangements, sources, the project | `Workspace.delete_project` |
+| Delete an account | every table, then the user | `Workspace.delete_user` |
+
+File bytes live outside the database. Where a block also stores files
+(`jobs.run_arrange`, the import routes), a rollback is followed by deleting
+the bytes that were already written, so no file is left that no row points to.
+
+`GET /arrangements/export` streams a user's saved arrangements as NDJSON in
+batches of 100: on Postgres through a named server-side cursor, on SQLite by
+iterating the statement. The stream holds its own connection for its lifetime.
+
 Files live behind the `ArtifactStore` protocol (`artifacts.py`): a local
 directory, a database table, or an S3-compatible bucket. Rows in `artifacts`
 hold the metadata and the storage key; downloads are authorised against that row

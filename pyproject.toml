@@ -26,6 +26,8 @@ dev = [
     "pytest-rerunfailures>=14.0",
     "bandit>=1.7",
     "pip-audit>=2.7",
+    # Inert outside GitHub Actions; in CI it turns each failure into an annotation.
+    "pytest-github-actions-annotate-failures>=0.2",
 ]
 # Browser tests. Also needs a browser (`playwright install chromium`) and `python fetch_vendor.py --dev`.
 e2e = ["playwright>=1.45"]

@@ -59,14 +59,69 @@ class PoolTimeout(DatabaseUnavailable):
 
 
 @dataclass
+class PostgresCursor:
+    """A psycopg cursor with the same `?` placeholders the repositories use.
+
+    With a `name` it is a server-side (named) cursor: rows stay on the server
+    and come over in `fetchmany(n)` batches, so streaming a user's whole
+    history never loads it into memory at once. A named cursor lives inside
+    the connection's transaction, so it must be closed (use it as a context
+    manager) before that transaction is committed or rolled back.
+    """
+
+    raw: Any
+
+    def execute(self, sql: str, params: Iterable[Any] | None = None) -> "PostgresCursor":
+        self.raw.execute(sql.replace("?", "%s"), params)
+        return self
+
+    def fetchone(self) -> Any:
+        return self.raw.fetchone()
+
+    def fetchmany(self, size: int) -> list[Any]:
+        return self.raw.fetchmany(size)
+
+    def fetchall(self) -> list[Any]:
+        return self.raw.fetchall()
+
+    def __iter__(self) -> Iterator[Any]:
+        return iter(self.raw)
+
+    @property
+    def rowcount(self) -> int:
+        return int(getattr(self.raw, "rowcount", -1))
+
+    def close(self) -> None:
+        self.raw.close()
+
+    def __enter__(self) -> "PostgresCursor":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
+
+@dataclass
 class PostgresConnection:
-    """Tiny DB-API adapter that lets repositories use portable placeholders."""
+    """Tiny DB-API adapter that lets repositories use portable placeholders.
+
+    `execute`, `commit` and `rollback` mirror sqlite3's connection so the
+    repositories can treat both databases the same way. `cursor(name=...)`
+    is the one Postgres-only feature: a server-side cursor for streaming.
+    """
 
     raw: Any
     dialect: str = "postgres"
 
     def execute(self, sql: str, params: Iterable[Any] | None = None) -> Any:
         return self.raw.execute(sql.replace("?", "%s"), params)
+
+    def cursor(self, name: str | None = None, *, itersize: int | None = None) -> PostgresCursor:
+        """A cursor; with `name`, a server-side one that fetches in batches."""
+        raw = self.raw.cursor(name=name) if name else self.raw.cursor()
+        if name and itersize:
+            raw.itersize = int(itersize)
+        return PostgresCursor(raw)
 
     def commit(self) -> None:
         self.raw.commit()

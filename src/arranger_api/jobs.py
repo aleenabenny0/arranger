@@ -101,28 +101,57 @@ class JobContext:
             self.progress(*self._progress)
         return self._stop
 
-    def store(self, ws: Workspace, *, kind: str, data: bytes, filename: str, project_id: str | None,
-              arrangement_id: str | None = None, source_id: str | None = None,
-              retention_days: int = 0) -> dict:
+    def put_file(self, ws: Workspace, *, kind: str, data: bytes) -> tuple[str, str]:
+        """Write bytes to the object store. Returns (storage key, content type).
+
+        Call it outside any database transaction: with `ARTIFACT_BACKEND=database`
+        the store writes through a connection of its own, and on SQLite that
+        write would wait on the lock an open `BEGIN IMMEDIATE` holds.
+        """
         settings = self.services.settings
         if ws.storage_used(self.user_id) + len(data) > settings.quota_storage_bytes:
             raise JobFailed("storage_quota", "Your storage is full. Delete a project to make room.")
         key = new_storage_key(self.user_id, kind)
         content_type = CONTENT_TYPES[kind][0]
         self.services.artifacts.put(key, data, content_type)
+        return key, content_type
+
+    def record_file(self, ws: Workspace, *, key: str, content_type: str, kind: str, data: bytes, filename: str,
+                    project_id: str | None, arrangement_id: str | None = None, source_id: str | None = None,
+                    retention_days: int = 0) -> dict:
+        """The row that makes stored bytes findable. Safe inside a transaction."""
         expires = None
         if retention_days > 0:
             from datetime import datetime, timedelta, timezone
 
             expires = format_timestamp(datetime.now(timezone.utc) + timedelta(days=retention_days))
+        return ws.create_artifact(
+            self.user_id, project_id=project_id, arrangement_id=arrangement_id, source_id=source_id,
+            kind=kind, filename=filename, content_type=content_type, storage_key=key,
+            size_bytes=len(data), sha256=sha256_hex(data), expires_at=expires,
+        )
+
+    def discard_files(self, keys: list[str]) -> None:
+        """Delete stored bytes whose rows were rolled back. A leak is logged, never raised."""
+        for key in keys:
+            try:
+                self.services.artifacts.delete(key)
+            except Exception as exc:
+                logger.warning("artifact_cleanup_failed", exc_info=exc, extra={"storage_key": key})
+
+    def store(self, ws: Workspace, *, kind: str, data: bytes, filename: str, project_id: str | None,
+              arrangement_id: str | None = None, source_id: str | None = None,
+              retention_days: int = 0) -> dict:
+        """Bytes first, then the row; never leaves bytes nobody can find."""
+        key, content_type = self.put_file(ws, kind=kind, data=data)
         try:
-            return ws.create_artifact(
-                self.user_id, project_id=project_id, arrangement_id=arrangement_id, source_id=source_id,
-                kind=kind, filename=filename, content_type=content_type, storage_key=key,
-                size_bytes=len(data), sha256=sha256_hex(data), expires_at=expires,
+            return self.record_file(
+                ws, key=key, content_type=content_type, kind=kind, data=data, filename=filename,
+                project_id=project_id, arrangement_id=arrangement_id, source_id=source_id,
+                retention_days=retention_days,
             )
         except Exception:
-            self.services.artifacts.delete(key)   # never leave bytes nobody can find
+            self.services.artifacts.delete(key)
             raise
 
 
@@ -182,24 +211,43 @@ def run_arrange(ctx: JobContext) -> dict:
     report["attempts"] = [
         {k: a.get(k) for k in ("number", "hard", "strain", "cost", "error", "origin")} for a in bundle.attempts
     ]
+    # The arrangement row and its two file rows are one result: a revision
+    # without its downloads, or downloads pointing at no revision, is a bug
+    # the user would see. The bytes live outside the database and go in
+    # first, outside the transaction (see `put_file`); if the rows roll back,
+    # the bytes are deleted again.
+    files: list[tuple[str, str, str, bytes, str]] = []
     with ctx.workspace() as ws:
-        arrangement = ws.add_arrangement(
-            ctx.user_id, project["id"], source["id"], origin=bundle.origin, accepted=bundle.accepted,
-            n_hard=len(bundle.verdict.hard), n_strain=len(bundle.verdict.strain),
-            fidelity_score=bundle.fidelity["score"], difficulty=bundle.difficulty.level,
-            algorithm_version=bundle.algorithm_version, model=bundle.model, profile=profile.to_dict(),
-            plan=json.loads(bundle.plan.to_json()), arranged=score_to_dict(bundle.arranged),
-            verdict=workflows.verdict_to_dict(bundle.verdict), summary=summary, report=report,
-            label=str(payload.get("label") or "")[:120],
-        )
-        if arrangement is None:
-            raise JobFailed("not_found", "That project no longer exists.")
-        base = safe_filename(f"{title} - arrangement {arrangement['revision']}", "arrangement")
-        retention = settings.export_retention_days
-        ctx.store(ws, kind="midi", data=midi, filename=f"{base}.mid", project_id=project["id"],
-                  arrangement_id=arrangement["id"], retention_days=retention)
-        ctx.store(ws, kind="musicxml", data=musicxml, filename=f"{base}.musicxml", project_id=project["id"],
-                  arrangement_id=arrangement["id"], retention_days=retention)
+        for kind, data, suffix in (("midi", midi, ".mid"), ("musicxml", musicxml, ".musicxml")):
+            try:
+                key, content_type = ctx.put_file(ws, kind=kind, data=data)
+            except BaseException:
+                ctx.discard_files([f[0] for f in files])
+                raise
+            files.append((key, content_type, kind, data, suffix))
+    try:
+        with ctx.workspace() as ws, ws.storage.transaction():
+            arrangement = ws.add_arrangement(
+                ctx.user_id, project["id"], source["id"], origin=bundle.origin, accepted=bundle.accepted,
+                n_hard=len(bundle.verdict.hard), n_strain=len(bundle.verdict.strain),
+                fidelity_score=bundle.fidelity["score"], difficulty=bundle.difficulty.level,
+                algorithm_version=bundle.algorithm_version, model=bundle.model, profile=profile.to_dict(),
+                plan=json.loads(bundle.plan.to_json()), arranged=score_to_dict(bundle.arranged),
+                verdict=workflows.verdict_to_dict(bundle.verdict), summary=summary, report=report,
+                label=str(payload.get("label") or "")[:120],
+            )
+            if arrangement is None:
+                raise JobFailed("not_found", "That project no longer exists.")
+            base = safe_filename(f"{title} - arrangement {arrangement['revision']}", "arrangement")
+            for key, content_type, kind, data, suffix in files:
+                ctx.record_file(
+                    ws, key=key, content_type=content_type, kind=kind, data=data, filename=f"{base}{suffix}",
+                    project_id=project["id"], arrangement_id=arrangement["id"],
+                    retention_days=settings.export_retention_days,
+                )
+    except BaseException:
+        ctx.discard_files([f[0] for f in files])
+        raise
     return {"arrangement_id": arrangement["id"], "revision": arrangement["revision"], "accepted": bundle.accepted}
 
 
@@ -261,7 +309,8 @@ def run_transcribe(ctx: JobContext) -> dict:
         "note": "Transcribed by a model from audio. Expect wrong, missing and extra notes, "
                 "especially in dense chords. Check it before arranging.",
     }
-    with ctx.workspace() as ws:
+    # The new project and the upload that now belongs to it are one change.
+    with ctx.workspace() as ws, ws.storage.transaction():
         project = ws.create_project(
             ctx.user_id, title=score.title, composer="", kind="audio", filename=upload["filename"],
             score=score_to_dict(score), note_count=len(score.notes), bar_count=score.last_bar(),
@@ -269,7 +318,6 @@ def run_transcribe(ctx: JobContext) -> dict:
         )
         ws.conn.execute("UPDATE artifacts SET project_id = ? WHERE id = ? AND user_id = ?",
                         (project["id"], upload["id"], ctx.user_id))
-        ws.conn.commit()
     return {"project_id": project["id"], "note_count": len(score.notes),
             "overall_confidence": round(result.overall_confidence, 3)}
 

@@ -435,22 +435,23 @@ class Storage:
         self._commit()
 
     def trim_user_sessions(self, user_id: str, keep: int) -> None:
-        rows = list(
-            self.conn.execute(
-                """
-                SELECT id FROM sessions
-                WHERE user_id = ? AND revoked_at IS NULL
-                ORDER BY created_at DESC
-                """,
-                (user_id,),
+        """Revoke the oldest sessions beyond `keep`, all of them or none."""
+        with self.transaction():
+            rows = list(
+                self.conn.execute(
+                    """
+                    SELECT id FROM sessions
+                    WHERE user_id = ? AND revoked_at IS NULL
+                    ORDER BY created_at DESC
+                    """,
+                    (user_id,),
+                )
             )
-        )
-        for row in rows[max(keep, 0):]:
-            self.conn.execute(
-                "UPDATE sessions SET revoked_at = ? WHERE id = ?",
-                (utc_now(), row["id"]),
-            )
-        self._commit()
+            for row in rows[max(keep, 0):]:
+                self.conn.execute(
+                    "UPDATE sessions SET revoked_at = ? WHERE id = ?",
+                    (utc_now(), row["id"]),
+                )
 
     def change_password(
         self,
@@ -874,6 +875,28 @@ class Storage:
         ).fetchone()
         return decode_row(row)
 
+    def iter_arrangements(self, user_id: str, *, batch_size: int = 100) -> Iterator[dict]:
+        """Every arrangement of one user, oldest first, `batch_size` rows at a time.
+
+        On Postgres the rows stay on the server behind a named cursor and come
+        over in `fetchmany` batches, so an account with thousands of saved
+        arrangements is streamed rather than loaded. SQLite has no server to
+        hold a cursor open; it iterates the statement in the same batches.
+        """
+        sql = "SELECT * FROM arrangements WHERE user_id = ? ORDER BY created_at, id"
+        size = max(1, int(batch_size))
+        if self.dialect == "postgres":
+            with self.conn.cursor(name=f"arrangements_{uuid.uuid4().hex}", itersize=size) as cursor:
+                cursor.execute(sql, (user_id,))
+                while rows := cursor.fetchmany(size):
+                    for row in rows:
+                        yield decode_row(row)
+            return
+        cursor = self.conn.execute(sql, (user_id,))
+        while rows := cursor.fetchmany(size):
+            for row in rows:
+                yield decode_row(row)
+
     def create_run(
         self,
         *,
@@ -936,43 +959,44 @@ class Storage:
     ) -> list[dict]:
         now = utc_now()
         record_ids: list[str] = []
-        for row in rows:
-            record_id = new_id()
-            record_ids.append(record_id)
-            self.conn.execute(
-                """
-                INSERT INTO candidate_rankings (
-                    id, user_id, run_id, score_id, profile_id, region_index,
-                    start_bar, end_bar, pattern, voices, melody_fold_window,
-                    difficulty_score, difficulty_rank, energy, role, verifier_cost,
-                    planner_penalty, chosen, created_at, payload_json
+        # One ranking set is one fact about one run: all of its rows or none.
+        with self.transaction():
+            for row in rows:
+                record_id = new_id()
+                record_ids.append(record_id)
+                self.conn.execute(
+                    """
+                    INSERT INTO candidate_rankings (
+                        id, user_id, run_id, score_id, profile_id, region_index,
+                        start_bar, end_bar, pattern, voices, melody_fold_window,
+                        difficulty_score, difficulty_rank, energy, role, verifier_cost,
+                        planner_penalty, chosen, created_at, payload_json
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        record_id,
+                        user_id,
+                        run_id,
+                        score_id,
+                        profile_id,
+                        int(row["region_index"]),
+                        int(row["start_bar"]),
+                        int(row["end_bar"]),
+                        row["pattern"],
+                        int(row["voices"]),
+                        int(row["melody_fold_window"]),
+                        float(row["difficulty_score"]),
+                        row["difficulty_rank"],
+                        row["energy"],
+                        row["role"],
+                        float(row["verifier_cost"]),
+                        float(row["planner_penalty"]),
+                        int(bool(row["chosen"])),
+                        now,
+                        json.dumps(row),
+                    ),
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record_id,
-                    user_id,
-                    run_id,
-                    score_id,
-                    profile_id,
-                    int(row["region_index"]),
-                    int(row["start_bar"]),
-                    int(row["end_bar"]),
-                    row["pattern"],
-                    int(row["voices"]),
-                    int(row["melody_fold_window"]),
-                    float(row["difficulty_score"]),
-                    row["difficulty_rank"],
-                    row["energy"],
-                    row["role"],
-                    float(row["verifier_cost"]),
-                    float(row["planner_penalty"]),
-                    int(bool(row["chosen"])),
-                    now,
-                    json.dumps(row),
-                ),
-            )
-        self._commit()
         return [
             record
             for record_id in record_ids

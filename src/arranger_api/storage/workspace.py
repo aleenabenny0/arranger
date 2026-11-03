@@ -500,23 +500,28 @@ class Workspace:
         self.conn.commit()
 
     def recover_expired_jobs(self) -> dict[str, int]:
-        """Jobs whose worker died mid-run: requeue them, or fail them if out of attempts."""
+        """Jobs whose worker died mid-run: requeue them, or fail them if out of attempts.
+
+        The two updates are one decision about the same set of rows. Applied
+        separately, a failure between them would fail the exhausted jobs and
+        leave the others stranded as `running` until the next sweep.
+        """
         now = utc_now()
-        failed = self.conn.execute(
-            """
-            UPDATE jobs SET status = 'failed', error_code = 'worker_lost',
-                   error_public = 'This job stopped unexpectedly and could not be retried.',
-                   finished_at = ?, lease_owner = NULL, lease_expires_at = NULL, stage = 'Failed'
-            WHERE status = 'running' AND lease_expires_at <= ? AND attempts >= max_attempts
-            """,
-            (now, now),
-        ).rowcount
-        requeued = self.conn.execute(
-            "UPDATE jobs SET status = 'queued', lease_owner = NULL, lease_expires_at = NULL, "
-            "stage = 'Waiting to retry' WHERE status = 'running' AND lease_expires_at <= ?",
-            (now,),
-        ).rowcount
-        self.conn.commit()
+        with self.storage.transaction():
+            failed = self.conn.execute(
+                """
+                UPDATE jobs SET status = 'failed', error_code = 'worker_lost',
+                       error_public = 'This job stopped unexpectedly and could not be retried.',
+                       finished_at = ?, lease_owner = NULL, lease_expires_at = NULL, stage = 'Failed'
+                WHERE status = 'running' AND lease_expires_at <= ? AND attempts >= max_attempts
+                """,
+                (now, now),
+            ).rowcount
+            requeued = self.conn.execute(
+                "UPDATE jobs SET status = 'queued', lease_owner = NULL, lease_expires_at = NULL, "
+                "stage = 'Waiting to retry' WHERE status = 'running' AND lease_expires_at <= ?",
+                (now,),
+            ).rowcount
         return {"requeued": requeued, "failed": failed}
 
     def prune_finished_jobs(self, older_than_days: int) -> int:
