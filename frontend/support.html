@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="arranger-api" content="">
+    <title>Support · Arranger</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="js/legal.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="index.html">Arranger</a>
+      <nav aria-label="Main"><a href="index.html">Back to the app</a></nav>
+    </header>
+    <main id="main" class="prose" tabindex="-1">
+      <h1>Support</h1>
+      <div id="draft-banner" class="notice" role="note">
+        <strong>Draft.</strong> Whoever operates this copy of Arranger has not completed its launch
+        configuration. Details marked &ldquo;not provided&rdquo; are theirs to supply, and this document has
+        not been reviewed by a lawyer.
+      </div>
+
+      <h2>Get in touch</h2>
+      <dl class="facts">
+        <dt>Operated by</dt><dd data-config="operator.name"></dd>
+        <dt>Postal address</dt><dd data-config="operator.postal_address"></dd>
+        <dt>Contact</dt><dd data-config="operator.contact_email" data-format="mailto"></dd>
+      </dl>
+
+      <h2>Common questions</h2>
+      <h3>My file will not import</h3>
+      <p>Arranger reads standard MIDI files and MusicXML (.musicxml, .xml, .mxl). MIDI files that use
+      SMPTE timecode are not supported: export again with a ticks-per-beat time base. Files with no
+      pitched notes cannot be arranged.</p>
+      <h3>The wrong line was chosen as the melody</h3>
+      <p>Open the piece, go to the Source step, choose the part that carries the tune, and save. Then arrange again.</p>
+      <h3>The arrangement is slower than the original</h3>
+      <p>When a passage moves faster than the hand speed you entered, Arranger keeps every melody note
+      and suggests a slower tempo instead of dropping notes. Raise the hand travel speed in step 2 if
+      it is too cautious for you.</p>
+      <h3>There is no PDF button</h3>
+      <p>PDF engraving needs LilyPond on the server. If it is not installed, MIDI and MusicXML downloads
+      still work, and any notation program can print the MusicXML.</p>
+      <h3>The transcription of my recording is wrong</h3>
+      <p>Transcription works best on a single, clearly recorded instrument. Dense chords, pedal, reverb,
+      singing and drums all make it worse. Remove wrong notes in the Source step before arranging.</p>
+
+      <h2>Accessibility</h2>
+      <p>Arranger is built to be used with a keyboard and a screen reader, and findings in the score are
+      always listed as text as well. If something does not work for you, please say so using the contact above.</p>
+    </main>
+    <footer class="site-footer">
+      <nav aria-label="Legal and help">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="cookies.html">Cookies</a>
+        <a href="copyright.html">Upload rights</a>
+        <a href="support.html">Support</a>
+      </nav>
+    </footer>
+  </body>
+</html>

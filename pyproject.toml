@@ -8,16 +8,25 @@ dependencies = []
 [project.optional-dependencies]
 # The verifier needs none of this. Keep it that way.
 io = ["music21>=9.1", "pretty_midi>=0.2.10"]
-audio = ["librosa>=0.10", "basic-pitch>=0.3", "demucs>=4.0"]
+# basic-pitch must be installed with `pip install --no-deps basic-pitch` on Python >= 3.12:
+# it declares a TensorFlow dependency that has no wheels there. Only its bundled ONNX model
+# file (saved_models/icassp_2022/nmp.onnx) is used; the package itself is never imported.
+# So: install the other four normally, then basic-pitch with --no-deps. See docs/audio-transcription.md.
+audio = ["numpy>=2.0", "onnxruntime>=1.20", "soundfile>=0.13", "soxr>=0.5", "basic-pitch>=0.4"]
 agent = ["langgraph>=0.2", "pydantic>=2.7"]
-api = ["fastapi>=0.111", "uvicorn[standard]>=0.30", "pydantic>=2.7", "psycopg[binary]>=3.2", "httpx>=0.28", "resend>=2.13"]
+api = ["fastapi>=0.111", "uvicorn[standard]>=0.30", "pydantic>=2.7", "psycopg[binary]>=3.2", "httpx>=0.28", "resend>=2.13", "argon2-cffi>=23.1"]
+# Optional model-assisted repair. Without it, and without ANTHROPIC_API_KEY, arranging is deterministic.
+model = ["anthropic>=1.0"]
 dev = ["pytest>=8.0", "ruff>=0.5"]
+# Browser tests. Also needs a browser (`playwright install chromium`) and `python fetch_vendor.py --dev`.
+e2e = ["playwright>=1.45"]
 
 [project.scripts]
 arranger-verify = "arranger.verify.cli:main"
 arranger-agent = "arranger.agent:main"
 arranger-evaluate = "arranger.evaluate:main"
 arranger-api = "arranger_api.main:main"
+arranger-worker = "arranger_api.worker:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -29,3 +38,7 @@ packages = ["src/arranger", "src/arranger_api"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = ["E9", "F", "B"]
+ignore = ["B008"]

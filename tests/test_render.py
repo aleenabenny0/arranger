@@ -164,8 +164,18 @@ def test_melody_shift_moves_only_the_melody():
     plan = ArrangementPlan(sections=[Section(1, 2, melody_shift=-12)])
     shifted = render(plan, SOURCE)
     plain = render(ArrangementPlan(sections=[Section(1, 2)]), SOURCE)
-    assert {n.pitch for n in shifted.notes if n.staff == 2} == \
-           {n.pitch for n in plain.notes if n.staff == 2}
+    # The shift does not change what the left hand plays or when. It may change
+    # the octave: bringing the melody down an octave here drops it into the
+    # left hand's chord, and the left hand gets out of its way rather than
+    # striking the same key.
+    def harmony(score):
+        return sorted((round(n.onset, 3), n.pitch % 12) for n in score.notes if n.staff == 2)
+
+    assert harmony(shifted) == harmony(plain)
+    for t in {n.onset for n in shifted.notes if n.staff == 2}:
+        tune = [n.pitch for n in shifted.notes if n.staff == 1 and n.sounds_at(t)]
+        under = [n.pitch for n in shifted.notes if n.staff == 2 and n.onset == t]
+        assert not tune or max(under) < min(tune)
     assert min(n.pitch for n in shifted.notes if n.staff == 1) == \
            min(n.pitch for n in plain.notes if n.staff == 1) - 12
 

@@ -26,6 +26,7 @@ docs/deployment-notes
 6. Wait for CI to pass.
 7. Merge into `main`.
 8. Railway deploys the new `main` commit.
+9. Run the manual production smoke check after Railway marks the deployment active.
 
 ## Local Checks
 
@@ -35,12 +36,15 @@ Run these before pushing:
 py tests\test_api.py
 py tests\test_storage.py
 py tests\test_settings.py
+py tests\test_email.py
 py tests\test_security.py
+py tests\test_planner.py
 py tests\test_architecture.py
 py tests\test_constraints.py
 py tests\test_render.py
 py tests\test_agent.py
 node --check frontend\app.js
+py -m ruff check src tests
 ```
 
 Use the real Postgres integration test when you have a public database URL:
@@ -82,3 +86,9 @@ git push origin v0.2.0
 
 Do not manually edit production code in Railway. Push code changes to GitHub,
 let CI run, then let Railway deploy from `main`.
+
+## Pull Request Checklist
+
+Every pull request should explain the user-facing change, note any database or
+environment-variable changes, list the local checks that passed, and include a
+rollback note for production-risky changes.

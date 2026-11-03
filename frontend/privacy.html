@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="arranger-api" content="">
+    <title>Privacy notice · Arranger</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="js/legal.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="index.html">Arranger</a>
+      <nav aria-label="Main"><a href="index.html">Back to the app</a></nav>
+    </header>
+    <main id="main" class="prose" tabindex="-1">
+      <h1>Privacy notice</h1>
+      <div id="draft-banner" class="notice" role="note">
+        <strong>Draft.</strong> Whoever operates this copy of Arranger has not completed its launch
+        configuration. Details marked &ldquo;not provided&rdquo; are theirs to supply, and this document has
+        not been reviewed by a lawyer.
+      </div>
+
+      <p>This notice describes what this software does with your data. It is written from the code,
+      so it says what happens, not what is intended.</p>
+
+      <h2>Who is responsible</h2>
+      <dl class="facts">
+        <dt>Operated by</dt><dd data-config="operator.name"></dd>
+        <dt>Postal address</dt><dd data-config="operator.postal_address"></dd>
+        <dt>Contact</dt><dd data-config="operator.contact_email" data-format="mailto"></dd>
+      </dl>
+      <p>Privacy questions and requests: <span data-config="operator.privacy_contact_email" data-format="mailto"></span></p>
+
+      <h2>What is stored</h2>
+      <ul>
+        <li><strong>Your account:</strong> email address, an optional display name, and a password
+          hash (Argon2id). Your password itself is never stored.</li>
+        <li><strong>Sign-in sessions:</strong> a hash of the session token, the network address and
+          browser description it was created from, and when it was last used. You can see and end
+          them on your account page.</li>
+        <li><strong>Your music:</strong> the files you upload, the notes read from them, your
+          corrections, and the arrangements, MIDI, MusicXML and PDF files made from them.</li>
+        <li><strong>Your hand profile:</strong> the reach, speed, finger and level settings you enter.
+          These are measurements of your hands. They are stored with each arrangement so an old
+          result can be explained later.</li>
+        <li><strong>Job records:</strong> when an arrangement, engraving or transcription ran and
+          whether it succeeded.</li>
+        <li><strong>Server logs:</strong> the time, path, status and network address of requests, under
+          a request id. Passwords, tokens and reset links are masked before anything is logged.</li>
+        <li><strong>Abuse counters:</strong> short-lived request counts per network address and account.</li>
+      </ul>
+      <p>There is no analytics, no advertising and no third-party tracking in this software.</p>
+
+      <h2>Who else receives data</h2>
+      <ul id="processors"><li>Loading&hellip;</li></ul>
+      <p><span data-config="audio_processing"></span></p>
+
+      <h2>How long it is kept</h2>
+      <ul>
+        <li>Uploaded originals: <span data-config="retention.upload_days" data-format="days"></span>.</li>
+        <li>Generated files: <span data-config="retention.export_days" data-format="days"></span>. They can be made again from a saved arrangement.</li>
+        <li>Pieces, corrections and arrangements: until you delete the piece or your account.</li>
+        <li>Finished job records: <span data-config="retention.job_days" data-format="days"></span>.</li>
+        <li>Sessions: up to <span data-config="retention.session_days"></span> days, or
+          <span data-config="retention.session_idle_days"></span> days without use.</li>
+      </ul>
+      <p>Backups are the responsibility of the operator and are not described by this software.</p>
+
+      <h2>What you can do</h2>
+      <ul>
+        <li><strong>Take a copy:</strong> Account, then &ldquo;Download a copy of my data&rdquo;. You get every record and file in one archive.</li>
+        <li><strong>Delete everything:</strong> Account, then &ldquo;Delete my account&rdquo;. Your records and files are removed from this service at once.</li>
+        <li><strong>Delete one piece:</strong> from your library. Its arrangements and files go with it.</li>
+        <li><strong>Correct your details or ask anything else:</strong> use the privacy contact above.</li>
+      </ul>
+
+      <h2>Where data is stored</h2>
+      <p data-config="processors.0.detail" data-missing="[storage location not provided by the operator]"></p>
+
+      <h2>Still to be settled by the operator</h2>
+      <p>The legal basis for processing, international transfers, the minimum age for an account,
+      and how to complain to a regulator depend on who operates this service and where. This
+      software cannot state them.</p>
+    </main>
+    <footer class="site-footer">
+      <nav aria-label="Legal and help">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="cookies.html">Cookies</a>
+        <a href="copyright.html">Upload rights</a>
+        <a href="support.html">Support</a>
+      </nav>
+    </footer>
+  </body>
+</html>

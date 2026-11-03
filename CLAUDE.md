@@ -19,45 +19,69 @@ Correctness is what they are unreliable at. Do not mix them.
 
 ## Architecture
 
-Today's pipeline starts from a MIDI file, not a recording:
+A MIDI file, a MusicXML file or a recording goes in. MIDI, MusicXML and an
+engraved PDF come out, with a verdict against one player's hands.
 
 ```
-MIDI file → io.read_midi → Score
-                              ↓
-                    describe_score → model writes ArrangementPlan
-                              ↓
-                    ArrangementPlan ──→ render ──→ verify
-                              ↑                       │
-                              └──── repair ←───────────┘
-                                  (max 4, then escalate)
+MIDI / MusicXML / audio ─→ adapters ─→ Score ─→ selection (user corrections)
+                                                    ↓
+                     planner ─→ ArrangementPlan ─→ render ─→ verify + fidelity
+                        ↑                                        │
+   engine: local repair, musical refinement  ←── repair ←────────┘
+   agent:  optional model, bounded by attempts, seconds and cost
+                                                    ↓
+                     notation ─→ MusicXML, LilyPond ─→ PDF;  MIDI writer
 ```
+
+Arranging is deterministic by default: `engine.arrange_deterministic` is
+candidate zero and needs no network. The model is an optional improver on top
+(`agent.arrange(model=...)`), and its output is only ever a plan.
 
 | Module | Role | Actual deps today |
 |---|---|---|
-| `arranger.ir` | Note/Score data model | stdlib only |
-| `arranger.profile` | The player's physical limits | stdlib only |
-| `arranger.verify` | **The oracle.** Playability constraints | stdlib only |
-| `arranger.io` | Hand-rolled MIDI loader (no MusicXML yet) | stdlib only |
-| `arranger.plan` | ArrangementPlan schema | stdlib only — dataclasses; pydantic was deliberately skipped, see the file's own docstring |
-| `arranger.render` | Plan → internal `Score` (melody/chord extraction, left-hand realisation) | stdlib only |
-| `arranger.fidelity` | Melodic recall / fidelity scoring against the source | stdlib only |
-| `arranger.agent` | Bounded repair loop, calls the Claude API directly | `anthropic` (only when not run with `--dry-run`) |
-| `arranger.application` | Use-case layer for CLI/API/worker entry points | stdlib only |
-| `arranger.adapters` | External file-format adapters | adapter-specific; JSON/MIDI path is stdlib today |
+| `arranger.ir`, `arranger.timeline` | Note/Score data model; tempo, meter and key maps, pickup bars | stdlib only |
+| `arranger.limits` | Import limits and the typed import errors | stdlib only |
+| `arranger.profile` | The player's physical limits, presets, guided calibration | stdlib only |
+| `arranger.verify` | **The oracle.** Playability constraints; `solver` is a phrase-based dynamic-programming hand assignment with FEASIBLE / INFEASIBLE / UNKNOWN | stdlib only |
+| `arranger.io`, `arranger.adapters.midi_writer` | Hand-rolled MIDI reader and writer | stdlib only |
+| `arranger.adapters.musicxml_reader`, `musicxml_writer` | MusicXML and compressed MusicXML in and out | stdlib only (expat) |
+| `arranger.adapters.lilypond` | LilyPond source, and a sandboxed subprocess that engraves the PDF | stdlib; the LilyPond program at run time |
+| `arranger.adapters.audio` | Recording to notes with the Basic Pitch ONNX model | `numpy`, `onnxruntime`, `soundfile`, `soxr` (optional `audio` extra) |
+| `arranger.analysis` | Melody extraction, chord and bass detection | stdlib only |
+| `arranger.notation` | Quantisation, voices, ties, tuplets, key-aware spelling; shared by both notation writers | stdlib only |
+| `arranger.plan` | ArrangementPlan schema | stdlib only: dataclasses; pydantic was deliberately skipped, see the file's own docstring |
+| `arranger.planner`, `arranger.musicianship` | Deterministic first draft: regions, candidates gated by skill and tempo | stdlib only |
+| `arranger.render` | Plan → internal `Score` (left-hand realisation, voicing, tempo scaling) | stdlib only |
+| `arranger.fidelity` | Melody, rhythm, contour, harmony, bass and accompaniment against the source | stdlib only |
+| `arranger.repair`, `arranger.engine` | Violations → suggestions; deterministic local repair and refinement | stdlib only |
+| `arranger.agent` | Bounded repair loop, calls the Claude API directly | `anthropic` (only when a model is passed) |
+| `arranger.selection`, `arranger.explain` | User corrections to a source; the plain-language report and difficulty estimate | stdlib only |
+| `arranger.application` | Use-case layer for CLI/API/worker entry points (`workflows.py`) | stdlib only |
+| `arranger.adapters` | External file-format adapters | adapter-specific |
 | `arranger.ports` | Protocols for infrastructure boundaries | stdlib only |
+| `arranger_api` | FastAPI service: accounts, projects, revisions, jobs, artifacts, static frontend | `fastapi`, `argon2-cffi`, `psycopg`, `httpx`, `resend` |
 
-**Not built yet.** These have been described elsewhere as if live; nothing in
-`src/` implements them:
-- **Audio front end.** No code reads a recording. `demucs`, `basic-pitch`,
-  and `librosa` are an unused optional `audio` extra in `pyproject.toml`.
-- **MusicXML input / engraved output.** `arranger.render` produces an
-  internal `Score`, not printable notation. `music21` and LilyPond are not
-  imported anywhere.
-- **CP-SAT hand/finger solver.** `arranger.verify.hands` is a v1 greedy
-  solver; its own docstring describes the OR-Tools CP-SAT replacement as
-  future work.
-- **LangGraph orchestration.** `arranger.agent` is a plain Python loop, not
-  a LangGraph graph.
+**Not built yet.** Nothing in `src/` implements these:
+- **Source separation.** Audio transcription assumes one instrument. `demucs`
+  is not used; a band recording is transcribed as if it were a piano.
+- **Detailed fingering.** The solver assigns hands and checks that a chord fits
+  the available fingers. It does not choose a finger for every note, and
+  nothing prints fingering.
+- **Beat tracking for audio.** A recording gets a tempo estimate and the user
+  can correct tempo and meter; barlines are not inferred from the audio.
+- **Lyrics, chord symbols, repeats and ornaments** in notation output.
+- **CP-SAT.** The hand solver is dynamic programming in the standard library.
+  OR-Tools was considered and not used, so `arranger.verify` keeps zero
+  dependencies.
+- **LangGraph orchestration.** `arranger.agent` is a plain Python loop. The
+  `agent` extra in `pyproject.toml` still lists `langgraph`; nothing imports it.
+- **Billing, teams, sharing.** Every project belongs to exactly one account.
+
+**Built but not verified against the real thing:** the S3 artifact store (no
+live bucket), the Dockerfile (no Docker on the development machine; CI builds
+it), the Postgres project workflow (runs in CI only), audio accuracy (measured
+on synthesised audio only), and the model path (tested with fakes; no paid call
+has been made). `docs/build-log/limitations.md` has the detail.
 
 **`arranger.verify` has zero third-party dependencies and must stay that way.**
 It is the component every other component's correctness is measured against.
@@ -104,12 +128,16 @@ makes it a benchmark rather than a demo. Do not add commercial recordings to
 
 ## Current state
 
-The core loop works end-to-end and is tested: MIDI in → `arranger.io.read_midi`
-→ model writes an `ArrangementPlan` → `arranger.render` → `arranger.verify`,
-with bounded repair on failure — run against a 20-piece public-domain corpus
-(`evals/corpus/`, see Corpus licensing above).
-Next work is whatever the **Not built yet** list under Architecture, above,
-says — nothing in this codebase is quietly further along than that list
-claims.
-Known limitations live in `docs/build-log/limitations.md` — read it before
+The product works end to end and is tested at every layer: upload (MIDI,
+MusicXML, audio) → inspect and correct → describe your hands → arrange as a
+background job → notation preview, playback and findings in the browser →
+revise and compare → download MIDI, MusicXML and PDF → reopen later. The
+deterministic engine arranges all 24 piece-and-profile pairs tried from the
+public-domain corpus (`evals/corpus/`, see Corpus licensing above) with the
+melody fully kept.
+
+`docs/progress.md` is the running log and lists what is left.
+`docs/backlog.md` has the acceptance criteria. Nothing in this codebase is
+quietly further along than the **Not built yet** list above claims.
+Known limitations live in `docs/build-log/limitations.md`: read it before
 concluding that a bug is new.

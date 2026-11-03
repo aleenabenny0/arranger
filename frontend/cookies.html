@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="arranger-api" content="">
+    <title>Cookies · Arranger</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="js/legal.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="index.html">Arranger</a>
+      <nav aria-label="Main"><a href="index.html">Back to the app</a></nav>
+    </header>
+    <main id="main" class="prose" tabindex="-1">
+      <h1>Cookies</h1>
+      <div id="draft-banner" class="notice" role="note">
+        <strong>Draft.</strong> Whoever operates this copy of Arranger has not completed its launch
+        configuration. Details marked &ldquo;not provided&rdquo; are theirs to supply, and this document has
+        not been reviewed by a lawyer.
+      </div>
+
+      <p>Arranger sets two cookies. Both are needed for signing in. Neither is used for tracking,
+      analytics or advertising, so there is no consent banner: there is nothing optional to consent to.</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Cookies this site sets">
+        <table>
+          <thead><tr><th scope="col">Name</th><th scope="col">What it is for</th><th scope="col">Lifetime</th><th scope="col">Readable by scripts</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">arranger_session</th><td>Keeps you signed in.</td><td>Up to <span data-config="retention.session_days"></span> days</td><td>No</td></tr>
+            <tr><th scope="row">arranger_csrf</th><td>Proves that a request to change something came from this site and not another one.</td><td>Same as the session</td><td>Yes, by this site only</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Your browser may also store the notation engine in its cache. Nothing else is stored on your device.</p>
+      <p>If optional cookies are ever added, this page will list them and the site will ask first.</p>
+    </main>
+    <footer class="site-footer">
+      <nav aria-label="Legal and help">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="cookies.html">Cookies</a>
+        <a href="copyright.html">Upload rights</a>
+        <a href="support.html">Support</a>
+      </nav>
+    </footer>
+  </body>
+</html>

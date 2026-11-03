@@ -1,16 +1,18 @@
 # Arranger
 
-MIDI in, playable-for-you sheet music out.
+Music in, playable-for-you sheet music out.
 
-You have a MIDI file of a song — a full-band arrangement, an orchestral
+You have a MIDI file, a MusicXML score or a recording of a song — a full-band arrangement, an orchestral
 reduction, whatever you could find — and you want to play it on piano. It
 isn't written for your instrument, or it's three grades above you, or it just
 doesn't fit your hands. Arranger reduces it to two hands, arranges it for
 *your* level, and verifies the result is physically playable before you ever
 see it.
 
-Turning an audio recording into that starting MIDI isn't built yet — see
-Roadmap below.
+It runs as a web app: upload, check what was read, describe your hands, arrange,
+read and hear the result with anything outside your limits marked, revise, and
+download MIDI, MusicXML and a printable PDF. Your pieces and every revision are
+saved to your account.
 
 ## The interesting part
 
@@ -28,7 +30,34 @@ has to interpret.
 
 The model does judgement. Code does correctness.
 
-## Try it
+Before the model edits anything, a deterministic planner now creates the first
+draft from bar-level musical features. That draft is rendered, verified, scored
+for fidelity, and passed into the model loop as the starting point for repair.
+
+## Run the app
+
+```powershell
+py -m venv .venv
+.venv\Scripts\python -m pip install -e ".[api,dev]"
+.venv\Scripts\python fetch_vendor.py        # the notation engine, checksum-verified
+.venv\Scripts\arranger-api                  # http://127.0.0.1:8000
+```
+
+That is the whole product with MIDI and MusicXML in, and MIDI and MusicXML out.
+Arranging needs no API key: the deterministic engine does it. Three things are
+optional, and the app says plainly when one is missing:
+
+| For | Install |
+|---|---|
+| Printable PDF | LilyPond 2.24 on `PATH`, or `LILYPOND_PATH` |
+| Recordings as input | `pip install numpy onnxruntime soundfile soxr`, then `pip install --no-deps basic-pitch` |
+| A model that tries to improve the arrangement | `pip install -e ".[model]"`, `ANTHROPIC_API_KEY`, `MODEL_REPAIR_ENABLED=true` |
+
+Tests: `python -m pytest -q`. Browser tests need `pip install -e ".[e2e]"`,
+`python fetch_vendor.py --dev`, and Edge, Chrome or `playwright install chromium`.
+Deployment is in `docs/deployment.md`.
+
+## Try the verifier alone
 
 ```bash
 git clone <your-repo> && cd arranger
@@ -63,11 +92,19 @@ and time it. Change these and the same piece becomes playable or doesn't.
 
 ## Status
 
-- [x] **M1** Playability verifier + profile model (17 tests, zero deps)
-- [x] **M2** MIDI loader, deterministic renderer (MusicXML input/output still open — see Roadmap)
-- [ ] **M3** CP-SAT fingering solver with infeasibility certificates
-- [x] **M4** Eval harness + baseline, 20-piece public-domain corpus (`evals/corpus/`, `python fetch_corpus.py`)
-- [x] **M5** Bounded repair loop, calls the Claude API directly (LangGraph orchestration still open — see Roadmap)
+- [x] **M1** Playability verifier + profile model (zero dependencies)
+- [x] **M2** MIDI and MusicXML in; MIDI, MusicXML and engraved PDF out
+- [x] **M3** Global hand solver: phrase-based search with FEASIBLE / INFEASIBLE /
+  UNKNOWN, pedal, rolled chords and crossing. Dynamic programming in the
+  standard library, not CP-SAT; per-note fingering is still open
+- [x] **M4** Eval harness + baseline, public-domain corpus (`evals/corpus/`, `python fetch_corpus.py`)
+- [x] **M5** Deterministic arranging engine, with a bounded model repair loop on top
+- [x] **M6** Audio transcription (one instrument, Basic Pitch)
+- [x] **M7** Web app: accounts, projects, revisions, background jobs, notation
+  preview, playback, downloads, data export and deletion
+
+`docs/progress.md` is the running log. `docs/build-log/limitations.md` says what
+is knowingly wrong.
 
 ## Open question: does the agent beat brute force?
 
@@ -96,24 +133,30 @@ here. Short version:
 
 Not built yet:
 
-- **Audio front end.** Turning a recording into a starting score — source
-  separation, pitch transcription, harmonic-fidelity scoring against the
-  original audio. `demucs`, `basic-pitch`, and `librosa` are listed as an
-  optional `audio` extra in `pyproject.toml`, but nothing in `src/` imports
-  them yet. Every run today starts from a MIDI file.
-- **MusicXML input and engraved (PDF) output.** `arranger.io` reads MIDI
-  only; `arranger.render` produces an internal score, not printable notation.
-- **CP-SAT hand/finger solver.** `arranger.verify.hands` is a fast greedy
-  assignment today — right most of the time, but it cannot model hand
-  crossing and doesn't produce the infeasibility certificates a CP-SAT
-  solver would.
-- **LangGraph orchestration.** The repair loop in `arranger.agent` is a
-  plain Python loop calling the Claude API directly, not a LangGraph graph.
+- **Per-note fingering.** The solver assigns hands and checks that chords fit
+  the available fingers. It does not choose or print a finger for each note.
+- **Source separation and beat tracking for audio.** One instrument at a time,
+  and the user sets tempo and meter. Accuracy has only been measured on
+  synthesised audio.
+- **Richer notation.** No grace notes, ornaments, slurs, dynamics, repeats,
+  lyrics or chord symbols.
+- **A note editor.** Corrections are by part, transposition, tempo, meter and
+  removing doubtful notes; there is no piano roll.
+- **LangGraph orchestration.** The repair loop in `arranger.agent` is a plain
+  Python loop calling the Claude API directly, not a LangGraph graph.
+
+Before a public launch: `docs/legal-review.md` (operator identity, consent for
+hand measurements, minimum age) and the limitations in `docs/security.md`.
 
 ## Design notes
 
 - `docs/architecture.md` — current layers and where future APIs/adapters fit
 - `docs/deployment.md` — Docker/Railway hosting setup and cloud environment
+- `docs/runbook.md` — backups, restore, rollback, alerts, incidents
+- `docs/security.md` — controls, the tests that pin them, and what is missing
+- `docs/legal-review.md` — decisions that need the owner or a lawyer
+- `docs/algorithm.md` — how melody, harmony, hands and fidelity are computed
+- `docs/audio-transcription.md` — how recordings become notes, and how well
 - `docs/build-log/why-plans-not-notes.md` — why the model never emits notation
 - `docs/build-log/limitations.md` — what's knowingly wrong and what fixes it
 - `docs/build-log/eval-protocol.md` — pre-registered design for the "does

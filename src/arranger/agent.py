@@ -26,16 +26,22 @@ the loop can hand back a regression after appearing to work.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
+from typing import Callable
 
+from . import engine
+from .engine import ALGORITHM_VERSION, Cancelled, Candidate, evaluate_plan
 from .fidelity import Fidelity, measure
 from .ir import Score, pitch_name
+from .musicianship import guidance_for_context, summarize_importance
 from .plan import ArrangementPlan, LHPattern, Section, simple_plan
 from .profile import PlayerProfile
+from .repair import repair_prompt
 from .render import RenderError, detect_chords, extract_melody, last_bar, render
 from .verify import Verdict, verify
 
@@ -54,14 +60,9 @@ FIDELITY_WEIGHT = 60.0
 
 
 def cost(hard: int, fidelity: Fidelity) -> float:
-    """The single number the loop actually minimises.
+    """The single number the loop actually minimises. See `engine.cost`."""
+    return engine.cost(hard, fidelity)
 
-    Violations, plus a penalty for falling below the fidelity floor. Fidelity
-    above the floor earns nothing: the goal is a complete arrangement that can
-    be played, not the most faithful one imaginable.
-    """
-    shortfall = max(0.0, FIDELITY_FLOOR - fidelity.score())
-    return hard + FIDELITY_WEIGHT * shortfall
 
 PITCH_CLASSES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
@@ -253,6 +254,45 @@ their budget.
 # --- model clients -------------------------------------------------------
 
 
+# US dollars per million tokens: (input, output). Cache reads are billed at a
+# tenth of input and cache writes at 1.25x. Used only to enforce a spending
+# cap, so a model missing from this table is priced as the most expensive one.
+MODEL_PRICES: dict[str, tuple[float, float]] = {
+    "claude-fable-5-1": (10.0, 50.0),
+    "claude-opus-5": (5.0, 25.0),
+    "claude-sonnet-5": (2.0, 10.0),
+    "claude-haiku-4-5": (1.0, 5.0),
+}
+_FALLBACK_PRICE = (10.0, 50.0)
+
+
+class TruncatedResponse(ValueError):
+    """The model ran out of output tokens. Not a formatting mistake."""
+
+
+class ModelRefused(ValueError):
+    """The model declined the request. Feedback will not change that."""
+
+
+class ProviderError(RuntimeError):
+    """The model service failed. `retryable` says whether trying again can help."""
+
+    def __init__(self, message: str, *, retryable: bool):
+        super().__init__(message)
+        self.retryable = retryable
+
+
+def model_credentials_available() -> bool:
+    """Is there anything the Anthropic SDK could authenticate with?
+
+    An unset ANTHROPIC_API_KEY does not mean "no credentials": the SDK also
+    accepts ANTHROPIC_AUTH_TOKEN and a stored login profile.
+    """
+    if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"):
+        return True
+    return (Path.home() / ".config" / "anthropic").is_dir()
+
+
 class ClaudeModel:
     """Talks to the Anthropic API.
 
@@ -263,12 +303,23 @@ class ClaudeModel:
     and wrote prose. The first live run lost two attempts to this and they
     appeared to be two unrelated problems.
 
-    Response prefill would prevent the prose case structurally, but not every
-    model supports it, and once the token ceiling is right it is unnecessary —
-    the parser already tolerates prose and fences around a complete object.
+    The conversation grows by one exchange per repair attempt and every
+    request resends all of it, so the request asks for automatic prompt
+    caching: attempt N reads attempts 1..N-1 from the cache instead of paying
+    for them again.
+
+    Thinking is left at the model's default (adaptive on current models).
+    `temperature` and `budget_tokens` are not sent: current models reject both.
     """
 
-    def __init__(self, model: str = DEFAULT_MODEL, max_tokens: int = 16000):
+    def __init__(
+        self,
+        model: str | None = None,
+        max_tokens: int = 16000,
+        *,
+        timeout: float = 120.0,
+        effort: str | None = None,
+    ):
         try:
             import anthropic
         except ImportError:
@@ -276,41 +327,80 @@ class ClaudeModel:
                 "The anthropic package is not installed. Run:\n"
                 "    pip install anthropic"
             ) from None
-        if not os.environ.get("ANTHROPIC_API_KEY"):
+        if not model_credentials_available():
             raise RuntimeError(
-                "ANTHROPIC_API_KEY is not set. Create a key at "
-                "console.anthropic.com, then set it in your environment."
+                "No Anthropic credentials found. Set ANTHROPIC_API_KEY (create a key at "
+                "console.anthropic.com) or log in with `ant auth login`."
             )
+        self._anthropic = anthropic
         self.client = anthropic.Anthropic()
-        self.model = model
+        self.model = model or os.environ.get("ARRANGER_MODEL") or DEFAULT_MODEL
         self.max_tokens = max_tokens
+        self.timeout = timeout
+        self.effort = effort or os.environ.get("ARRANGER_MODEL_EFFORT") or None
         self.input_tokens = 0
         self.output_tokens = 0
+        self.cache_read_tokens = 0
+        self.cache_write_tokens = 0
 
-    def __call__(self, messages: list[dict]) -> str:
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=self.max_tokens,
-            system=SYSTEM_PROMPT,
-            messages=messages,
-        )
-        self.input_tokens += response.usage.input_tokens
-        self.output_tokens += response.usage.output_tokens
+    @property
+    def cost_usd(self) -> float:
+        price_in, price_out = MODEL_PRICES.get(self.model, _FALLBACK_PRICE)
+        return (
+            self.input_tokens * price_in
+            + self.cache_write_tokens * price_in * 1.25
+            + self.cache_read_tokens * price_in * 0.1
+            + self.output_tokens * price_out
+        ) / 1_000_000
+
+    def __call__(self, messages: list[dict], *, timeout: float | None = None,
+                 max_tokens: int | None = None) -> str:
+        anthropic = self._anthropic
+        limit = min(self.max_tokens, max_tokens) if max_tokens else self.max_tokens
+        request: dict = {
+            "model": self.model,
+            "max_tokens": limit,
+            "system": SYSTEM_PROMPT,
+            "messages": messages,
+            "cache_control": {"type": "ephemeral"},
+        }
+        if self.effort:
+            request["output_config"] = {"effort": self.effort}
+        try:
+            response = self.client.with_options(timeout=timeout or self.timeout).messages.create(**request)
+        except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as exc:
+            raise ProviderError(f"the model service rejected the credentials ({type(exc).__name__})",
+                                retryable=False) from exc
+        except (anthropic.BadRequestError, anthropic.NotFoundError) as exc:
+            raise ProviderError(f"the model service rejected the request ({type(exc).__name__})",
+                                retryable=False) from exc
+        except anthropic.RateLimitError as exc:
+            raise ProviderError("the model service is rate limiting this account", retryable=True) from exc
+        except anthropic.APIStatusError as exc:
+            raise ProviderError(f"the model service returned HTTP {exc.status_code}",
+                                retryable=exc.status_code >= 500) from exc
+        except anthropic.APIConnectionError as exc:   # includes timeouts
+            raise ProviderError(f"could not reach the model service ({type(exc).__name__})",
+                                retryable=True) from exc
+
+        usage = response.usage
+        self.input_tokens += usage.input_tokens
+        self.output_tokens += usage.output_tokens
+        self.cache_read_tokens += getattr(usage, "cache_read_input_tokens", 0) or 0
+        self.cache_write_tokens += getattr(usage, "cache_creation_input_tokens", 0) or 0
+
+        if response.stop_reason == "refusal":
+            raise ModelRefused("the model declined this request")
         text = "".join(b.text for b in response.content if b.type == "text")
-
         if response.stop_reason == "max_tokens":
             # Say plainly what happened. "Expecting ',' delimiter" sends the
             # model looking for a syntax error that does not exist.
             raise TruncatedResponse(
-                f"response hit the {self.max_tokens}-token limit and was cut "
+                f"response hit the {limit}-token limit and was cut "
                 "off mid-plan. Use at most 6 sections, omit the reductions "
                 "list, and keep notes to one short sentence."
             )
         return text
-
-
-class TruncatedResponse(ValueError):
-    """The model ran out of output tokens. Not a formatting mistake."""
 
 
 class ScriptedModel:
@@ -346,6 +436,24 @@ class Attempt:
     seconds: float = 0.0
     fidelity: dict | None = None
     cost: float | None = None
+    origin: str = "model"
+
+
+@dataclass(frozen=True)
+class RepairBudget:
+    """Every way the loop is allowed to stop. None of them is optional in production."""
+
+    max_attempts: int = MAX_ATTEMPTS
+    max_seconds: float = 180.0
+    max_cost_usd: float | None = None        # None: no spending cap (tests, scripted models)
+    max_response_chars: int = 200_000
+    patience: int = 2                        # valid attempts in a row that fail to improve the best
+    max_repeated_plans: int = 1              # identical valid plans tolerated before stopping
+    max_provider_failures: int = 2
+    # A hosted service should not pay a model to improve something already
+    # acceptable. A caller that hands over a model explicitly usually wants
+    # its judgement, so the default is to ask.
+    skip_model_when_draft_accepted: bool = False
 
 
 @dataclass
@@ -362,18 +470,30 @@ class RunResult:
     escalated: bool = False
     input_tokens: int = 0
     output_tokens: int = 0
+    # Where the returned plan came from: "deterministic", "local_repair" or "model".
+    best_origin: str | None = None
+    # The deterministic draft, scored before any model was asked. It is the
+    # candidate every model attempt has to beat.
+    draft: Attempt | None = None
+    stop_reason: str = ""
+    seconds: float = 0.0
+    cost_usd: float = 0.0
+    model: str | None = None
+    algorithm_version: str = ALGORITHM_VERSION
 
     def to_json(self, indent: int = 2) -> str:
         return json.dumps(asdict(self), indent=indent, default=str)
 
 
-def _parse_plan(text: str) -> ArrangementPlan:
+def _parse_plan(text: str, max_chars: int = 200_000) -> ArrangementPlan:
     """Extract a plan from model output.
 
     Models sometimes wrap JSON in markdown fences despite instructions. Strip
-    them rather than failing the attempt — a formatting slip is not a planning
+    them rather than failing the attempt - a formatting slip is not a planning
     mistake, and burning a retry on it wastes the budget.
     """
+    if len(text) > max_chars:
+        raise ValueError(f"response is {len(text)} characters; the limit is {max_chars}")
     text = text.strip()
     if text.startswith("```"):
         text = text.split("```")[1]
@@ -385,6 +505,24 @@ def _parse_plan(text: str) -> ArrangementPlan:
     return ArrangementPlan.from_dict(json.loads(text[start : end + 1]))
 
 
+def _fingerprint(plan: ArrangementPlan) -> str:
+    """Identity of what a plan *does*. Titles, labels and notes do not render."""
+    data = json.loads(plan.to_json())
+    for key in ("title", "notes", "reductions"):
+        data.pop(key, None)
+    for section in data.get("sections", []):
+        section.pop("label", None)
+    return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+
+
+def _attempt_from(candidate: Candidate, number: int, seconds: float = 0.0) -> Attempt:
+    return Attempt(
+        number=number, plan=json.loads(candidate.plan.to_json()), hard=candidate.hard,
+        strain=len(candidate.verdict.strain), fidelity=asdict(candidate.fidelity),
+        cost=round(candidate.cost, 2), seconds=seconds, origin=candidate.origin,
+    )
+
+
 def arrange(
     source: Score,
     profile: PlayerProfile,
@@ -392,121 +530,243 @@ def arrange(
     max_attempts: int = MAX_ATTEMPTS,
     verbose: bool = True,
     countdown: bool = True,
+    *,
+    budget: RepairBudget | None = None,
+    progress: Callable[[float, str], None] | None = None,
+    should_cancel: Callable[[], bool] | None = None,
 ) -> RunResult:
-    """Run the loop until the arrangement is accepted or the budget runs out.
+    """Arrange `source` for `profile`. With no model, do it deterministically.
+
+    The deterministic draft is scored first and is the best candidate until
+    something beats it. A model can only ever improve the result: a worse,
+    malformed, repeated, refused or never-delivered plan leaves the draft
+    standing. The loop stops on the first of: accepted, attempts spent, time
+    spent, money spent, no progress, a repeated plan, the provider failing, or
+    the caller cancelling. `RunResult.stop_reason` says which.
 
     `countdown` controls whether feedback tells the model which attempt it is
     on and how many remain. It exists as a switch because two runs solved on
-    their final attempt — the 4th of 4, then the 6th-7th of 7 — which suggests
+    their final attempt - the 4th of 4, then the 6th-7th of 7 - which suggests
     the deadline, not the accumulated feedback, is what triggers the strategy
     change. Turning it off is the ablation that tests this.
     """
-    model = model or ClaudeModel()
+    budget = budget or RepairBudget(max_attempts=max_attempts)
+    started = time.monotonic()
+    deadline = started + budget.max_seconds
+
+    def report(fraction: float, stage: str) -> None:
+        if progress is not None:
+            progress(min(max(fraction, 0.0), 1.0), stage)
+
+    def check_cancel() -> None:
+        if should_cancel is not None and should_cancel():
+            raise Cancelled()
+
     baseline = verify(source, profile)
     result = RunResult(
-        title=source.title,
-        baseline_hard=len(baseline.hard),
-        best_hard=None,
-        best_plan=None,
-        playable=False,
+        title=source.title, baseline_hard=len(baseline.hard), best_hard=None,
+        best_plan=None, playable=False, model=getattr(model, "model", None),
     )
 
+    # --- candidate zero: no model, no cost -------------------------------
+    best: Candidate = engine.arrange_deterministic(
+        source, profile, deadline=deadline, should_cancel=should_cancel,
+        progress=(lambda f, stage: report(0.45 * f, stage)) if model is not None else report,
+    )
+    check_cancel()
+    result.draft = _attempt_from(best, 0, time.monotonic() - started)
+    if verbose:
+        print(f"  draft: {best.hard} hard, {best.fidelity.summary()} [{best.origin}]")
+
+    def finish(reason: str) -> RunResult:
+        result.stop_reason = reason
+        result.best_hard = best.hard
+        result.best_plan = json.loads(best.plan.to_json())
+        result.best_fidelity = asdict(best.fidelity)
+        result.best_cost = round(best.cost, 2)
+        result.best_origin = best.origin
+        result.playable = best.verdict.playable
+        result.accepted = best.accepted
+        result.escalated = not best.accepted
+        result.input_tokens = getattr(model, "input_tokens", 0)
+        result.output_tokens = getattr(model, "output_tokens", 0)
+        result.cost_usd = round(float(getattr(model, "cost_usd", 0.0) or 0.0), 6)
+        result.seconds = round(time.monotonic() - started, 3)
+        report(1.0, "Done")
+        if verbose:
+            state = "ACCEPTED" if result.accepted else "escalated"
+            print(f"  {state} ({reason}): {best.hard} hard, cost {best.cost:.2f}, from {best.origin}")
+            if not result.playable:
+                print("  remaining:", best.verdict.summary())
+        return result
+
+    if model is None:
+        return finish("accepted" if best.accepted else "no_model")
+    if best.accepted and budget.skip_model_when_draft_accepted:
+        return finish("draft_accepted")
+
+    # --- the model loop ----------------------------------------------------
     summary = describe_score(source, profile)
+    guidance_text = "\n".join(
+        f"- {item.title}: {item.summary}" for item in guidance_for_context(summary)
+    )
     messages: list[dict] = [
         {
             "role": "user",
             "content": (
                 f"{summary}\n\n"
+                f"{summarize_importance(source)}\n\n"
+                f"ARRANGING GUIDANCE RETRIEVED FOR THIS SCORE:\n{guidance_text}\n\n"
                 f"The unarranged source has {len(baseline.hard)} hard violations.\n\n"
+                "Start from this deterministic draft, then revise it only where "
+                "the music or playability constraints require it. It currently has "
+                f"{best.hard} hard violations and fidelity {best.fidelity.score():.2f}; "
+                "a plan that does no better will be discarded in its favour:\n"
+                f"{best.plan.to_json()}\n\n"
                 "Write an ArrangementPlan covering every bar."
             ),
         }
     ]
 
-    best_verdict: Verdict | None = None
+    seen: dict[str, int] = {_fingerprint(best.plan): 0}
+    stale = repeats = provider_failures = 0
+    accepts_kwargs = _accepts_call_options(model)
+    end = last_bar(source)
 
-    for attempt_no in range(1, max_attempts + 1):
-        started = time.time()
+    for attempt_no in range(1, budget.max_attempts + 1):
+        check_cancel()
+        remaining = deadline - time.monotonic()
+        if remaining <= 1.0:
+            return finish("time_budget")
+        spent = float(getattr(model, "cost_usd", 0.0) or 0.0)
+        if budget.max_cost_usd is not None and spent >= budget.max_cost_usd:
+            return finish("cost_budget")
+        report(0.45 + 0.5 * (attempt_no - 1) / budget.max_attempts,
+               f"Asking the model for a better plan ({attempt_no} of {budget.max_attempts})")
+
+        attempt_started = time.monotonic()
         attempt = Attempt(number=attempt_no, plan=None, hard=None, strain=None)
         raw = ""  # bound before the try: the error path reads it
 
         try:
-            raw = model(messages)
-            plan = _parse_plan(raw)
-            arranged = render(plan, source)
-            verdict = verify(arranged, profile)
-
-            fidelity = measure(source, arranged)
-            this_cost = cost(len(verdict.hard), fidelity)
+            if accepts_kwargs:
+                options: dict = {"timeout": max(5.0, min(remaining, 120.0))}
+                if budget.max_cost_usd is not None:
+                    _, price_out = MODEL_PRICES.get(getattr(model, "model", ""), _FALLBACK_PRICE)
+                    affordable = int((budget.max_cost_usd - spent) * 1_000_000 / price_out)
+                    options["max_tokens"] = max(1024, affordable)
+                raw = model(messages, **options)
+            else:
+                raw = model(messages)
+            plan = _parse_plan(raw, budget.max_response_chars)
+            if problems := plan.validate_for_source(end, skill_level=profile.skill_level):
+                raise ValueError("; ".join(problems))
+            candidate = evaluate_plan(plan, source, profile, origin="model")
 
             attempt.plan = json.loads(plan.to_json())
-            attempt.hard = len(verdict.hard)
-            attempt.strain = len(verdict.strain)
-            attempt.fidelity = asdict(fidelity)
-            attempt.cost = round(this_cost, 2)
+            attempt.hard = candidate.hard
+            attempt.strain = len(candidate.verdict.strain)
+            attempt.fidelity = asdict(candidate.fidelity)
+            attempt.cost = round(candidate.cost, 2)
+            if verbose:
+                print(f"  attempt {attempt_no}: {candidate.hard} hard, {candidate.fidelity.summary()}")
 
             # Keep the best result, not the most recent one. A later attempt
             # can be worse, and without this the loop can return a regression
             # after appearing to make progress. Ranked by cost, not violations
-            # alone — otherwise an emptier arrangement always looks better.
-            if result.best_cost is None or this_cost < result.best_cost:
-                result.best_cost = round(this_cost, 2)
-                result.best_hard = len(verdict.hard)
-                result.best_plan = attempt.plan
-                result.best_fidelity = asdict(fidelity)
-                best_verdict = verdict
+            # alone - otherwise an emptier arrangement always looks better.
+            improved = candidate.better_than(best)
+            if improved:
+                best = candidate
+                stale = 0
+            else:
+                stale += 1
 
-            accepted = verdict.playable and fidelity.score() >= FIDELITY_FLOOR
-            if verbose:
-                print(
-                    f"  attempt {attempt_no}: {len(verdict.hard)} hard, "
-                    f"{fidelity.summary()}"
-                )
+            fingerprint = _fingerprint(plan)
+            repeated = fingerprint in seen
+            seen.setdefault(fingerprint, attempt_no)
+            if repeated:
+                repeats += 1
 
-            if accepted:
-                result.playable = True
-                result.accepted = True
-                attempt.seconds = time.time() - started
-                result.attempts.append(attempt)
-                break
+            attempt.seconds = time.monotonic() - attempt_started
+            result.attempts.append(attempt)
 
-            feedback = describe_verdict(verdict, plan)
-            if verdict.playable:
+            if candidate.accepted:
+                return finish("accepted")
+            if repeated and repeats > budget.max_repeated_plans:
+                return finish("repeated_plan")
+            if stale >= budget.patience and best.origin != "model":
+                # The model has had `patience` valid tries and never beaten the
+                # free candidate. Further attempts are paying for nothing.
+                return finish("no_improvement")
+            if stale >= budget.patience + 1:
+                return finish("no_improvement")
+
+            feedback = describe_verdict(candidate.verdict, plan)
+            if candidate.verdict.playable:
+                name, value = candidate.fidelity.weakest()
                 feedback = (
                     f"Playable, but too much of the piece is gone: "
-                    f"{fidelity.summary()}. Required: {FIDELITY_FLOOR:.2f}.\n"
+                    f"{candidate.fidelity.summary()}. Required: {FIDELITY_FLOOR:.2f}. "
+                    f"The weakest part is {name} at {value:.0%}.\n"
                     "Restore the left hand where you removed it "
                     "(lh_voices=0) and solve the leaps another way."
                 )
             else:
                 feedback += (
-                    f"\nFIDELITY: {fidelity.summary()} "
+                    f"\nFIDELITY: {candidate.fidelity.summary()} "
                     f"(must end at or above {FIDELITY_FLOOR:.2f}).\n"
                     "Setting lh_voices=0 removes violations by removing the "
                     "music and will fail this check.\n"
                 )
+            if repeated:
+                feedback = (
+                    f"That plan renders identically to the one from attempt {seen[fingerprint]}. "
+                    "Resubmitting it cannot help; change a field that affects the notes.\n" + feedback
+                )
+            if not improved:
+                feedback += (
+                    f"\nThe best plan so far still has {best.hard} hard violations and cost "
+                    f"{best.cost:.2f}; this one did not beat it.\n"
+                )
+            targeted_repairs = repair_prompt(candidate.verdict, plan)
             messages.append({"role": "assistant", "content": raw})
             messages.append(
                 {
                     "role": "user",
                     "content": (
-                        f"{feedback}\n{REPAIR_GUIDANCE}\n"
-                        + (
-                            f"Attempt {attempt_no} of {max_attempts}. "
-                            if countdown else ""
-                        )
+                        f"{feedback}\n{targeted_repairs}\n{REPAIR_GUIDANCE}\n"
+                        + (f"Attempt {attempt_no} of {budget.max_attempts}. " if countdown else "")
                         + "Revise the plan and return the complete JSON."
                     ),
                 }
             )
+            continue
+
+        except ProviderError as exc:
+            provider_failures += 1
+            attempt.error = f"ProviderError: {exc}"
+            attempt.seconds = time.monotonic() - attempt_started
+            result.attempts.append(attempt)
+            if verbose:
+                print(f"  attempt {attempt_no}: provider failure - {exc}")
+            if not exc.retryable or provider_failures >= budget.max_provider_failures:
+                return finish("provider_failure")
+            continue   # nothing to tell the model; it never answered
+
+        except ModelRefused as exc:
+            attempt.error = f"ModelRefused: {exc}"
+            attempt.seconds = time.monotonic() - attempt_started
+            result.attempts.append(attempt)
+            return finish("model_refused")
 
         except (ValueError, RenderError, json.JSONDecodeError) as exc:
             # A malformed plan is feedback, not a crash. Tell the model what
             # broke and let it use the next attempt to fix it.
-            attempt.error = f"{type(exc).__name__}: {exc}"
+            attempt.error = f"{type(exc).__name__}: {str(exc)[:1500]}"
             if verbose:
                 print(f"  attempt {attempt_no}: rejected - {attempt.error}")
-            messages.append({"role": "assistant", "content": raw or "(no response)"})
+            messages.append({"role": "assistant", "content": raw[:20_000] or "(no response)"})
             messages.append(
                 {
                     "role": "user",
@@ -516,26 +776,23 @@ def arrange(
                     ),
                 }
             )
+            attempt.seconds = time.monotonic() - attempt_started
+            result.attempts.append(attempt)
 
-        attempt.seconds = time.time() - started
-        result.attempts.append(attempt)
+    return finish("attempts_exhausted")
 
-    result.escalated = not result.accepted
-    result.input_tokens = getattr(model, "input_tokens", 0)
-    result.output_tokens = getattr(model, "output_tokens", 0)
 
-    if verbose:
-        if result.accepted:
-            print(f"  ACCEPTED after {len(result.attempts)} attempt(s)")
-        else:
-            print(
-                f"  escalated: best was {result.best_hard} hard violations "
-                f"(source had {result.baseline_hard}), cost {result.best_cost}"
-            )
-        if best_verdict and not result.playable:
-            print("  remaining:", best_verdict.summary())
+def _accepts_call_options(model) -> bool:
+    """Does this model client take `timeout` / `max_tokens` per call?"""
+    import inspect
 
-    return result
+    try:
+        parameters = inspect.signature(model.__call__).parameters
+    except (TypeError, ValueError):
+        return False
+    return "timeout" in parameters or any(
+        p.kind == inspect.Parameter.VAR_KEYWORD for p in parameters.values()
+    )
 
 
 def brute_force_baseline(source: Score, profile: PlayerProfile) -> tuple[float, int, str, int, int]:

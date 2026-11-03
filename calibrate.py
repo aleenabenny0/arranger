@@ -9,7 +9,6 @@ guess. A wrong number here means every arrangement afterwards is wrong, and
 you won't be able to tell which part is broken.
 """
 
-import json
 import sys
 from pathlib import Path
 
