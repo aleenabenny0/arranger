@@ -29,16 +29,49 @@ function loadEngine() {
   return enginePromise;
 }
 
-function sanitise(svgText) {
-  const parsed = new DOMParser().parseFromString(svgText, "image/svg+xml");
+// Verovio puts its own CSS inside the SVG: element rules scoped to the SVG's
+// id, and its music font as an embedded @font-face. The content security
+// policy allows no inline styles, and rightly so, but it does not govern
+// stylesheets built through the CSSOM. So the <style> elements are lifted out
+// of the SVG and their text goes into one constructed stylesheet, replaced on
+// every render. The rules stay scoped to each SVG's id, so several scores on
+// one page do not interfere.
+const svgStyles = new Map();   // canvas element -> css text of the score it shows
+let sheet = null;
+
+function applySvgStyles(canvas, cssText) {
+  svgStyles.set(canvas, cssText);
+  for (const known of svgStyles.keys()) if (!known.isConnected && known !== canvas) svgStyles.delete(known);
+  if (!sheet) {
+    sheet = new CSSStyleSheet();
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+  }
+  sheet.replaceSync(Array.from(svgStyles.values()).join("\n"));
+}
+
+const STYLE_ELEMENT = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+
+function cssText(raw) {
+  return raw.replace(/^\s*<!\[CDATA\[/, "").replace(/\]\]>\s*$/, "")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+}
+
+function sanitise(svgText, canvas) {
+  // The <style> elements come out of the text before it is parsed: a parsed
+  // document inherits the page's policy, and the browser reports the inline
+  // styles as blocked at parse time even though nothing in it is ever live.
+  const css = [];
+  const stripped = svgText.replace(STYLE_ELEMENT, (_, text) => { css.push(cssText(text)); return ""; });
+  const parsed = new DOMParser().parseFromString(stripped, "image/svg+xml");
   if (parsed.querySelector("parsererror")) throw new Error("The score could not be drawn.");
-  for (const el of parsed.querySelectorAll("script, foreignObject, iframe, object, embed")) el.remove();
+  for (const el of parsed.querySelectorAll("script, foreignObject, iframe, object, embed, style")) el.remove();
   for (const el of parsed.querySelectorAll("*")) {
     for (const attr of Array.from(el.attributes)) {
       const name = attr.name.toLowerCase();
-      if (name.startsWith("on") || ((name === "href" || name === "xlink:href") && !attr.value.startsWith("#"))) el.removeAttribute(attr.name);
+      if (name.startsWith("on") || name === "style" || ((name === "href" || name === "xlink:href") && !attr.value.startsWith("#"))) el.removeAttribute(attr.name);
     }
   }
+  applySvgStyles(canvas, css.join("\n"));
   return document.importNode(parsed.documentElement, true);
 }
 
@@ -97,7 +130,7 @@ export class NotationView {
   show(page) {
     if (!this.toolkit) return;
     this.page = Math.max(1, Math.min(this.pages, page));
-    replace(this.canvas, sanitise(this.toolkit.renderToSVG(this.page)));
+    replace(this.canvas, sanitise(this.toolkit.renderToSVG(this.page), this.canvas));
     this.pageLabel.textContent = `Page ${this.page} of ${this.pages}`;
     this.prev.disabled = this.page <= 1;
     this.next.disabled = this.page >= this.pages;

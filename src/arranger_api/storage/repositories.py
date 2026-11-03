@@ -379,7 +379,7 @@ class Storage:
             FROM sessions
             WHERE user_id = ? AND revoked_at IS NULL AND expires_at > ? {idle_clause}
             ORDER BY created_at DESC
-            """,
+            """,  # nosec B608 - built only from literal fragments; every value is a bound parameter
             tuple(params),
         )
         return [decode_row(row) for row in rows]
@@ -414,7 +414,7 @@ class Storage:
             UPDATE sessions
             SET revoked_at = ?
             WHERE user_id = ? AND revoked_at IS NULL {keep_clause}
-            """,
+            """,  # nosec B608 - built only from literal fragments; every value is a bound parameter
             tuple(params),
         )
         self._commit()
@@ -476,7 +476,7 @@ class Storage:
             INSERT INTO {table}
                 (id, user_id, token_hash, created_at, expires_at, used_at)
             VALUES (?, ?, ?, ?, ?, NULL)
-            """,
+            """,  # nosec B608 - table is an internal constant, never user input; values are bound parameters
             (
                 new_id(),
                 user_id,
@@ -494,7 +494,7 @@ class Storage:
             WHERE token_hash = ?
               AND used_at IS NULL
               AND expires_at > ?
-            """,
+            """,  # nosec B608 - table is an internal constant, never user input; values are bound parameters
             (token_hash, utc_now()),
         ).fetchone()
         return decode_row(row)
@@ -510,7 +510,7 @@ class Storage:
             UPDATE {table}
             SET used_at = ?
             WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?
-        """
+        """  # nosec B608 - table is an internal constant, never user input; values are bound parameters
         if self.supports_returning:
             rows = self.conn.execute(sql + " RETURNING user_id", (now, token_hash, now)).fetchall()
             return rows[0]["user_id"] if rows else None
@@ -518,7 +518,7 @@ class Storage:
         if cur.rowcount != 1:
             return None
         row = self.conn.execute(
-            f"SELECT user_id FROM {table} WHERE token_hash = ?", (token_hash,)
+            f"SELECT user_id FROM {table} WHERE token_hash = ?", (token_hash,)  # nosec B608 - table is an internal constant, never user input; values are bound parameters
         ).fetchone()
         return row["user_id"] if row else None
 
@@ -624,7 +624,7 @@ class Storage:
             removed["sessions"] = self.conn.execute(session_sql, tuple(params)).rowcount
             for table in ("password_reset_tokens", "email_verification_tokens"):
                 removed[table] = self.conn.execute(
-                    f"DELETE FROM {table} WHERE used_at IS NOT NULL OR expires_at <= ?",
+                    f"DELETE FROM {table} WHERE used_at IS NOT NULL OR expires_at <= ?",  # nosec B608 - table is an internal constant, never user input; values are bound parameters
                     (now,),
                 ).rowcount
         return {key: max(0, value or 0) for key, value in removed.items()}
@@ -1027,7 +1027,7 @@ class Storage:
             WHERE {' AND '.join(filters)}
             ORDER BY created_at DESC, region_index ASC, verifier_cost ASC
             LIMIT ? OFFSET ?
-            """,
+            """,  # nosec B608 - built only from literal fragments; every value is a bound parameter
             tuple(params),
         )
         return [decode_row(row) for row in rows]
@@ -1132,7 +1132,7 @@ class Storage:
             WHERE {' AND '.join(filters)}
             ORDER BY created_at DESC
             LIMIT ? OFFSET ?
-            """,
+            """,  # nosec B608 - built only from literal fragments; every value is a bound parameter
             tuple(params),
         )
         return [decode_row(row) for row in rows]

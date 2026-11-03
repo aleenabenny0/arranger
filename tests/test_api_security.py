@@ -460,6 +460,8 @@ def test_security_headers_are_complete():
     assert response.headers["referrer-policy"] == "no-referrer"
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["cross-origin-opener-policy"] == "same-origin"
+    assert response.headers["cross-origin-embedder-policy"] == "require-corp"
+    assert response.headers["cross-origin-resource-policy"] == "same-origin"
     assert "camera=()" in response.headers["permissions-policy"]
 
     csp = {
@@ -470,6 +472,7 @@ def test_security_headers_are_complete():
     assert "'wasm-unsafe-eval'" in csp["script-src"]
     assert "'unsafe-inline'" not in csp["script-src"]
     assert "'unsafe-eval'" not in csp["script-src"]
+    assert csp["style-src"] == ["'self'"], "inline styles are not needed and ZAP flags the allowance"
     assert "blob:" in csp["worker-src"]
     assert "blob:" in csp["media-src"]
     assert csp["object-src"] == ["'none'"]

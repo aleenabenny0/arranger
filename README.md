@@ -1,6 +1,77 @@
 # Arranger
 
+[![CI](https://github.com/aleenabenny0/arranger/actions/workflows/ci.yml/badge.svg)](https://github.com/aleenabenny0/arranger/actions/workflows/ci.yml)
+[![Coverage gate](https://img.shields.io/badge/coverage%20gate-90%25-brightgreen)](https://github.com/aleenabenny0/arranger/blob/main/pyproject.toml)
+[![License](https://img.shields.io/badge/license-not%20yet%20chosen-lightgrey)](#license)
+
 Music in, playable-for-you sheet music out.
+
+**Live demo:** _coming soon_ · **Walkthrough:** _GIF coming soon_
+
+<!-- Replace the two placeholders above with the deployed URL and a recorded walkthrough. -->
+
+## Quickstart
+
+Bash (Git Bash on Windows, or Linux and macOS):
+
+```bash
+scripts/setup.sh            # venv, dependencies, notation engine; add --audio or --e2e
+scripts/test.sh             # the suite as CI runs it
+.venv/bin/arranger-api      # http://127.0.0.1:8000 (.venv/Scripts/arranger-api in Git Bash)
+```
+
+PowerShell:
+
+```powershell
+py -m venv .venv
+.venv\Scripts\python -m pip install -e ".[api,dev]"
+.venv\Scripts\python fetch_vendor.py
+.venv\Scripts\python -m pytest -q
+.venv\Scripts\arranger-api                  # http://127.0.0.1:8000
+```
+
+## How it fits together
+
+```mermaid
+flowchart LR
+    subgraph inputs [Inputs]
+        MIDI[MIDI]
+        MXL[MusicXML]
+        AUDIO[Recording]
+    end
+    subgraph adapters [Adapters]
+        READERS[readers]
+        WRITERS[MIDI, MusicXML,<br/>LilyPond PDF writers]
+        STORE[(SQLite / Postgres<br/>artifact store)]
+    end
+    subgraph domain [Domain core, stdlib only]
+        SCORE[Score]
+        PLANNER[deterministic planner]
+        PLAN[ArrangementPlan]
+        RENDER[renderer]
+        VERIFY{{verifier: the oracle}}
+        FIDELITY[fidelity]
+    end
+    MODEL[Claude model<br/>optional, plans only]
+    subgraph app [Application and API]
+        WORKFLOWS[use cases]
+        API[FastAPI: accounts,<br/>projects, jobs]
+        UI[static frontend]
+    end
+    MIDI & MXL & AUDIO --> READERS --> SCORE
+    SCORE --> PLANNER --> PLAN --> RENDER --> VERIFY
+    RENDER --> FIDELITY
+    VERIFY -- findings --> MODEL -- revised plan --> PLAN
+    VERIFY --> WORKFLOWS
+    FIDELITY --> WORKFLOWS
+    WORKFLOWS --> WRITERS
+    WORKFLOWS <--> API <--> UI
+    API <--> STORE
+```
+
+The model never writes notes. It emits an `ArrangementPlan`; the renderer turns
+the plan into a score; the dependency-free verifier decides whether that score
+fits one specific pair of hands. See `docs/architecture.md`.
 
 You have a MIDI file, a MusicXML score or a recording of a song — a full-band arrangement, an orchestral
 reduction, whatever you could find — and you want to play it on piano. It
@@ -73,6 +144,23 @@ python scripts/test_report.py --junit reports/junit.xml --coverage reports/cover
 
 A test that passes only after a rerun is listed as flaky in that table; it is
 a bug to fix, not a pass.
+
+## Testing strategy
+
+Every layer has its own tests, and CI runs all of them on every push:
+
+| Layer | What it proves | Where |
+|---|---|---|
+| Unit | The verifier, solver, planner, renderer, fidelity scorer, notation and file adapters, each against small scores built in the test | `tests/test_constraints.py` (also run on bare stdlib), `test_solver.py`, `test_engine.py`, `test_planner.py`, `test_render.py`, `test_fidelity.py`, `test_notation.py`, `test_midi_io.py`, `test_musicxml_reader.py`, `test_audio_transcription.py` |
+| API | Every route over HTTP with the real app: auth, CSRF, rate limits, ownership, quotas, jobs, exports | `tests/test_api*.py`, `test_workflows.py`, `test_artifacts.py` |
+| Database | Repositories on SQLite and, in CI, on real Postgres; failure injection proves every multi-write path is atomic | `tests/test_storage.py`, `test_transactions.py`, `test_postgres_integration.py` |
+| End to end | A real browser drives the product: register, upload, correct, arrange, play, download, reopen; axe-core accessibility checks on every view | `tests/test_browser_e2e.py` (Playwright) |
+| Security | Bandit on the source, pip-audit on the lock file, Gitleaks on the history, an OWASP ZAP baseline scan of the built image, Snyk when a token is configured | the `security` and Docker CI jobs, `.zap/rules.tsv`, `docs/security.md` |
+| Smoke | The built image starts, answers `/health` and `/ready`, and a throwaway account can register, sign in, list profiles and sign out | `scripts/smoke.sh` in the Docker CI job |
+
+The suite runs with coverage (gated by `fail_under` in `pyproject.toml`), a
+JUnit report and reruns that expose flaky tests; the CI job summary shows the
+counts, pass rate, coverage, slowest tests and any flaky test.
 
 ## Scripts
 
@@ -194,6 +282,12 @@ Not built yet:
 
 Before a public launch: `docs/legal-review.md` (operator identity, consent for
 hand measurements, minimum age) and the limitations in `docs/security.md`.
+
+## License
+
+No license has been chosen yet, so the code is all rights reserved by default.
+The evaluation corpus is public-domain and Creative Commons material only (see
+`evals/corpus/README.md`).
 
 ## Design notes
 

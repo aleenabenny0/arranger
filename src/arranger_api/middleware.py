@@ -52,7 +52,9 @@ CONTENT_SECURITY_POLICY = "; ".join(
         # 'wasm-unsafe-eval' lets the same-origin WebAssembly notation renderer
         # compile. It does not permit eval() or inline script.
         "script-src 'self' 'wasm-unsafe-eval'",
-        "style-src 'self' 'unsafe-inline'",
+        # No inline styles either: the stylesheet is a file, and the notation
+        # SVG uses presentation attributes, which CSP does not govern.
+        "style-src 'self'",
         "img-src 'self' data: blob:",
         "font-src 'self' data:",
         "connect-src 'self'",
@@ -76,6 +78,9 @@ SECURITY_HEADERS = {
     "X-Frame-Options": "DENY",
     "Cross-Origin-Opener-Policy": "same-origin",
     "Cross-Origin-Resource-Policy": "same-origin",
+    # With the opener policy above this isolates the page from cross-origin
+    # windows and resources (Spectre). Every asset the app loads is same-origin.
+    "Cross-Origin-Embedder-Policy": "require-corp",
 }
 HSTS_VALUE = "max-age=31536000; includeSubDomains"
 # Third-party code under /vendor/ is requested with its version in the URL, so it

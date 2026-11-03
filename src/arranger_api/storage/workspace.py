@@ -107,7 +107,7 @@ class Workspace:
         if query:
             where += " AND (LOWER(p.title) LIKE ? ESCAPE '!' OR LOWER(p.composer) LIKE ? ESCAPE '!')"
             params += [_like(query.lower())] * 2
-        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM projects p WHERE {where}", tuple(params)).fetchone()["n"]
+        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM projects p WHERE {where}", tuple(params)).fetchone()["n"]  # nosec B608 - built only from literal fragments; every value is a bound parameter
         rows = self.conn.execute(
             f"""
             SELECT p.*,
@@ -116,7 +116,7 @@ class Workspace:
                    (SELECT bar_count FROM project_sources s WHERE s.id = p.current_source_id) AS bar_count
             FROM projects p WHERE {where}
             ORDER BY p.updated_at DESC LIMIT ? OFFSET ?
-            """,
+            """,  # nosec B608 - built only from literal fragments; every value is a bound parameter
             (*params, limit, offset),
         ).fetchall()
         return [_row(r) for r in rows], int(total)
@@ -139,7 +139,7 @@ class Workspace:
             fields.append("profile_json = ?")
             params.append(_dump(profile))
         cursor = self.conn.execute(
-            f"UPDATE projects SET {', '.join(fields)} WHERE id = ? AND user_id = ? AND status != 'deleted'",
+            f"UPDATE projects SET {', '.join(fields)} WHERE id = ? AND user_id = ? AND status != 'deleted'",  # nosec B608 - built only from literal fragments; every value is a bound parameter
             (*params, project_id, user_id),
         )
         self.storage._commit()
@@ -164,7 +164,7 @@ class Workspace:
 
     def _next_revision(self, table: str, project_id: str) -> int:
         row = self.conn.execute(
-            f"SELECT COALESCE(MAX(revision), 0) + 1 AS n FROM {table} WHERE project_id = ?", (project_id,)
+            f"SELECT COALESCE(MAX(revision), 0) + 1 AS n FROM {table} WHERE project_id = ?", (project_id,)  # nosec B608 - table is an internal constant, never user input; values are bound parameters
         ).fetchone()
         return int(row["n"])
 
@@ -373,7 +373,7 @@ class Workspace:
         if active_only:
             where += " AND status IN ('queued', 'running')"
         rows = self.conn.execute(
-            f"SELECT * FROM jobs WHERE {where} ORDER BY created_at DESC LIMIT ?", (*params, limit)
+            f"SELECT * FROM jobs WHERE {where} ORDER BY created_at DESC LIMIT ?", (*params, limit)  # nosec B608 - built only from literal fragments; every value is a bound parameter
         ).fetchall()
         return [_row(r) for r in rows]
 
@@ -387,7 +387,7 @@ class Workspace:
         if kind:
             where += " AND kind = ?"
             params.append(kind)
-        return int(self.conn.execute(f"SELECT COUNT(*) AS n FROM jobs WHERE {where}", tuple(params)).fetchone()["n"])
+        return int(self.conn.execute(f"SELECT COUNT(*) AS n FROM jobs WHERE {where}", tuple(params)).fetchone()["n"])  # nosec B608 - built only from literal fragments; every value is a bound parameter
 
     def request_cancel(self, user_id: str, job_id: str) -> dict | None:
         """Queued jobs are cancelled at once. Running jobs are asked to stop."""
@@ -441,7 +441,7 @@ class Workspace:
             params += list(kinds)
         for _ in range(5):
             row = self.conn.execute(
-                f"SELECT id FROM jobs WHERE {where} ORDER BY created_at LIMIT 1", tuple(params)
+                f"SELECT id FROM jobs WHERE {where} ORDER BY created_at LIMIT 1", tuple(params)  # nosec B608 - built only from literal fragments; every value is a bound parameter
             ).fetchone()
             if row is None:
                 self.conn.rollback()
@@ -574,6 +574,6 @@ class Workspace:
             for table in ("jobs", "artifacts", "project_arrangements", "project_sources", "projects",
                           "candidate_feedback", "candidate_rankings", "runs", "arrangements", "plans",
                           "scores", "profiles", "password_reset_tokens", "email_verification_tokens", "sessions"):
-                self.conn.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
+                self.conn.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))  # nosec B608 - table is an internal constant, never user input; values are bound parameters
             self.conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
         return keys
