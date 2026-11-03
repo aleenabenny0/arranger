@@ -257,6 +257,23 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  shell-checks:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends shellcheck
+          shellcheck --version
+
+      - name: Lint every shell script
+        run: shellcheck --severity=style scripts/*.sh
+
   docker-build:
     name: Docker build and smoke test
     runs-on: ubuntu-latest
@@ -265,6 +282,7 @@ jobs:
       - frontend-checks
       - security-checks
       - postgres-integration
+      - shell-checks
 
     steps:
       - name: Check out repository
@@ -273,31 +291,45 @@ jobs:
       - name: Build deployment image
         run: docker build -t arranger-ci .
 
-      # Start the real image and ask it what it can do. This catches a missing
-      # dependency, a missing notation engine, or a LilyPond that did not install.
-      - name: Start the image and check its capabilities
+      - name: Start the image
         run: |
           docker run -d --name arranger-smoke -p 8000:8000 \
             -e APP_ENV=development -e COOKIE_SECURE=false -e EMAIL_PROVIDER=console arranger-ci
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:8000/health > /dev/null; then break; fi
+
+      - name: Wait for /health
+        run: |
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent http://127.0.0.1:8000/health > /dev/null; then
+              echo "healthy after $attempt attempt(s)"
+              exit 0
+            fi
             sleep 2
           done
-          curl --fail --show-error --silent http://127.0.0.1:8000/ready
-          curl --fail --show-error --silent http://127.0.0.1:8000/catalog > catalog.json
-          python3 - <<'PY'
-          import json
-          caps = json.load(open("catalog.json"))["capabilities"]
-          for name in ("export_pdf", "import_audio"):
-              assert caps[name]["available"], f"{name} is not available in the image: {caps[name]}"
-          print("capabilities ok:", {k: v["available"] for k, v in caps.items()})
-          PY
+          echo "::error title=Container never answered /health::$(docker logs arranger-smoke 2>&1 | tail -n 40 | tr '\n' ' ' | cut -c1-3500)"
+          exit 1
+
+      # The same script an operator runs against staging: health, readiness,
+      # register, sign in, list profiles, sign out, and the capabilities the
+      # full image promises (PDF engraving and audio import).
+      - name: Run the smoke test
+        env:
+          SMOKE_CAPABILITIES: export_pdf,import_audio
+        run: bash scripts/smoke.sh http://127.0.0.1:8000 | tee smoke.log
+
+      - name: Check the image itself
+        run: |
           curl --fail --silent --output /dev/null "http://127.0.0.1:8000/vendor/verovio-toolkit-wasm.js"
           test "$(docker exec arranger-smoke id -u)" != "0"
 
-      - name: Show the container log on failure
+      # Annotations can be read from the run page and the API without the log.
+      - name: Explain the failure
         if: failure()
-        run: docker logs arranger-smoke || true
+        run: |
+          if [ -f smoke.log ]; then
+            echo "::error title=Smoke test::$(grep -E '^(FAIL|[0-9]+ check)' smoke.log | tr '\n' ' ' | cut -c1-3500)"
+          fi
+          echo "::error title=Container log tail::$(docker logs arranger-smoke 2>&1 | tail -n 60 | tr '\n' ' ' | cut -c1-3500)"
+          docker logs arranger-smoke || true
 
   production-smoke:
     name: Production smoke check
