@@ -17,6 +17,8 @@ agent = ["langgraph>=0.2", "pydantic>=2.7"]
 api = ["fastapi>=0.111", "uvicorn[standard]>=0.30", "pydantic>=2.7", "psycopg[binary]>=3.2", "httpx>=0.28", "resend>=2.13", "argon2-cffi>=23.1"]
 # Optional model-assisted repair. Without it, and without ANTHROPIC_API_KEY, arranging is deterministic.
 model = ["anthropic>=1.0"]
+# JOB_QUEUE_BACKEND=sqs: the API dispatches jobs to Amazon SQS and workers long-poll it.
+sqs = ["boto3>=1.34"]
 # Test runner, coverage with a gate, reruns that expose flaky tests, and the two
 # scanners the security CI job runs (Bandit on the source, pip-audit on the lock).
 dev = [

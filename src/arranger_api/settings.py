@@ -134,6 +134,19 @@ class Settings:
     job_lease_seconds: int = 120
     job_max_attempts: int = 2
     job_retention_days: int = 30
+    # --- job queue ---------------------------------------------------------
+    # "database": workers poll the jobs table (the default, one host or a few).
+    # "sqs": the API sends a message per job and workers long-poll the queue.
+    # "memory": one process, for tests and development.
+    job_queue_backend: str = "database"
+    sqs_queue_url: str = ""
+    sqs_dead_letter_queue_url: str = ""
+    aws_endpoint_url: str = ""                  # LocalStack or another SQS-compatible endpoint
+    aws_region: str = ""
+    # How long a received message stays invisible; 0 derives it from the
+    # slowest job's time limit plus a margin.
+    job_visibility_seconds: int = 0
+    job_queue_max_receives: int = 3             # deliveries before a message is dead-lettered
     arrange_max_seconds: int = 180
     engrave_max_seconds: int = 120
     transcribe_max_seconds: int = 900
@@ -172,6 +185,18 @@ class Settings:
     @property
     def is_local(self) -> bool:
         return self.app_env in LOCAL_ENVIRONMENTS
+
+    @property
+    def effective_visibility_seconds(self) -> int:
+        """How long a queue message stays invisible to other workers once received.
+
+        Longer than the slowest job can run, plus a margin for saving its
+        result, so a job is never handed to a second worker while the first is
+        still on it.
+        """
+        if self.job_visibility_seconds > 0:
+            return self.job_visibility_seconds
+        return max(self.arrange_max_seconds, self.engrave_max_seconds, self.transcribe_max_seconds) + 60
 
     @property
     def uses_postgres(self) -> bool:
@@ -341,6 +366,14 @@ def load_settings() -> Settings:
         job_lease_seconds=max(10, env_int("JOB_LEASE_SECONDS", 120)),
         job_max_attempts=max(1, env_int("JOB_MAX_ATTEMPTS", 2)),
         job_retention_days=max(1, env_int("JOB_RETENTION_DAYS", 30)),
+        job_queue_backend=os.environ.get("JOB_QUEUE_BACKEND", "database").strip().lower() or "database",
+        sqs_queue_url=os.environ.get("SQS_QUEUE_URL", "").strip(),
+        sqs_dead_letter_queue_url=os.environ.get("SQS_DEAD_LETTER_QUEUE_URL", "").strip(),
+        aws_endpoint_url=os.environ.get("AWS_ENDPOINT_URL", "").strip(),
+        # Empty lets boto3 use its own AWS_DEFAULT_REGION or the instance's region.
+        aws_region=os.environ.get("AWS_REGION", "").strip(),
+        job_visibility_seconds=max(0, env_int("JOB_VISIBILITY_SECONDS", 0)),
+        job_queue_max_receives=max(1, env_int("JOB_QUEUE_MAX_RECEIVES", 3)),
         arrange_max_seconds=max(5, env_int("ARRANGE_MAX_SECONDS", 180)),
         engrave_max_seconds=max(5, env_int("ENGRAVE_MAX_SECONDS", 120)),
         transcribe_max_seconds=max(5, env_int("TRANSCRIBE_MAX_SECONDS", 900)),
@@ -381,6 +414,12 @@ def configuration_problems(settings: Settings) -> list[str]:
     problems: list[str] = []
     if settings.rate_limit_backend not in {"memory", "database"}:
         problems.append("RATE_LIMIT_BACKEND must be 'memory' or 'database'.")
+    if settings.job_queue_backend not in {"database", "memory", "sqs"}:
+        problems.append("JOB_QUEUE_BACKEND must be 'database', 'memory' or 'sqs'.")
+    if settings.job_queue_backend == "sqs" and not settings.sqs_queue_url:
+        problems.append("JOB_QUEUE_BACKEND=sqs requires SQS_QUEUE_URL.")
+    if settings.is_production and settings.job_queue_backend == "memory":
+        problems.append("JOB_QUEUE_BACKEND=memory lives in one process; jobs would be lost on restart.")
     if settings.artifact_backend not in {"local", "database", "s3"}:
         problems.append("ARTIFACT_BACKEND must be 'local', 'database' or 's3'.")
     if settings.artifact_backend == "s3":

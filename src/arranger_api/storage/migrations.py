@@ -929,6 +929,18 @@ def m0008_postgres(conn: Any) -> None:
     )
 
 
+def m0009_sqlite(conn: sqlite3.Connection) -> None:
+    """When the job's queue message was sent, and its id: the link from a row to
+    the delivery that will run it, for the SQS-backed worker."""
+    sqlite_add_column(conn, "jobs", "dispatched_at", "dispatched_at TEXT")
+    sqlite_add_column(conn, "jobs", "queue_message_id", "queue_message_id TEXT")
+
+
+def m0009_postgres(conn: Any) -> None:
+    postgres_add_column(conn, "jobs", "dispatched_at TEXT")
+    postgres_add_column(conn, "jobs", "queue_message_id TEXT")
+
+
 MIGRATIONS = [
     Migration("0001_initial_storage", m0001_sqlite, m0001_postgres),
     Migration("0002_auth_hardening", m0002_sqlite, m0002_postgres),
@@ -938,4 +950,5 @@ MIGRATIONS = [
     Migration("0006_rate_limit_buckets", m0006_sqlite, m0006_postgres),
     Migration("0007_email_verification", m0007_sqlite, m0007_postgres),
     Migration("0008_projects_jobs_artifacts", m0008_sqlite, m0008_postgres),
+    Migration("0009_job_dispatch", m0009_sqlite, m0009_postgres),
 ]

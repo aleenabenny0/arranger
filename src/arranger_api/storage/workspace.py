@@ -459,6 +459,52 @@ class Workspace:
                 return _row(self.conn.execute("SELECT * FROM jobs WHERE id = ?", (row["id"],)).fetchone())
         return None
 
+    def claim_job_by_id(self, job_id: str, worker_id: str, lease_seconds: int) -> dict | None:
+        """Take one specific queued job: the one a queue message names.
+
+        One conditional UPDATE decides it. None means the job is not queued any
+        more (running elsewhere, finished, cancelled, or unknown), which is how
+        a duplicate delivery of the same message is recognised and dropped.
+        """
+        now_dt = datetime.now(timezone.utc)
+        now = format_timestamp(now_dt)
+        lease = format_timestamp(now_dt + timedelta(seconds=lease_seconds))
+        with self.storage.transaction():
+            cursor = self.conn.execute(
+                """
+                UPDATE jobs SET status = 'running', lease_owner = ?, lease_expires_at = ?,
+                       attempts = attempts + 1, started_at = COALESCE(started_at, ?), stage = 'Starting'
+                WHERE id = ? AND status = 'queued'
+                """,
+                (worker_id, lease, now, job_id),
+            )
+            if cursor.rowcount != 1:
+                return None
+        return _row(self.conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone())
+
+    def set_aside_job(self, job_id: str, reason: str) -> bool:
+        """Fail a job whose queue message is being dead-lettered, if it is still open."""
+        with self.storage.transaction():
+            cursor = self.conn.execute(
+                """
+                UPDATE jobs SET status = 'failed', error_code = 'dead_lettered',
+                       error_public = 'This job failed repeatedly and was set aside. Try again later.',
+                       error_internal = ?, finished_at = ?, lease_owner = NULL, lease_expires_at = NULL,
+                       stage = 'Failed'
+                WHERE id = ? AND status IN ('queued', 'running')
+                """,
+                (reason[:4000], utc_now(), job_id),
+            )
+        return cursor.rowcount == 1
+
+    def mark_dispatched(self, job_id: str, message_id: str) -> None:
+        """Record that the job's queue message was sent, and which one."""
+        with self.storage.transaction():
+            self.conn.execute(
+                "UPDATE jobs SET dispatched_at = ?, queue_message_id = ? WHERE id = ?",
+                (utc_now(), message_id[:200], job_id),
+            )
+
     def heartbeat(self, job_id: str, worker_id: str, *, progress: float, stage: str, lease_seconds: int) -> bool:
         """Record progress and extend the lease. Returns True if the job should stop."""
         lease = format_timestamp(datetime.now(timezone.utc) + timedelta(seconds=lease_seconds))

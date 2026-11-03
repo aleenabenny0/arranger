@@ -22,4 +22,4 @@ def register_routers(app: FastAPI) -> None:
 
 
 # Populated as feature routers land. Order is registration order.
-_ROUTER_MODULES: tuple[str, ...] = ("catalog", "projects", "account")
+_ROUTER_MODULES: tuple[str, ...] = ("catalog", "projects", "account", "jobs")

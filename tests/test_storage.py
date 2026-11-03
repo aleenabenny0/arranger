@@ -265,8 +265,9 @@ def test_new_migrations_are_recorded_and_status_is_reported():
 
     applied = init_db(conn)
     assert applied == [m.id for m in MIGRATIONS], "applied in order, none skipped"
-    assert applied[5:8] == [
+    assert applied[5:9] == [
         "0006_rate_limit_buckets", "0007_email_verification", "0008_projects_jobs_artifacts",
+        "0009_job_dispatch",
     ]
     assert init_db(conn) == []  # idempotent
 

@@ -341,6 +341,65 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  sqs-localstack:
+    name: SQS queue on LocalStack
+    runs-on: ubuntu-latest
+
+    # A real SQS API, emulated: queues, visibility timeouts and redrive
+    # policies behave as on AWS, without an account.
+    services:
+      localstack:
+        image: localstack/localstack:3
+        env:
+          SERVICES: sqs
+        ports:
+          - 4566:4566
+        options: >-
+          --health-cmd "curl -sf http://localhost:4566/_localstack/health"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install the API with the sqs extra
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[api,dev,sqs]"
+
+      # The in-memory semantics first, then the same adapter and worker loop
+      # against LocalStack: round trip, redrive to the dead-letter queue after
+      # three receives, and a job that goes queued -> running -> succeeded.
+      - name: Run the queue tests against LocalStack
+        env:
+          ARRANGER_SQS_ENDPOINT: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+        run: >-
+          python -m pytest tests/test_job_queue.py tests/test_sqs_localstack.py
+          --junitxml=reports/junit-sqs.xml --durations=10 --reruns 2 -rRs
+
+      - name: Write the quality summary
+        if: always()
+        run: python scripts/test_report.py --junit reports/junit-sqs.xml --title "SQS on LocalStack"
+
+      - name: Keep the test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-sqs
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 14
+
   shell-checks:
     name: ShellCheck
     runs-on: ubuntu-latest

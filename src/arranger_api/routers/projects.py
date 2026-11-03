@@ -24,6 +24,7 @@ from ..artifacts import CONTENT_TYPES, ArtifactNotFound, new_storage_key, safe_f
 from ..auth import CurrentUser
 from ..deps import get_current_user, get_settings, get_storage, rate_limit, require_verified_user
 from ..errors import api_error, bad_request, domain_error, not_found
+from ..jobs import dispatch
 from ..schemas import MAX_LABEL_CHARS, ApiModel, ArrangementPlanIn, PlayerProfileIn, RecordId
 from ..settings import Settings
 from ..storage import Storage
@@ -353,12 +354,23 @@ def add_source_revision(project_id: RecordId, body: SourceRevisionIn,
     dependencies=[Depends(rate_limit("arrange", 30, 60, per="user"))],
 )
 def start_arrangement(
-    project_id: RecordId, body: ArrangeIn,
+    project_id: RecordId, body: ArrangeIn, request: Request,
     idempotency_key: str | None = Header(default=None, alias=IDEMPOTENCY_HEADER),
     user: CurrentUser = Depends(require_verified_user),
     ws: Workspace = Depends(get_workspace),
     settings: Settings = Depends(get_settings),
 ) -> dict:
+    return queue_arrangement(request, ws, user, settings, project_id, body, idempotency_key)
+
+
+def queue_arrangement(
+    request: Request, ws: Workspace, user: CurrentUser, settings: Settings,
+    project_id: str, body: ArrangeIn, idempotency_key: str | None,
+) -> dict:
+    """Check the request, create the job row and, when a queue is in use, send its message.
+
+    Shared by `POST /projects/{id}/arrangements` and `POST /jobs/arrange`.
+    """
     project = _require_project(ws, user, project_id)
     source_id = body.source_id or project["current_source_id"]
     source = ws.get_source(user.id, source_id) if source_id else None
@@ -382,6 +394,8 @@ def start_arrangement(
             "plan": None if body.plan is None else body.plan.model_dump(), "label": _clean_text(body.label, 120),
         },
     )
+    if created:
+        dispatch(getattr(request.app.state, "job_queue", None), ws, job)
     return {"job": _job_out(job), "created": created}
 
 
