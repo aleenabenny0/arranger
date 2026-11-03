@@ -57,6 +57,23 @@ Tests: `python -m pytest -q`. Browser tests need `pip install -e ".[e2e]"`,
 `python fetch_vendor.py --dev`, and Edge, Chrome or `playwright install chromium`.
 Deployment is in `docs/deployment.md`.
 
+The same run CI does, with coverage (the build fails under the `fail_under`
+gate in `pyproject.toml`), a JUnit file, the slowest tests and up to two reruns
+of a failing test, followed by the quality table CI puts in its job summary:
+
+```powershell
+.venv\Scripts\python -m pytest --cov=src --cov-report=term --cov-report=xml:reports/coverage.xml --junitxml=reports/junit.xml --durations=10 --reruns 2 -rRs --ignore=tests/test_browser_e2e.py
+.venv\Scripts\python scripts\test_report.py --junit reports\junit.xml --coverage reports\coverage.xml
+```
+
+```bash
+python -m pytest --cov=src --cov-report=term --cov-report=xml:reports/coverage.xml --junitxml=reports/junit.xml --durations=10 --reruns 2 -rRs --ignore=tests/test_browser_e2e.py
+python scripts/test_report.py --junit reports/junit.xml --coverage reports/coverage.xml
+```
+
+A test that passes only after a rerun is listed as flaky in that table; it is
+a bug to fix, not a pass.
+
 ## Try the verifier alone
 
 ```bash

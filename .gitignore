@@ -23,3 +23,10 @@ frontend/vendor/*.js
 
 # Left behind by interrupted pytest runs
 pytest-cache-files-*/
+
+# Test reports and coverage data
+reports/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
