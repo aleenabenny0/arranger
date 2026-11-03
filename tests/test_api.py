@@ -10,6 +10,8 @@ migrations, connections).
 """
 
 import json
+import re
+from pathlib import Path
 import logging
 
 import pytest
@@ -67,15 +69,21 @@ def test_security_headers_are_set():
     assert "default-src 'self'" in response.headers["content-security-policy"]
 
 
+DIST = Path(__file__).resolve().parents[1] / "frontend-react" / "dist"
+
+
+@pytest.mark.skipif(not (DIST / "index.html").is_file(), reason="the web app is not built: run `npm run build` in frontend-react")
 def test_frontend_is_served_from_root():
     api = client()
     response = api.get("/")
     assert response.status_code == 200
     assert "<title>Arranger</title>" in response.text
-    assert 'src="js/app.js"' in response.text
+    # Vite writes the app as one fingerprinted module under /assets/.
+    scripts = re.findall(r'<script type="module"[^>]*src="(/assets/[^"]+\.js)"', response.text)
+    assert scripts, response.text
     # The page has no inline script or style attribute for the CSP to refuse.
-    assert "<script>" not in response.text and "onclick=" not in response.text
-    for path in ("/js/app.js", "/js/view-project.js", "/styles.css", "/privacy.html", "/terms.html",
+    assert "<script>" not in response.text and "onclick=" not in response.text and ' style="' not in response.text
+    for path in (scripts[0], "/styles.css", "/privacy.html", "/terms.html",
                  "/cookies.html", "/copyright.html", "/support.html", "/favicon.svg"):
         assert api.get(path).status_code == 200, path
 

@@ -1,6 +1,6 @@
 # Questions for the owner and a lawyer
 
-Arranger ships with draft legal pages (`frontend/privacy.html`, `terms.html`,
+Arranger ships with draft legal pages (`frontend-react/public/privacy.html`, `terms.html`,
 `cookies.html`, `copyright.html`, `support.html`). They describe what the
 software does, taken from the code. They deliberately say nothing about who
 operates the service, under which law, or what is promised, because none of

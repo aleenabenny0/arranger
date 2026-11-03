@@ -29,11 +29,14 @@ from the repository root).
 | `tests/api.spec.ts` | `/health`, `/ready`, `/catalog`, and the account round trip through the `request` fixture including the CSRF header on sign-out |
 
 Locators use roles and `data-testid` attributes; the ids are listed in
-`frontend/README.md`. Traces, screenshots and page snapshots are kept for
+`frontend-react/README.md`. Traces, screenshots and page snapshots are kept for
 failed tests under `test-results/`; CI uploads them and the HTML report as
 artifacts.
 
 The Python browser suite in `tests/test_browser_e2e.py` still exists: it is the
 deeper journey (email verification, playback, PDF, keyboard-only use at phone
-width). This package is the fast, role-based regression suite that item 08's
-new frontend has to pass unchanged.
+width). This package is the fast, role-based regression suite; the React
+rewrite of the web app (item 08) passed it unchanged, which is what it is for.
+
+The API serves `frontend-react/dist`, so build the app first (`npm ci && npm
+run build` in `frontend-react`, after `python fetch_vendor.py`).

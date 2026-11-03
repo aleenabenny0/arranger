@@ -106,8 +106,10 @@ manual step is needed; the user can also cancel it.
 `GET /catalog` shows `export_pdf.detail`. Set `LILYPOND_PATH` or rebuild the image
 with `WITH_LILYPOND=1`.
 
-**The notation preview will not load.** `frontend/vendor/verovio-toolkit-wasm.js`
-is missing. Run `python fetch_vendor.py`; it verifies the file's checksum.
+**The notation preview will not load.** `vendor/verovio-toolkit-wasm.js` is
+missing from the served app directory. Run `python fetch_vendor.py` before
+`npm run build` (or `python fetch_vendor.py --target <served dir>/vendor`); it
+verifies the file's checksum.
 
 **A user cannot sign in after a password reset email never arrived.** Check
 `arranger_email_send_total` and the Resend dashboard. Reset requests always answer

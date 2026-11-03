@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time developer setup: virtual environment, dependencies, notation engine.
+# One-time developer setup: virtual environment, dependencies, notation engine, web app build.
 #
 #   scripts/setup.sh            # the API and the test tooling
 #   scripts/setup.sh --audio    # also the audio transcription packages
@@ -73,6 +73,15 @@ if (( with_e2e )); then
   "$VENV_PY" -m playwright install chromium
 else
   "$VENV_PY" fetch_vendor.py
+fi
+
+if command -v npm > /dev/null 2>&1; then
+  echo "Building the web app (frontend-react/dist, served by the API at /)"
+  npm --prefix frontend-react ci --no-audit --no-fund
+  npm --prefix frontend-react run build
+else
+  echo "npm is not installed: skipping the web app build. Install Node 22 and run" >&2
+  echo "  npm --prefix frontend-react ci && npm --prefix frontend-react run build" >&2
 fi
 
 echo

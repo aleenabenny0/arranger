@@ -59,7 +59,8 @@ candidate zero and needs no network. The model is an optional improver on top
 | `arranger.application` | Use-case layer for CLI/API/worker entry points (`workflows.py`) | stdlib only |
 | `arranger.adapters` | External file-format adapters | adapter-specific |
 | `arranger.ports` | Protocols for infrastructure boundaries | stdlib only |
-| `arranger_api` | FastAPI service: accounts, projects, revisions, jobs, artifacts, static frontend | `fastapi`, `argon2-cffi`, `psycopg`, `httpx`, `resend` |
+| `arranger_api` | FastAPI service: accounts, projects, revisions, jobs, artifacts; serves the built web app | `fastapi`, `argon2-cffi`, `psycopg`, `httpx`, `resend` |
+| `frontend-react` | The web app: React, TypeScript, Vite; typed from the API's OpenAPI document; a browser-side preview verifier in `src/lib/verify.ts` that never overrules the server | `react`, `openapi-fetch`; build-time `vite`, `vitest`, `openapi-typescript` |
 
 **Not built yet.** Nothing in `src/` implements these:
 - **Source separation.** Audio transcription assumes one instrument. `demucs`

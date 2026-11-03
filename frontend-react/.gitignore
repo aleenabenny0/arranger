@@ -1,0 +1,6 @@
+node_modules/
+dist/
+coverage/
+# Third-party notation engine, fetched by fetch_vendor.py into public/vendor
+public/vendor/*.js
+reports

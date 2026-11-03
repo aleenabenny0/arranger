@@ -268,3 +268,13 @@ summary { cursor: pointer; padding: 8px 0; font-weight: 600; min-height: 40px; }
 .prose { max-width: 760px; }
 .prose li { margin-bottom: 6px; }
 .missing { font-style: italic; background: var(--warn-bg); color: var(--warn); padding: 0 4px; border-radius: 4px; }
+
+/* --- timeline: the piece as a row of bars ------------------------------------ */
+.timeline { list-style: none; display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 1em; padding: 0; }
+.timeline li { margin: 0; }
+.bar-tile { min-width: 2.4rem; min-height: 2.4rem; padding: 2px 6px; border: 2px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.85rem; line-height: 1.2; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+.bar-tile:hover { border-color: var(--accent); }
+.bar-tile[aria-current="true"] { outline: 3px solid var(--accent); outline-offset: 1px; }
+.bar-tile-strain { border-style: dashed; border-color: var(--warn); background: var(--warn-bg); }
+.bar-tile-hard { border-color: var(--bad); background: var(--bad-bg); }
+.bar-mark { font-weight: 700; min-height: 1em; }

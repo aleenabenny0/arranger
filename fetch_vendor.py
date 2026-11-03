@@ -12,7 +12,7 @@ whatever came back.
 
 `--dev` also fetches axe-core (MPL-2.0, https://github.com/dequelabs/axe-core),
 which the browser tests inject into pages to check them. It goes to
-`.cache/tools/`, never into `frontend/`, so it is never served to users.
+`.cache/tools/`, never into the web app's public directory, so it is never served to users.
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-VENDOR = ROOT / "frontend" / "vendor"
+VENDOR = ROOT / "frontend-react" / "public" / "vendor"
 DEV_TOOLS = ROOT / ".cache" / "tools"
 
 PACKAGES = [
@@ -63,6 +63,14 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _shown(path: Path) -> str:
+    """The path as printed: relative to the repository when it is inside it."""
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 def fetch(package: dict, target: Path = VENDOR) -> None:
     wanted = package["files"]
     if all((target / out).is_file() and sha256((target / out).read_bytes()) == digest
@@ -89,16 +97,23 @@ def fetch(package: dict, target: Path = VENDOR) -> None:
             if sha256(blob) != digest:
                 raise SystemExit(f"{package['name']}: {member_name} does not match its pinned checksum")
             (target / out_name).write_bytes(blob)
-            print(f"  wrote    {(target / out_name).relative_to(ROOT).as_posix()} ({len(blob):,} bytes, verified)")
+            print(f"  wrote    {_shown(target / out_name)} ({len(blob):,} bytes, verified)")
 
 
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
+    target = VENDOR
+    if "--target" in args:
+        at = args.index("--target")
+        if at + 1 >= len(args):
+            raise SystemExit("--target needs a directory")
+        target = Path(args[at + 1]).resolve()
+        args = args[:at] + args[at + 2:]
     unknown = [a for a in args if a != "--dev"]
     if unknown:
-        raise SystemExit(f"unknown argument: {unknown[0]} (the only option is --dev)")
+        raise SystemExit(f"unknown argument: {unknown[0]} (the options are --dev and --target DIR)")
     for package in PACKAGES:
-        fetch(package)
+        fetch(package, target)
     if "--dev" in args:
         for package in DEV_PACKAGES:
             fetch(package, DEV_TOOLS)

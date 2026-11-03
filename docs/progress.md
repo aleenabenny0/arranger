@@ -3,6 +3,40 @@
 Newest entries first. Records what was done, why, what was tested, and what is
 left. Backlog item ids refer to `docs/backlog.md`.
 
+## 2026-09-29 - Item 08: the web app rewritten in React and TypeScript
+
+**Test state.** `python -m pytest --ignore=tests/test_browser_e2e.py`: 872
+passed, 22 skipped. `tests/test_browser_e2e.py` against the built app: 3
+passed. `e2e/` (Playwright): 15 passed. `frontend-react`: `tsc --noEmit`
+clean; Vitest 81 passed, 91.04% of lines covered. Both browser suites passed
+on the React build unchanged, which was the acceptance test for the rewrite.
+
+### Done
+
+| Item | What exists | Evidence |
+|---|---|---|
+| 08 | `frontend-react/`: Vite 6, React 19, TypeScript 5.9. `openapi.json` exported from the app and turned into `src/api/schema.ts` by `openapi-typescript`; `src/api/client.ts` is `openapi-fetch` with a middleware for the CSRF header and an `ApiError` per failure, so a route or field that does not exist is a compile error | `npm run typecheck`, `src/api/client.test.ts` |
+| 08 | Views: home, sign in and register, forgot and reset password, email verification, library (upload with progress, search, paging, rename and delete dialogs), account, and the piece (source facts and corrections, hands with presets and step-by-step measurement, arranging through `POST /jobs/arrange` with progress, cancel and retry, the result with verdict, fidelity, difficulty, playback, downloads, notation with findings marked, the findings table, revisions and comparison, the advanced plan editor with the engine's JSON) | `src/views/*.test.tsx`, both browser suites |
+| 08 | Components: WAI-ARIA `Tabs`, native `<dialog>` `Dialog` and `ConfirmDialog` with focus returned to the opener, `Field`, `Notation` (Verovio adopted node by node, styles through a constructed stylesheet), `PlayerControls`, and a new `Timeline` of bar tiles that seeks the player and reveals the bar's finding | `src/components/components.test.tsx` |
+| 08 | The browser fallback verifier ported to TypeScript (`src/lib/verify.ts`) with `validatePlan`; the Advanced view refuses a malformed plan before sending it and can check the current arrangement against the current hands in the browser, labelled as a browser check | `src/lib/verify.test.ts`, `project.test.tsx` |
+| 08 | Served from `frontend-react/dist` (`FRONTEND_DIR` default); `/assets/` is fingerprinted and cached immutable, everything else revalidated. Multi-stage `Dockerfile` (Node build stage, then the Python image copies `dist/`); `fetch_vendor.py --target`; CI job `frontend` (type check, Vitest with coverage and a JUnit file, build, forbidden-pattern greps) and a build step in every job that serves the app | `tests/test_api.py::test_frontend_is_served_from_root`, `tests/test_api_security.py::test_static_frontend_assets_stay_cacheable`, `.github/workflows/ci.yml` |
+| 08 | The old static app under `frontend/` removed once both browser suites passed on the build | git history |
+
+### Found by the unit tests
+
+- **Signing out could land on the sign-in page instead of home.** The route
+  guard read the route state, which only catches up on the `hashchange`
+  event, so a sign-out from the library navigated home and was then
+  redirected to `/login`. The Playwright test did not notice because its
+  assertions (a sign-in link and the toast) hold on either page. The guard now
+  reads the live address.
+
+### Not done
+
+- Firefox, Safari and real assistive technology are still untested.
+- The app is built for the root of an origin (`/assets/...`); hosting under a
+  sub-path needs Vite's `base` set.
+
 ## 2026-09-19 - Checkpoint 4: frontend, browser verification, planner, operations
 
 **Test state.** `pytest`: 831 passed, 1 skipped (the Postgres journey; needs

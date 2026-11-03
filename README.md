@@ -15,17 +15,19 @@ Music in, playable-for-you sheet music out.
 Bash (Git Bash on Windows, or Linux and macOS):
 
 ```bash
-scripts/setup.sh            # venv, dependencies, notation engine; add --audio or --e2e
-scripts/test.sh             # the suite as CI runs it
+scripts/setup.sh            # venv, dependencies, notation engine, the web app build; add --audio or --e2e
+scripts/test.sh             # the suite as CI runs it: Python, then the web app's type check and unit tests
 .venv/bin/arranger-api      # http://127.0.0.1:8000 (.venv/Scripts/arranger-api in Git Bash)
 ```
 
-PowerShell:
+PowerShell (Node 22 is needed for the web app):
 
 ```powershell
 py -m venv .venv
 .venv\Scripts\python -m pip install -e ".[api,dev]"
 .venv\Scripts\python fetch_vendor.py
+npm --prefix frontend-react ci
+npm --prefix frontend-react run build       # writes frontend-react\dist, which the API serves at /
 .venv\Scripts\python -m pytest -q
 .venv\Scripts\arranger-api                  # http://127.0.0.1:8000
 ```
@@ -56,7 +58,7 @@ flowchart LR
     subgraph app [Application and API]
         WORKFLOWS[use cases]
         API[FastAPI: accounts,<br/>projects, jobs]
-        UI[static frontend]
+        UI[React web app]
     end
     MIDI & MXL & AUDIO --> READERS --> SCORE
     SCORE --> PLANNER --> PLAN --> RENDER --> VERIFY
@@ -152,6 +154,7 @@ Every layer has its own tests, and CI runs all of them on every push:
 | Layer | What it proves | Where |
 |---|---|---|
 | Unit | The verifier, solver, planner, renderer, fidelity scorer, notation and file adapters, each against small scores built in the test | `tests/test_constraints.py` (also run on bare stdlib), `test_solver.py`, `test_engine.py`, `test_planner.py`, `test_render.py`, `test_fidelity.py`, `test_notation.py`, `test_midi_io.py`, `test_musicxml_reader.py`, `test_audio_transcription.py` |
+| Web app | Every React component and view, and the typed API client's error paths, under jsdom against a `fetch` stand-in; the TypeScript build itself, typed from the API's OpenAPI document | `frontend-react/src/**/*.test.tsx` (Vitest + Testing Library, 81 tests), `npm run typecheck` |
 | API | Every route over HTTP with the real app: auth, CSRF, rate limits, ownership, quotas, jobs, exports | `tests/test_api*.py`, `test_workflows.py`, `test_artifacts.py` |
 | Database | Repositories on SQLite and, in CI, on real Postgres; failure injection proves every multi-write path is atomic | `tests/test_storage.py`, `test_transactions.py`, `test_postgres_integration.py` |
 | End to end | A real browser drives the product. The Node suite: auth, upload, profile, plan authoring, verify, export, view switching, axe scans, API checks. The Python suite: the deeper journey with email verification, playback, PDF and keyboard-only use at phone width | `e2e/` (`@playwright/test`, 15 tests), `tests/test_browser_e2e.py` |
@@ -170,8 +173,8 @@ have the equivalents next to each.
 
 | Job | Bash | PowerShell |
 |---|---|---|
-| Set up a machine | `scripts/setup.sh` (`--audio`, `--e2e`) | the block under "Run the app" |
-| Test like CI | `scripts/test.sh` (`--quick`, `--browser`, `-- <pytest args>`) | the two commands under "Tests" |
+| Set up a machine | `scripts/setup.sh` (`--audio`, `--e2e`; builds the web app when `npm` is installed) | the block under "Quickstart" |
+| Test like CI | `scripts/test.sh` (`--quick`, `--browser`, `--no-web`, `-- <pytest args>`) | `python -m pytest` and `npm --prefix frontend-react test` |
 | Smoke-test a running server | `scripts/smoke.sh http://127.0.0.1:8000` | the snippet below |
 
 `smoke.sh` checks `/health` and `/ready`, that `/auth/me` is 401 without a

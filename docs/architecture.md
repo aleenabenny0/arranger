@@ -169,8 +169,10 @@ SQLite files. Cloud runs should use managed Postgres.
 
 ## Auth And Permissions
 
-`arranger_api.main` serves the static frontend from `/` when the `frontend/`
-directory is present. `arranger_api.settings` reads cloud configuration from
+`arranger_api.main` serves the web app (React and TypeScript, built by Vite into
+`frontend-react/dist`) from `/` when that directory is present. The app is
+typed against the API's OpenAPI document, so a route change that is not
+reflected in `frontend-react/openapi.json` fails the web app's type check. `arranger_api.settings` reads cloud configuration from
 environment variables such as `PORT`, `FRONTEND_ORIGINS`, `COOKIE_SECURE`, and
 `FRONTEND_DIR`.
 

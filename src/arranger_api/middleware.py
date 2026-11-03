@@ -88,6 +88,7 @@ HSTS_VALUE = "max-age=31536000; includeSubDomains"
 # they are revalidated on every load, so a deploy never leaves a browser running
 # a new module against an old one.
 VENDOR_CACHE_CONTROL = "public, max-age=604800"
+ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable"
 _DIGITS = re.compile(r"^[0-9]{1,18}$")
 
 
@@ -171,8 +172,15 @@ class RequestContextMiddleware:
             # The frontend is public and identical for everyone, so it may be
             # stored; whether it may be reused without asking depends on what it is.
             if "Cache-Control" not in headers:
-                is_vendor = str(scope.get("path", "")).startswith("/vendor/")
-                headers["Cache-Control"] = VENDOR_CACHE_CONTROL if is_vendor else "no-cache"
+                path = str(scope.get("path", ""))
+                if path.startswith("/vendor/"):
+                    headers["Cache-Control"] = VENDOR_CACHE_CONTROL
+                elif path.startswith("/assets/"):
+                    # Vite fingerprints everything under /assets/: a changed file
+                    # has a new name, so the old one may be kept for good.
+                    headers["Cache-Control"] = ASSET_CACHE_CONTROL
+                else:
+                    headers["Cache-Control"] = "no-cache"
             return
         # Everything else is API output: per-user, or about to be.
         headers["Cache-Control"] = "no-store"

@@ -1,0 +1,35 @@
+{
+  "name": "arranger-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The Arranger web app: React, TypeScript and Vite, typed against the API's OpenAPI document.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "api-types": "openapi-typescript openapi.json -o src/api/schema.ts"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.14.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^3.2.7",
+    "jsdom": "^26.1.0",
+    "openapi-typescript": "^7.8.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.3.0",
+    "vitest": "^3.2.0"
+  }
+}
