@@ -88,7 +88,7 @@ export function toast(message, kind = "info") {
   const host = document.getElementById("toasts");
   if (!host) return;
   const label = kind === "error" ? "Error: " : kind === "success" ? "Done: " : "";
-  const item = h("div", { class: `toast toast-${kind}` },
+  const item = h("div", { class: `toast toast-${kind}`, "data-testid": `toast-${kind}` },
     h("span", { class: "toast-icon", "aria-hidden": "true", text: kind === "error" ? "!" : kind === "success" ? "✓" : "i" }),
     h("span", { text: label + message }),
     h("button", { type: "button", class: "icon-button", "aria-label": "Dismiss message", onclick: () => item.remove(), text: "×" }));
@@ -143,6 +143,7 @@ export function tabs({ label, items, onChange, initial }) {
     const panelId = uid("panel");
     const button = h("button", {
       type: "button", role: "tab", id: tabId, "aria-controls": panelId, class: "tab", dataset: { tab: item.id },
+      "data-testid": `tab-${item.id}`,
       text: item.label, onclick: () => select(item.id, false),
       onkeydown: (event) => {
         const keys = { ArrowRight: 1, ArrowLeft: -1 };
@@ -155,7 +156,8 @@ export function tabs({ label, items, onChange, initial }) {
     });
     buttons.push(button);
     list.append(button);
-    panels.append(h("div", { role: "tabpanel", id: panelId, "aria-labelledby": tabId, tabindex: "0", class: "tabpanel", dataset: { tab: item.id } }, item.content));
+    panels.append(h("div", { role: "tabpanel", id: panelId, "aria-labelledby": tabId, tabindex: "0", class: "tabpanel", dataset: { tab: item.id },
+      "data-testid": `panel-${item.id}` }, item.content));
   });
   select(active, false);
   const root = h("div", { class: "tabs" }, list, panels);
@@ -166,7 +168,7 @@ export function tabs({ label, items, onChange, initial }) {
 // A modal built on <dialog>: the browser traps focus and handles Escape.
 export function dialog({ title, body, actions }) {
   const titleId = uid("dlg");
-  const el = h("dialog", { "aria-labelledby": titleId, class: "dialog" },
+  const el = h("dialog", { "aria-labelledby": titleId, class: "dialog", "data-testid": "dialog" },
     h("h2", { id: titleId, text: title }), body, h("div", { class: "dialog-actions" }, actions));
   el.addEventListener("close", () => el.remove());
   document.body.append(el);

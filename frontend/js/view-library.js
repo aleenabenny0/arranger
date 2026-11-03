@@ -15,13 +15,13 @@ export async function libraryView(root, state) {
   let uploading = false;
 
   // --- upload ----------------------------------------------------------------
-  const input = h("input", { type: "file", id: "upload-input", class: "visually-hidden",
+  const input = h("input", { type: "file", id: "upload-input", class: "visually-hidden", "data-testid": "upload-input",
     accept: `.mid,.midi,.musicxml,.xml,.mxl${audioReady ? ",.wav,.flac,.ogg,.mp3" : ""}` });
   const progress = h("progress", { max: "1", value: "0", "aria-label": "Upload progress" });
   const progressText = h("p", { class: "muted", role: "status" });
   const progressBox = h("div", { class: "progress-box" }, progress, progressText);
   progressBox.hidden = true;
-  const uploadError = h("p", { class: "form-error", role: "alert" }); uploadError.hidden = true;
+  const uploadError = h("p", { class: "form-error", role: "alert", "data-testid": "upload-error" }); uploadError.hidden = true;
   const dropLabel = h("label", { for: "upload-input", class: "dropzone" },
     h("strong", { text: "Choose a file" }), h("span", { text: " or drop one here" }),
     h("span", { class: "muted block", text: `MIDI or MusicXML${audioReady ? ", or a recording" : ""}. Up to ${Math.round(limits.max_upload_bytes / 1024 / 1024)} MB.` }));
@@ -63,8 +63,8 @@ export async function libraryView(root, state) {
   dropLabel.addEventListener("drop", (e) => upload(e.dataTransfer && e.dataTransfer.files[0]));
 
   // --- list --------------------------------------------------------------------
-  const list = h("ul", { class: "project-list", "aria-label": "Your pieces" });
-  const summary = h("p", { class: "muted", role: "status" });
+  const list = h("ul", { class: "project-list", "aria-label": "Your pieces", "data-testid": "project-list" });
+  const summary = h("p", { class: "muted", role: "status", "data-testid": "library-summary" });
   const prev = h("button", { type: "button", class: "button", text: "Previous", onclick: () => { offset = Math.max(0, offset - PAGE_SIZE); load(); } });
   const next = h("button", { type: "button", class: "button", text: "Next", onclick: () => { offset += PAGE_SIZE; load(); } });
   const search = h("input", { type: "search", autocomplete: "off", maxlength: 100 });
@@ -89,7 +89,7 @@ export async function libraryView(root, state) {
   }
 
   function row(project) {
-    const title = h("a", { href: `#/project/${project.id}`, class: "project-title", text: project.title });
+    const title = h("a", { href: `#/project/${project.id}`, class: "project-title", text: project.title, "data-testid": "project-link" });
     const meta = [KIND_LABEL[project.source_kind] || project.source_kind, project.composer,
       project.bar_count ? `${project.bar_count} bars` : "", `${project.arrangement_count || 0} arrangement${project.arrangement_count === 1 ? "" : "s"}`,
       `changed ${formatDate(project.updated_at)}`].filter(Boolean).join(" · ");

@@ -42,7 +42,8 @@ function dl(pairs) {
 
 function findingsBadge(summary) {
   const icon = { passes: "✓", findings: "!", unresolved: "?" }[summary.status] || "i";
-  return h("p", { class: `verdict verdict-${summary.status}` }, h("span", { class: "verdict-icon", "aria-hidden": "true", text: icon }),
+  return h("p", { class: `verdict verdict-${summary.status}`, "data-testid": "verdict", "data-status": summary.status },
+    h("span", { class: "verdict-icon", "aria-hidden": "true", text: icon }),
     h("strong", { text: summary.headline }));
 }
 
@@ -57,7 +58,7 @@ export async function projectView(root, state, projectId, setTitle) {
   let activeJob = null;
   setTitle(data.project.title);
 
-  const heading = h("h1", { text: data.project.title });
+  const heading = h("h1", { text: data.project.title, "data-testid": "project-title" });
   const subheading = h("p", { class: "muted" });
   const sourcePanel = h("div", {});
   const handsPanel = h("div", {});
@@ -197,7 +198,7 @@ export async function projectView(root, state, projectId, setTitle) {
   const profileInputs = {};
 
   function renderHands() {
-    const preset = h("select", {}, h("option", { value: "", text: "Custom" }),
+    const preset = h("select", { "data-testid": "profile-preset" }, h("option", { value: "", text: "Custom" }),
       catalog.presets.map((p) => h("option", { value: p.id, text: p.id.replace(/_/g, " ") })));
     const presetHint = h("p", { class: "hint", "aria-live": "polite" });
     preset.addEventListener("change", () => {
@@ -208,7 +209,8 @@ export async function projectView(root, state, projectId, setTitle) {
       syncInputs(); markStale();
     });
     const fields = PROFILE_FIELDS.map(([key, label, hint, min, max]) => {
-      const input = h("input", { type: "number", min: String(min), max: String(max), step: key === "max_leap_rate" ? "5" : "1", value: profile[key] });
+      const input = h("input", { type: "number", min: String(min), max: String(max), step: key === "max_leap_rate" ? "5" : "1", value: profile[key],
+        "data-testid": `profile-${key}` });
       const wrapper = field({ label, hint, control: input });
       input.addEventListener("change", () => {
         const value = Number(input.value);
@@ -281,11 +283,11 @@ export async function projectView(root, state, projectId, setTitle) {
   }
 
   // ------------------------------------------------------------ arrangement --
-  const staleNotice = h("div", { class: "notice", role: "status" }); staleNotice.hidden = true;
-  const jobBox = h("div", { class: "progress-box" }); jobBox.hidden = true;
-  const resultBody = h("div", {});
+  const staleNotice = h("div", { class: "notice", role: "status", "data-testid": "stale-notice" }); staleNotice.hidden = true;
+  const jobBox = h("div", { class: "progress-box", "data-testid": "job-status" }); jobBox.hidden = true;
+  const resultBody = h("div", { "data-testid": "arrangement-result" });
   const useModel = h("input", { type: "checkbox", id: "use-model" });
-  const generate = h("button", { type: "button", class: "button button-primary", text: "Arrange for my hands" });
+  const generate = h("button", { type: "button", class: "button button-primary", text: "Arrange for my hands", "data-testid": "arrange-button" });
   const modelAvailable = Boolean(catalog.capabilities.model_repair && catalog.capabilities.model_repair.available);
 
   function markStale() {
@@ -382,7 +384,7 @@ export async function projectView(root, state, projectId, setTitle) {
     const pdfAvailable = Boolean(catalog.capabilities.export_pdf && catalog.capabilities.export_pdf.available);
     for (const [kind, label] of [["midi", "MIDI"], ["musicxml", "MusicXML"], ["pdf", "Printable PDF"]]) {
       if (kind === "pdf" && !pdfAvailable) { downloads.append(h("span", { class: "muted", text: "PDF engraving is not installed on this server." })); continue; }
-      const button = h("button", { type: "button", class: "button", text: `Download ${label}` });
+      const button = h("button", { type: "button", class: "button", text: `Download ${label}`, "data-testid": `download-${kind}` });
       button.addEventListener("click", async () => {
         button.disabled = true;
         try {
@@ -408,7 +410,7 @@ export async function projectView(root, state, projectId, setTitle) {
         h("article", { class: "card" }, h("h3", { text: "Can you play it?" }), findingsBadge(summary.findings), h("p", { text: summary.findings.detail }),
           h("p", { class: "muted", text: `${summary.findings.hard} beyond your limits · ${summary.findings.strain} stretches` })),
         h("article", { class: "card" }, h("h3", { text: "Is it still the piece?" }),
-          h("p", {}, h("strong", { text: `Fidelity score ${Math.round((fidelity.score || 0) * 100)}%` })),
+          h("p", {}, h("strong", { text: `Fidelity score ${Math.round((fidelity.score || 0) * 100)}%`, "data-testid": "fidelity-score" })),
           h("p", { class: "muted", text: "How much of the tune, rhythm, harmony and bass can still be heard. It is not a count of notes: what was left out is listed below." }),
           h("ul", { class: "meters" }, FIDELITY_LABELS.map(([key, label]) => h("li", {}, h("span", { text: label }),
             h("meter", { min: "0", max: "1", low: "0.6", high: "0.85", optimum: "1", value: String(fidelity[key] ?? 0), "aria-label": label }),
@@ -422,9 +424,9 @@ export async function projectView(root, state, projectId, setTitle) {
       h("h3", { text: "Download" }), downloads,
       h("h3", { text: "Score" }), notation.root,
       h("h3", { text: `Findings (${findings.length})` }),
-      findings.length ? h("div", { class: "table-wrap", tabindex: "0", role: "region", "aria-label": "Table, scroll sideways if it is cut off" }, h("table", {}, h("caption", { class: "visually-hidden", text: "Playability findings, most serious first" }),
+      findings.length ? h("div", { class: "table-wrap", tabindex: "0", role: "region", "aria-label": "Table, scroll sideways if it is cut off", "data-testid": "findings" }, h("table", {}, h("caption", { class: "visually-hidden", text: "Playability findings, most serious first" }),
         h("thead", {}, h("tr", {}, ["Kind", "Where", "Hand", "What", "Detail", "Score"].map((t) => h("th", { scope: "col", text: t })))), h("tbody", {}, findingRows)))
-        : h("p", { text: "Nothing in this arrangement is outside the limits you set." }),
+        : h("p", { text: "Nothing in this arrangement is outside the limits you set.", "data-testid": "findings-none" }),
       verdict.violations_truncated ? h("p", { class: "muted", text: `${verdict.violations_truncated} more findings are not listed.` }) : null);
 
     renderAdvanced();
@@ -458,7 +460,7 @@ export async function projectView(root, state, projectId, setTitle) {
     });
     replace(revisionsPanel, h("h2", { text: "Revisions" }),
       h("p", { text: "Every arrangement is kept with the source, hand profile and engine version it was made from." }),
-      h("div", { class: "table-wrap", tabindex: "0", role: "region", "aria-label": "Table, scroll sideways if it is cut off" }, h("table", {}, h("thead", {}, h("tr", {}, ["No.", "Label", "Made", "Playable", "Kept", "Difficulty", "Open"].map((t) => h("th", { scope: "col", text: t })))), h("tbody", {}, rows))),
+      h("div", { class: "table-wrap", tabindex: "0", role: "region", "aria-label": "Table, scroll sideways if it is cut off", "data-testid": "revisions" }, h("table", {}, h("thead", {}, h("tr", {}, ["No.", "Label", "Made", "Playable", "Kept", "Difficulty", "Open"].map((t) => h("th", { scope: "col", text: t })))), h("tbody", {}, rows))),
       items.length > 1 ? h("div", { class: "form" }, h("h3", { text: "Compare two" }), field({ label: "First", control: a }), field({ label: "Second", control: b }),
         h("button", { type: "button", class: "button", text: "Compare", onclick: async () => {
           try {
@@ -475,19 +477,19 @@ export async function projectView(root, state, projectId, setTitle) {
   // --------------------------------------------------------------- advanced --
   function renderAdvanced() {
     if (!arrangement) { replace(advancedPanel, h("h2", { text: "Advanced" }), h("p", { text: "Make an arrangement first. Its plan and the engine's diagnostics appear here." })); return; }
-    const planText = h("textarea", { rows: "16", spellcheck: "false", class: "code" });
+    const planText = h("textarea", { rows: "16", spellcheck: "false", class: "code", "data-testid": "plan-json" });
     planText.value = JSON.stringify(arrangement.plan, null, 2);
     const planField = field({ label: "Arrangement plan (JSON)", control: planText, hint: "The plan is a list of decisions, not notes. Edit it and evaluate to get a new revision." });
     const pre = (value) => h("pre", { class: "code", tabindex: "0", text: JSON.stringify(value, null, 2) });
     replace(advancedPanel, h("h2", { text: "Advanced" }), planField,
-      h("button", { type: "button", class: "button", text: "Evaluate this plan", onclick: () => {
+      h("button", { type: "button", class: "button", text: "Evaluate this plan", "data-testid": "plan-evaluate", onclick: () => {
         let plan;
         try { plan = JSON.parse(planText.value); } catch { planField.setError("That is not valid JSON."); return; }
         planField.setError(""); tabset.select("arrange"); runJob({ profile, plan, label: "edited plan" }, "Evaluating your plan");
       } }),
-      h("details", {}, h("summary", { text: "Engine report" }), pre(arrangement.report)),
-      h("details", {}, h("summary", { text: "Verdict" }), pre(arrangement.verdict)),
-      h("details", {}, h("summary", { text: "Hand profile used" }), pre(arrangement.profile)));
+      h("details", { "data-testid": "json-report" }, h("summary", { text: "Engine report" }), pre(arrangement.report)),
+      h("details", { "data-testid": "json-verdict" }, h("summary", { text: "Verdict" }), pre(arrangement.verdict)),
+      h("details", { "data-testid": "json-profile" }, h("summary", { text: "Hand profile used" }), pre(arrangement.profile)));
   }
 
   // ------------------------------------------------------------------ start --

@@ -43,12 +43,13 @@ function focusHeading() {
 function renderNav() {
   const nav = document.getElementById("nav");
   const current = parseRoute().parts[0] || "";
-  const link = (href, text, key) => h("a", { href, text, "aria-current": current === key ? "page" : null });
+  const link = (href, text, key) => h("a", { href, text, "aria-current": current === key ? "page" : null,
+    "data-testid": `nav-${key || "home"}` });
   if (state.user) {
     replace(nav,
       link("#/library", "Your pieces", "library"),
       link("#/account", "Account", "account"),
-      h("button", { type: "button", class: "link-button", text: "Sign out", onclick: signOut }));
+      h("button", { type: "button", class: "link-button", text: "Sign out", onclick: signOut, "data-testid": "nav-sign-out" }));
   } else {
     replace(nav, link("#/", "About", ""), link("#/login", "Sign in", "login"), link("#/register", "Create account", "register"));
   }
@@ -104,7 +105,7 @@ function homeView(root) {
       h("p", { class: "lead", text: "Upload a piece, tell Arranger what your hands can do, and get a two-hand version you can read, hear and print." }),
       h("p", {}, state.user
         ? h("a", { class: "button button-primary", href: "#/library", text: "Go to your pieces" })
-        : h("a", { class: "button button-primary", href: "#/register", text: "Create a free account" }))),
+        : h("a", { class: "button button-primary", href: "#/register", text: "Create a free account", "data-testid": "home-register" }))),
     h("section", { class: "cards" },
       card("What you can upload", [
         "MIDI files (.mid)", "MusicXML files (.musicxml, .xml, .mxl)",
@@ -131,15 +132,17 @@ function card(title, items) {
 
 function authView(root, mode) {
   const isRegister = mode === "register";
-  const email = h("input", { type: "email", name: "email", autocomplete: "email", required: true, inputmode: "email" });
+  const email = h("input", { type: "email", name: "email", autocomplete: "email", required: true, inputmode: "email",
+    "data-testid": "auth-email" });
   const password = h("input", { type: "password", name: "password", required: true, minlength: isRegister ? 10 : 1,
-    autocomplete: isRegister ? "new-password" : "current-password" });
+    autocomplete: isRegister ? "new-password" : "current-password", "data-testid": "auth-password" });
   const name = h("input", { type: "text", name: "display_name", autocomplete: "name", maxlength: 80 });
   const emailField = field({ label: "Email address", control: email });
   const passwordField = field({ label: "Password", control: password,
     hint: isRegister ? "At least 10 characters. A few unrelated words works well." : "" });
-  const submit = h("button", { type: "submit", class: "button button-primary", text: isRegister ? "Create account" : "Sign in" });
-  const formError = h("p", { class: "form-error", role: "alert" });
+  const submit = h("button", { type: "submit", class: "button button-primary", text: isRegister ? "Create account" : "Sign in",
+    "data-testid": "auth-submit" });
+  const formError = h("p", { class: "form-error", role: "alert", "data-testid": "auth-error" });
   formError.hidden = true;
 
   const form = h("form", { class: "form", novalidate: true, onsubmit: async (event) => {
