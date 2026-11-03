@@ -7,13 +7,12 @@ v1 (this file) is greedy: at each instant, pick the pitch split that is
 feasible and moves the hands least from where they just were. It is fast,
 has no dependencies, and is right the large majority of the time.
 
-v2 (milestone 3) replaces this with OR-Tools CP-SAT solving the whole piece at
-once, jointly with finger assignment. That is the version that produces
-*infeasibility certificates* — proof that no assignment exists, which is a far
-stronger signal for the repair loop than "greedy couldn't find one".
-
-Keep this module's signature stable so v2 is a drop-in swap. The rest of the
-codebase should not know or care which solver answered.
+v2 is `solver.py`: a phrase-based dynamic-programming search over the whole
+piece, still in the standard library, that answers FEASIBLE, INFEASIBLE or
+UNKNOWN. OR-Tools CP-SAT was considered for this and not used, so that
+`arranger.verify` keeps zero dependencies. The verifier uses the solver; this
+greedy assigner is kept as the fast reference the solver's tests compare
+against.
 """
 
 from __future__ import annotations

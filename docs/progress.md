@@ -3,6 +3,39 @@
 Newest entries first. Records what was done, why, what was tested, and what is
 left. Backlog item ids refer to `docs/backlog.md`.
 
+## 2026-11-03 - Housekeeping: licence, stale extra, current model prices
+
+**Test state.** `tests/test_agent.py`, `tests/test_solver.py`,
+`tests/test_evaluate.py`: 87 passed. `python tests/test_constraints.py`: 19/19.
+`ruff check` on the edited modules: clean.
+
+### Done
+
+- `LICENSE`: MIT, copyright 2026 Aleena Benny, the author name on record in the
+  git history. The README badge and licence section say so and name what keeps
+  its own terms: the corpus, the recorded Mutopia pages, the vendored Unity.
+- The `agent` extra (`langgraph`, `pydantic`) removed from `pyproject.toml`;
+  nothing imported either. CLAUDE.md updated to match.
+- `verify/hands.py` docstring: the DP solver in `solver.py` is what replaced the
+  greedy assigner; CP-SAT was considered and not used.
+- `agent.MODEL_PRICES` gained Opus 5.5, Sonnet 5.5 and Haiku 5.5, so a run on a
+  current model computes its spending cap at the real rate rather than the
+  most-expensive fallback.
+- The stacked pull requests opened with `gh`: `chore/checkpoint-4` through
+  `feat/10`, plus this branch, each based on the branch below it. Merging is the
+  owner's job, in order, with merge commits.
+
+### Decided
+
+- The pre-registered model run stays on `claude-sonnet-5`, as
+  `docs/build-log/eval-protocol.md` names it. A run on Sonnet 5.5 would be a
+  protocol amendment and a second spend.
+
+### Not done
+
+- Everything that needs the owner: the paid model run, the Railway redeploy, the
+  legal review, and the S3, ESP32 and real-recording checks.
+
 ## 2026-11-02 - Item 10: the engine beats brute force, and the arranger tests itself
 
 **Test state.** `python -m pytest --ignore=tests/test_browser_e2e.py`:

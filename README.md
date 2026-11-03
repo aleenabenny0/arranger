@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/aleenabenny0/arranger/actions/workflows/ci.yml/badge.svg)](https://github.com/aleenabenny0/arranger/actions/workflows/ci.yml)
 [![Coverage gate](https://img.shields.io/badge/coverage%20gate-90%25-brightgreen)](https://github.com/aleenabenny0/arranger/blob/main/pyproject.toml)
-[![License](https://img.shields.io/badge/license-not%20yet%20chosen-lightgrey)](#license)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 Music in, playable-for-you sheet music out.
 
@@ -312,9 +312,11 @@ hand measurements, minimum age) and the limitations in `docs/security.md`.
 
 ## License
 
-No license has been chosen yet, so the code is all rights reserved by default.
-The evaluation corpus is public-domain and Creative Commons material only (see
-`evals/corpus/README.md`).
+The code is released under the MIT License (`LICENSE`). Material that is not
+this project's code keeps its own terms: the evaluation corpus is public-domain
+and Creative Commons music only (`evals/corpus/README.md`), the recorded Mutopia
+Project pages under `tests/fixtures/mutopia/` belong to that site, and the Unity
+test framework vendored under `c/midi/tests/unity/` carries its own MIT licence.
 
 ## Design notes
 

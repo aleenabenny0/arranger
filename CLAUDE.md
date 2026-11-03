@@ -78,8 +78,8 @@ candidate zero and needs no network. The model is an optional improver on top
 - **CP-SAT.** The hand solver is dynamic programming in the standard library.
   OR-Tools was considered and not used, so `arranger.verify` keeps zero
   dependencies.
-- **LangGraph orchestration.** `arranger.agent` is a plain Python loop. The
-  `agent` extra in `pyproject.toml` still lists `langgraph`; nothing imports it.
+- **LangGraph orchestration.** `arranger.agent` is a plain Python loop calling
+  the Claude API directly; nothing in the project depends on LangGraph.
 - **Billing, teams, sharing.** Every project belongs to exactly one account.
 
 **Built but not verified against the real thing:** the S3 artifact store (no
